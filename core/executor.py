@@ -70,6 +70,8 @@ class AgentExecutor:
 
         state.update_status(AgentStatus.EXECUTING)
         for index, step in enumerate(state.plan.steps):
+            if step.status == "completed":
+                continue
             state.current_step_index = index
             try:
                 await self.execute_step(step, state)

@@ -1,6 +1,7 @@
 import uuid
 from typing import Dict, List, Optional, Type
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from core.config import settings
@@ -13,25 +14,36 @@ from registry.skill_registry import skill_registry
 # Import tools
 from tools.search_company import SearchCompanyTool
 from tools.search_web import SearchWebTool
+from tools.create_pdf import CreatePDFTool
+from tools.create_ppt import CreatePPTTool
+from tools.send_email import SendEmailTool
 
 # Import skills
 from skills.sales_account_research.skill import SalesAccountResearchSkill
+from skills.proposal_writer.skill import ProposalWriterSkill
 
 app = FastAPI(
     title=settings.APP_NAME,
     description="Reusable Enterprise AI Agent Framework REST API",
-    version="0.2.0",
+    version="0.3.0",
     debug=settings.DEBUG
 )
+
+# Serve generated PDFs and PPTs statically
+app.mount("/static", StaticFiles(directory="artifacts"), name="static")
 
 # Register default tools
 tool_registry.register(SearchCompanyTool())
 tool_registry.register(SearchWebTool())
+tool_registry.register(CreatePDFTool())
+tool_registry.register(CreatePPTTool())
+tool_registry.register(SendEmailTool())
 
 # Register default skills
 skill_registry.register(SalesAccountResearchSkill())
+skill_registry.register(ProposalWriterSkill())
 
-# Initialize executor with registered tools
+# Initialize executor and router
 executor = AgentExecutor(tools=tool_registry.list_tools())
 router = AgentRouter(skill_registry)
 
@@ -54,7 +66,7 @@ def get_root():
     return {
         "app_name": settings.APP_NAME,
         "status": "online",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "debug": settings.DEBUG,
         "registered_tools": tool_registry.list_tool_names(),
         "registered_skills": skill_registry.list_skill_names()
@@ -105,6 +117,10 @@ async def execute_session_plan(session_id: str):
         raise HTTPException(status_code=404, detail="Session not found")
     
     state = sessions[session_id]
+    
+    # Sync executor tools with dynamic registry
+    global executor
+    executor = AgentExecutor(tools=tool_registry.list_tools())
     
     # 1. Route the query to a matching skill
     skill = router.route(state.query)
