@@ -8,3 +8,5 @@ pytest-asyncio
 httpx>=0.24.0
 reportlab>=4.0.0
 python-pptx>=0.6.21
+yfinance>=0.2.0
+python-docx>=0.8.11

@@ -16,11 +16,15 @@ from tools.search_company import SearchCompanyTool
 from tools.search_web import SearchWebTool
 from tools.create_pdf import CreatePDFTool
 from tools.create_ppt import CreatePPTTool
+from tools.create_docs import CreateDocsTool
 from tools.send_email import SendEmailTool
 
 # Import skills
 from skills.sales_account_research.skill import SalesAccountResearchSkill
 from skills.proposal_writer.skill import ProposalWriterSkill
+
+from fastapi.middleware.cors import CORSMiddleware
+from api.routes import router as workspace_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -28,6 +32,23 @@ app = FastAPI(
     version="0.3.0",
     debug=settings.DEBUG
 )
+
+# Enable CORS for Next.js frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include the workspace router
+app.include_router(workspace_router)
 
 # Serve generated PDFs and PPTs statically
 app.mount("/static", StaticFiles(directory="artifacts"), name="static")
@@ -37,6 +58,7 @@ tool_registry.register(SearchCompanyTool())
 tool_registry.register(SearchWebTool())
 tool_registry.register(CreatePDFTool())
 tool_registry.register(CreatePPTTool())
+tool_registry.register(CreateDocsTool())
 tool_registry.register(SendEmailTool())
 
 # Register default skills

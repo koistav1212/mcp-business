@@ -119,3 +119,12 @@ def test_api_session_lifecycle():
     assert execution_result["status"] == "completed"
     assert execution_result["verification"]["is_valid"] is True
     assert "zoho" in execution_result["response"].lower()
+
+def test_workspace_run_endpoint():
+    response = client.post("/workspace/run", json={"company": "Zoho"})
+    assert response.status_code == 200
+    data = response.json()
+    assert "company_profile" in data
+    assert data["company_profile"]["name"] == "Zoho Corporation"
+    assert "technology_stack" in data
+    assert len(data["sources"]) > 0

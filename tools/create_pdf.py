@@ -12,6 +12,7 @@ class CreatePDFInput(BaseModel):
     filename: str
     title: str
     body_text: str
+    style: Optional[str] = "professional"
 
 class CreatePDFTool(BaseTool):
     name: str = "create_pdf"
@@ -25,6 +26,7 @@ class CreatePDFTool(BaseTool):
             
         title_text = kwargs["title"]
         body_text = kwargs["body_text"]
+        style = kwargs.get("style", "professional")
 
         # Temporary file location in the current workspace directory
         temp_path = f"temp_gen_{filename}"
@@ -40,9 +42,16 @@ class CreatePDFTool(BaseTool):
 
         styles = getSampleStyleSheet()
         
-        # Color palette
-        primary_color = colors.HexColor("#1e293b")  # Dark Slate
-        text_color = colors.HexColor("#334155")     # Slate Grey
+        # Color palette based on style
+        if style == "creative":
+            primary_color = colors.HexColor("#6366f1")  # Indigo
+            text_color = colors.HexColor("#4f46e5")     # Violet
+        elif style == "minimalist":
+            primary_color = colors.HexColor("#09090b")  # Black
+            text_color = colors.HexColor("#27272a")     # Charcoal
+        else:  # professional
+            primary_color = colors.HexColor("#1e293b")  # Dark Slate
+            text_color = colors.HexColor("#334155")     # Slate Grey
 
         title_style = ParagraphStyle(
             'PDFTitle',

@@ -9,20 +9,7 @@ class WebProvider(BaseProvider):
     async def fetch(self, company: str) -> Dict[str, Any]:
         company_clean = company.lower().strip()
         
-        if "zoho" in company_clean:
-            return {
-                "source_title": "BuiltWith Web Technologies Report",
-                "source_url": "https://builtwith.com/zoho.com",
-                "source_type": "web_scraper",
-                "technology_stack": ["Java", "Deluge Script", "React", "PostgreSQL", "Nginx", "Docker"]
-            }
-        elif "google" in company_clean:
-            return {
-                "source_title": "StackShare Engineering Stack",
-                "source_url": "https://stackshare.io/google/google",
-                "source_type": "web_scraper",
-                "technology_stack": ["C++", "Python", "Go", "Spanner", "Angular", "Kubernetes"]
-            }
+
             
         return {
             "source_title": "Wappalyzer Automated Site Probe",

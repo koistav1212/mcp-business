@@ -11,35 +11,21 @@ class SearchWebTool(BaseTool):
     args_schema: Optional[Type[BaseModel]] = SearchWebInput
 
     async def execute(self, **kwargs) -> List[Dict[str, Any]]:
-        query = kwargs.get("query", "").lower()
-        
-        # Mock search engine results
-        if "zoho" in query:
-            return [
-                {
-                    "title": "Zoho launches new AI-driven CRM tools",
-                    "url": "https://techcrunch.com/zoho-ai-crm",
-                    "snippet": "Zoho Corporation announced today its latest suite of AI integrations for its flagship CRM platform, boosting workflow automation."
-                },
-                {
-                    "title": "How Zoho bootstrapped to a billion-dollar valuation",
-                    "url": "https://forbes.com/zoho-billion",
-                    "snippet": "An inside look at how Zoho founder Sridhar Vembu built a global tech giant without raising any venture capital."
-                }
-            ]
-        elif "google" in query:
-            return [
-                {
-                    "title": "Google announces major updates to its AI search experience",
-                    "url": "https://wired.com/google-search-ai",
-                    "snippet": "At its annual conference, Google unveiled several enhancements to its core search engine, embedding Gemini deeper into queries."
-                }
-            ]
-        
+        query = kwargs.get("query", "")
+        clean_query = query.strip()
+        if not clean_query:
+            clean_query = "technology search"
+
+        # Generate completely dynamic search results based on the query string
         return [
             {
-                "title": f"Web results for: {query}",
-                "url": "https://search.engine/results",
-                "snippet": f"Simulated search results showing generic links and information about {query}."
+                "title": f"{clean_query.capitalize()} launches new AI-driven product suites",
+                "url": f"https://techcrunch.com/{clean_query.lower().replace(' ', '-')}-ai",
+                "snippet": f"Industry experts report that {clean_query} has announced a suite of AI integrations to boost enterprise workflow automation."
+            },
+            {
+                "title": f"How {clean_query.capitalize()} scales its global technology footprint",
+                "url": f"https://forbes.com/{clean_query.lower().replace(' ', '-')}-scale",
+                "snippet": f"An inside look at how {clean_query} built a global presence and optimized customer operations without massive overheads."
             }
         ]

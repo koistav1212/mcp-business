@@ -5,16 +5,20 @@ from services.research.models import ResearchContext, Source
 from services.research.providers.company_provider import CompanyProvider
 from services.research.providers.web_provider import WebProvider
 from services.research.providers.news_provider import NewsProvider
-from services.research.providers.financial_provider import FinancialProvider
+from services.research.providers.yfinance_provider import YFinanceProvider
+from services.research.providers.sec_edgar_provider import SECEdgarProvider
 from services.research.providers.people_provider import PeopleProvider
+from services.research.providers.reddit_provider import RedditProvider
 
 def test_provider_inheritance():
     # Verify that all providers subclass BaseProvider contract
     assert issubclass(CompanyProvider, BaseProvider)
     assert issubclass(WebProvider, BaseProvider)
     assert issubclass(NewsProvider, BaseProvider)
-    assert issubclass(FinancialProvider, BaseProvider)
+    assert issubclass(YFinanceProvider, BaseProvider)
+    assert issubclass(SECEdgarProvider, BaseProvider)
     assert issubclass(PeopleProvider, BaseProvider)
+    assert issubclass(RedditProvider, BaseProvider)
 
 @pytest.mark.asyncio
 async def test_orchestrator_zoho_success():
@@ -24,9 +28,9 @@ async def test_orchestrator_zoho_success():
     assert isinstance(context, ResearchContext)
     
     # 1. Company profile verification
-    assert context.company_profile.name == "Zoho Corporation"
-    assert context.company_profile.employee_count == 12000
-    assert context.company_profile.headquarters == "Chennai, India & Austin, Texas"
+    assert context.profile.name == "Zoho Corporation"
+    assert context.profile.employee_count.value == 12000
+    assert context.profile.headquarters.value == "Chennai, India & Austin, Texas"
     
     # 2. Technology stack
     assert "React" in context.technology_stack
@@ -51,9 +55,6 @@ async def test_orchestrator_zoho_success():
 
     # 6. Source citation check
     assert len(context.sources) >= 3
-    source_urls = [s.url for s in context.sources]
-    assert "https://builtwith.com/zoho.com" in source_urls
-    assert "https://linkedin.com/company/zoho" in source_urls
 
     # 7. Confidence & Timestamp metadata
     assert context.confidence_score > 0.5
@@ -61,14 +62,46 @@ async def test_orchestrator_zoho_success():
 
 @pytest.mark.asyncio
 async def test_conflict_detection_and_resolution():
-    orchestrator = ResearchOrchestrator()
-    context = await orchestrator.run("Zoho")
-
-    # Mismatch was introduced in financial_provider between Forbes ($1.0B) and Crunchbase ($1.2B)
+    from services.research.synthesizer import ResearchSynthesizer
+    from services.research.models import RawResearchBundle, EntityResolution
+    
+    synthesizer = ResearchSynthesizer()
+    
+    # Setup a bundle with conflicting financial reports
+    bundle = RawResearchBundle(
+        company_raw={"name": "Test Company", "source_title": "Source A", "source_url": "url A", "source_type": "official_website"},
+        web_raw={"technology_stack": []},
+        news_raw={"news": []},
+        financial_raw={
+            "financial_reports": [
+                {
+                    "source_title": "Forbes Business Profiles",
+                    "source_url": "https://forbes.com",
+                    "source_type": "commercial_database",
+                    "revenue_annual": "$1.0B"
+                },
+                {
+                    "source_title": "Crunchbase Corporate Profile",
+                    "source_url": "https://crunchbase.com",
+                    "source_type": "commercial_database",
+                    "revenue_annual": "$1.2B"
+                }
+            ]
+        },
+        people_raw={"leadership": []}
+    )
+    
+    entity = EntityResolution(company_name="Test Company", confidence=1.0)
+    context = await synthesizer.synthesize(
+        bundle=bundle,
+        entity=entity,
+        sec_data={"revenue_history": {}, "raw_data": {}},
+        yf_data={"raw_data": {}},
+        reddit_data={}
+    )
+    
     assert len(context.conflicts) >= 1
     assert "Conflict: Revenue figures mismatch" in context.conflicts[0]
-    
-    # Check that a resolved financial profile is still built
     assert context.financials is not None
     assert context.financials.revenue_annual in ["$1.0B", "$1.2B"]
 
@@ -77,9 +110,96 @@ async def test_orchestrator_generic_fallback():
     orchestrator = ResearchOrchestrator()
     context = await orchestrator.run("AcmeCorp")
 
-    assert context.company_profile.name == "Acmecorp"
-    assert context.company_profile.employee_count == 100
-    assert context.company_profile.headquarters == "Unknown"
+    assert context.profile.name == "Acmecorp"
+    assert context.profile.employee_count.value == 100
+    assert context.profile.headquarters.value == "Unknown"
     
-    # Fallback uses lower quality sources (directories), confidence score should reflect this
     assert context.confidence_score <= 0.6
+
+@pytest.mark.asyncio
+async def test_real_data_provider_nvidia():
+    orchestrator = ResearchOrchestrator()
+    context = await orchestrator.run("Nvidia")
+
+    assert isinstance(context, ResearchContext)
+    
+    # 1. Company profile verification from Wikipedia/yfinance
+    assert "Nvidia" in context.profile.name or "NVIDIA" in context.profile.name
+    assert "Santa Clara" in context.profile.headquarters.value or "California" in context.profile.headquarters.value
+    assert context.profile.employee_count.value > 1000
+    assert "nvidia.com" in context.profile.website
+    assert "Jensen Huang" in context.profile.founders
+    
+    # 2. Financials from yfinance/sec
+    assert context.financials is not None
+    assert context.financials.market_cap > 100_000_000_000 # Nvidia market cap is > $100B
+    assert len(context.financials.revenue_history) > 0
+    assert len(context.financials.net_income_history) > 0
+    assert len(context.financials.assets_history) > 0
+    assert len(context.financials.liabilities_history) > 0
+    assert len(context.financials.cash_flow_history) > 0
+
+    # 3. News aggregation
+    assert len(context.news) > 0
+    news_types = [n.type for n in context.news]
+    assert any(nt in ["product_launch", "earnings", "litigation", "acquisition", "investment", "leadership_change", "general"] for nt in news_types)
+
+    # 4. Raw data storage
+    assert "company" in context.raw_data
+    assert "financials" in context.raw_data
+    assert "news" in context.raw_data
+    assert "market_data" in context.raw_data
+    assert "cik" in context.raw_data["financials"]
+    assert "ticker" in context.raw_data["market_data"]
+
+@pytest.mark.asyncio
+async def test_confidence_gate_rejection():
+    orchestrator = ResearchOrchestrator()
+    # Misspelled company that won't resolve with high confidence
+    result = await orchestrator.run("Nivdia deep analysis")
+    
+    assert isinstance(result, dict)
+    assert result["status"] == "needs_clarification"
+    assert result["query"] == "Nivdia deep analysis"
+    assert len(result["closest_candidates"]) > 0
+    assert any("NVIDIA" in c["name"] for c in result["closest_candidates"])
+
+@pytest.mark.asyncio
+async def test_dynamic_intent_filtering_financial_only():
+    orchestrator = ResearchOrchestrator()
+    # Ask explicitly for financial history only
+    context = await orchestrator.run("Zoho", user_query="Get Zoho's financial history and stock valuation details only")
+    
+    assert isinstance(context, ResearchContext)
+    # Financials should exist
+    assert context.financials is not None
+    assert context.technology_stack is None
+    assert context.hiring_signals is None
+    assert context.leadership is None
+    assert context.news is None
+
+
+def test_no_hardcoded_company_branches():
+    import os
+    research_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    for root, dirs, files in os.walk(research_dir):
+        # Exclude the tests directory
+        if "tests" in root.split(os.sep):
+            continue
+        for file in files:
+            if file.endswith(".py"):
+                path = os.path.join(root, file)
+                with open(path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                lines = content.splitlines()
+                for line_idx, line in enumerate(lines, 1):
+                    line_lower = line.lower()
+                    if "zoho" in line_lower:
+                        raise AssertionError(f"Found forbidden substring 'zoho' in {path}:{line_idx}: {line.strip()}")
+                    if "acme" in line_lower:
+                        raise AssertionError(f"Found forbidden substring 'acme' in {path}:{line_idx}: {line.strip()}")
+                    if ".mock" in line_lower:
+                        raise AssertionError(f"Found forbidden substring '.MOCK' in {path}:{line_idx}: {line.strip()}")
+                    if '"note":' in line and "mocked" in line_lower:
+                        raise AssertionError(f"Found forbidden pattern '\"note\":' + 'Mocked' in {path}:{line_idx}: {line.strip()}")
+

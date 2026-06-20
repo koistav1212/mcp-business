@@ -5,6 +5,7 @@ from tools.base import BaseTool
 from storage.local import local_storage
 from pptx import Presentation
 from pptx.util import Inches, Pt
+from pptx.dml.color import RGBColor
 
 class SlideContent(BaseModel):
     title: str
@@ -14,6 +15,7 @@ class CreatePPTInput(BaseModel):
     filename: str
     presentation_title: str
     slides: List[SlideContent]
+    style: Optional[str] = "professional"
 
 class CreatePPTTool(BaseTool):
     name: str = "create_ppt"
@@ -27,6 +29,18 @@ class CreatePPTTool(BaseTool):
             
         presentation_title = kwargs["presentation_title"]
         slides_data = kwargs["slides"]
+        style = kwargs.get("style", "professional")
+
+        # RGB Colors
+        if style == "creative":
+            primary_color = RGBColor(99, 102, 241)  # Indigo
+            text_color = RGBColor(79, 70, 229)     # Violet
+        elif style == "minimalist":
+            primary_color = RGBColor(9, 9, 11)      # Black
+            text_color = RGBColor(39, 39, 42)      # Charcoal
+        else: # professional
+            primary_color = RGBColor(30, 41, 59)    # Dark Slate
+            text_color = RGBColor(51, 65, 85)      # Slate Grey
 
         prs = Presentation()
         
@@ -36,8 +50,16 @@ class CreatePPTTool(BaseTool):
         title_shape = slide.shapes.title
         subtitle_shape = slide.placeholders[1]
         
+        # Color Title
         title_shape.text = presentation_title
+        for paragraph in title_shape.text_frame.paragraphs:
+            for run in paragraph.runs:
+                run.font.color.rgb = primary_color
+
         subtitle_shape.text = "Business Intelligence Brief | Powered by AI Agent Framework"
+        for paragraph in subtitle_shape.text_frame.paragraphs:
+            for run in paragraph.runs:
+                run.font.color.rgb = text_color
 
         # 2. Add Bullet Content Slides
         bullet_layout = prs.slide_layouts[1]
@@ -56,6 +78,9 @@ class CreatePPTTool(BaseTool):
             body_shape = shapes.placeholders[1]
             
             title_shape.text = slide_title
+            for paragraph in title_shape.text_frame.paragraphs:
+                for run in paragraph.runs:
+                    run.font.color.rgb = primary_color
             
             tf = body_shape.text_frame
             if slide_points:
@@ -64,8 +89,16 @@ class CreatePPTTool(BaseTool):
                     p = tf.add_paragraph()
                     p.text = pt
                     p.level = 0
+                
+                # Apply text color to body bullets
+                for paragraph in tf.paragraphs:
+                    for run in paragraph.runs:
+                        run.font.color.rgb = text_color
             else:
                 tf.text = "No content details provided."
+                for paragraph in tf.paragraphs:
+                    for run in paragraph.runs:
+                        run.font.color.rgb = text_color
 
         # Save presentation
         temp_path = f"temp_gen_{filename}"
