@@ -20,13 +20,14 @@ from services.research.synthesizer import ResearchSynthesizer
 from services.research.analytics import AnalyticsCalculator
 from services.research.verifier import EntityVerifier
 from services.research.intent_engine import IntentEngine
-from services.research.research_planner import ResearchPlanner
+from services.research.research_planner import ResearchDirectorAgent
 from services.research.industry_classifier import IndustryClassifier
 from services.research.evidence_graph import EvidenceGraphBuilder
 from services.research.report_planner import ReportPlanner
 from services.research.llm_writer import LLMWriter
 from services.research.critic_agent import CriticAgent
 from services.research.json_llm import configured_json_generator
+from services.research.groq_extractor import extract_company_from_prompt_groq
 
 
 def generate_planned_business_report(context: ResearchContext):
@@ -262,7 +263,7 @@ class ResearchOrchestrator:
         json_generator = json_generator or configured_json_generator()
         self.intent_engine = IntentEngine(json_generator=json_generator)
         self.industry_classifier = IndustryClassifier()
-        self.research_planner = ResearchPlanner()
+        self.research_planner = ResearchDirectorAgent()
         self.evidence_builder = EvidenceGraphBuilder()
         self.report_planner = ReportPlanner()
         self.writer = LLMWriter(json_generator=json_generator)
@@ -277,6 +278,14 @@ class ResearchOrchestrator:
         logger = logging.getLogger("uvicorn.error")
         
         original_request = user_query or f"Research {company}"
+        
+        # Extract company name from the user's prompt using Groq if not explicitly provided
+        if not company and user_query:
+            extracted_company = await extract_company_from_prompt_groq(user_query)
+            if extracted_company:
+                company = extracted_company
+                logger.info(f"Groq extracted company: {company}")
+                
         intent = await self.intent_engine.extract(original_request, entity_hint=company)
         if not company:
             company = intent.entities[0] if intent.entities else None
@@ -288,8 +297,7 @@ class ResearchOrchestrator:
                 "closest_candidates": [],
                 "confidence": 0.0,
             }
-        industry = self.industry_classifier.classify(intent)
-        research_plan = self.research_planner.plan(intent, industry)
+        research_plan = await self.research_planner.plan(intent)
 
         # 1. Resolve entity candidates
         candidates = await self.entity_resolver.get_candidates(company)
@@ -396,7 +404,12 @@ class ResearchOrchestrator:
                     break
 
         if final_context:
-            industry = self.industry_classifier.classify(intent, final_context.profile.overview)
+            industry = await self.industry_classifier.classify(
+                intent=intent,
+                company_profile=final_context.profile,
+                website_data=web_results,
+                sec_data=sec_results
+            )
             intent.industry_focus = industry.industry
             evidence = self.evidence_builder.build(final_context, intent.required_data)
             report_plan = self.report_planner.plan(intent, industry, evidence)

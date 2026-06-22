@@ -9,6 +9,7 @@ import httpx
 
 from services.research.orchestrator import ResearchOrchestrator
 from services.research.models import ResearchContext
+from services.research.ui_response import build_ui_generation
 from core.config import settings
 
 # Import tools
@@ -47,7 +48,9 @@ async def run_workspace(req: ResearchRequest):
     result = await orchestrator.run(company=req.company, generate_reports=False, user_query=req.query)
     if isinstance(result, dict):
         return result
-    return result.model_dump(exclude_none=True)
+    response = result.model_dump(exclude_none=True)
+    response["ui_generation"] = build_ui_generation(result)
+    return response
 
 async def generate_content_via_llm(context: ResearchContext, format: str, style: str, prompt_text: str) -> Any:
     # Build a clean context representation for the LLM

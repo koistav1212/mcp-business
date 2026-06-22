@@ -62,6 +62,8 @@ class IntentPlan(BaseModel):
     report_type: str = "business intelligence"
     industry_focus: str = "unknown"
     time_horizon: str = "current"
+    workspace_type: str = "DEEP_RESEARCH"
+    report_style: str = "executive"
     depth: str = "standard"
     decision_type: str = "informational"
     entities: List[str] = Field(default_factory=list)
@@ -69,12 +71,17 @@ class IntentPlan(BaseModel):
     required_calculations: List[str] = Field(default_factory=list)
     required_visualizations: List[str] = Field(default_factory=list)
     required_sources: List[str] = Field(default_factory=list)
+    required_frameworks: List[str] = Field(default_factory=list)
     success_criteria: List[str] = Field(default_factory=list)
+    ui_generation_spec: Dict[str, Any] = Field(default_factory=dict)
     output_format: str = "json"
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
     clarification_needed: bool = False
 
 class ResearchPlan(BaseModel):
+    research_depth: str = "standard"
+    research_iterations: int = 1
+    minimum_sources: int = 5
     providers: List[str] = Field(default_factory=list)
     research_questions: List[str] = Field(default_factory=list)
     calculations: List[str] = Field(default_factory=list)
@@ -82,6 +89,7 @@ class ResearchPlan(BaseModel):
 
 class IndustryContext(BaseModel):
     industry: str = "general"
+    sub_industry: Optional[str] = None
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
     key_metrics: List[str] = Field(default_factory=list)
     strategic_themes: List[str] = Field(default_factory=list)

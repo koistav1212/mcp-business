@@ -1,38 +1,89 @@
-from services.planning.research_planner import DynamicResearchPlanner
-from services.research.models import IndustryContext, IntentPlan, ResearchPlan
+import json
+import logging
+from typing import Optional, Callable, Awaitable, Dict, Any
 
-class ResearchPlanner:
-    """Selects only provider capabilities needed for the stated decision."""
+from services.research.models import IntentPlan, ResearchPlan
+from services.research.json_llm import configured_json_generator
 
-    def plan(self, intent: IntentPlan, industry: IndustryContext) -> ResearchPlan:
-        dynamic_planner = DynamicResearchPlanner()
-        # Convert intent model to dict
-        plan_dict = {
-            "intent": intent.decision_type,
-            "required_sources": intent.required_sources
+logger = logging.getLogger("uvicorn.error")
+
+DIRECTOR_SYSTEM_PROMPT = """You are the Research Director Agent for a Business Intelligence platform.
+Your task is to analyze the user's intent and output a comprehensive research plan.
+
+Output a JSON object containing:
+1. "research_depth": The depth of research required ("shallow", "standard", "deep").
+2. "required_sources": A list of source providers. Choose from:
+   - "company" (official website/profile)
+   - "news" (news articles)
+   - "sec" (SEC Edgar filings)
+   - "market" (YFinance data)
+   - "people" (LinkedIn/hiring data)
+   - "technology" (web/tech stack data)
+   - "social" (Reddit/social sentiment)
+3. "research_questions": A list of specific research questions to answer.
+4. "research_iterations": Number of search/synthesis loops (integer between 1 and 10).
+5. "minimum_sources": Minimum number of total sources to require (integer between 5 and 50).
+
+Return ONLY the raw JSON object. Do not include markdown code block formatting (like ```json ... ```).
+"""
+
+class ResearchDirectorAgent:
+    """Dynamically plans the research strategy and specifies required provider configurations."""
+
+    def __init__(self, json_generator: Optional[Callable[[str, str], Awaitable[Dict[str, Any]]]] = None):
+        self.json_generator = json_generator or configured_json_generator()
+
+    async def plan(self, intent: IntentPlan) -> ResearchPlan:
+        # Fallback plan in case of LLM failure
+        fallback_plan = {
+            "research_depth": "standard",
+            "required_sources": ["company", "news"],
+            "research_questions": [f"What evidence supports the intent: {intent.decision_type}?"],
+            "research_iterations": 1,
+            "minimum_sources": 5
         }
-        tasks = dynamic_planner.plan(plan_dict)
-        
-        # Map task providers to actual orchestrator providers
+
+        if self.json_generator:
+            try:
+                payload = await self.json_generator(
+                    DIRECTOR_SYSTEM_PROMPT,
+                    json.dumps({
+                        "primary_goal": intent.primary_goal,
+                        "decision_type": intent.decision_type,
+                        "workspace_type": intent.workspace_type
+                    })
+                )
+                
+                # Merge fallback with payload to handle missing fields
+                fallback_plan.update(payload)
+            except Exception as e:
+                logger.warning(f"ResearchDirectorAgent LLM planning failed: {e}. Using fallback.")
+
+        # Map task providers to actual orchestrator provider names
         provider_map = {
             "company": "company_provider",
             "people": "people_provider",
-            "web": "technology_provider",
+            "technology": "technology_provider",
             "sec": "sec_provider",
-            "yfinance": "market_provider",
+            "market": "market_provider",
             "news": "news_provider",
-            "reddit": "social_provider"
+            "social": "social_provider",
+            # accept alternate names
+            "yfinance": "market_provider",
+            "reddit": "social_provider",
+            "web": "technology_provider"
         }
+        
+        selected_sources = fallback_plan.get("required_sources", [])
         
         providers = []
         rationale = {}
-        for t in tasks:
-            short_p = t["provider"]
-            full_p = provider_map.get(short_p)
+        for short_p in selected_sources:
+            full_p = provider_map.get(short_p.lower())
             if full_p:
                 providers.append(full_p)
-                rationale[full_p] = f"dynamically selected for task: {t['task']}"
-                
+                rationale[full_p] = f"dynamically selected for depth: {fallback_plan.get('research_depth')}"
+
         # ensure default company and news provider are present if not already
         if "company_provider" not in providers:
             providers.insert(0, "company_provider")
@@ -48,8 +99,11 @@ class ResearchPlanner:
         unique_providers = list(dict.fromkeys(providers))
 
         return ResearchPlan(
-            providers=[provider for provider in provider_order if provider in unique_providers],
-            research_questions=[f"What evidence is required to support: {item}?" for item in intent.required_data],
+            research_depth=fallback_plan.get("research_depth", "standard"),
+            research_iterations=fallback_plan.get("research_iterations", 1),
+            minimum_sources=fallback_plan.get("minimum_sources", 5),
+            providers=[p for p in provider_order if p in unique_providers],
+            research_questions=fallback_plan.get("research_questions", []),
             calculations=intent.required_calculations,
             rationale=rationale,
         )

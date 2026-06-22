@@ -27,6 +27,13 @@ class IntentEngine:
         req_sources = plan_dict.get("required_sources", [])
         req_analyses = plan_dict.get("required_analytics", [])
         framework = plan_dict.get("report_framework", "general_brief")
+        workspace_type = plan_dict.get("workspace_type", "DEEP_RESEARCH")
+        report_style = plan_dict.get("report_style", "executive")
+        required_frameworks = plan_dict.get("required_frameworks", [])
+        ui_generation_spec = plan_dict.get("ui_generation", {})
+        
+        # Merge data from required_data directly if provided by the new LLM struct
+        explicit_required_data = plan_dict.get("required_data", [])
         
         # Prioritize entity_hint if provided, otherwise fallback to target_company
         target_company = entity_hint or plan_dict.get("target_company")
@@ -49,6 +56,7 @@ class IntentEngine:
         if "web" in req_sources or "competitors" in req_sources:
             required_data.append("technology stack")
             
+        required_data.extend(explicit_required_data)
         required_data = list(dict.fromkeys(required_data))
         
         # Calculations & visualizations
@@ -67,13 +75,17 @@ class IntentEngine:
             industry_focus=plan_dict.get("industry", "general"),
             time_horizon=plan_dict.get("time_horizon", "current"),
             depth=plan_dict.get("analysis_depth", "standard"),
+            workspace_type=workspace_type,
+            report_style=report_style,
             decision_type=intent,
             entities=[target_company] if target_company else [],
             required_data=required_data,
             required_calculations=calculations,
             required_visualizations=visualizations,
             required_sources=req_sources,
+            required_frameworks=required_frameworks,
             success_criteria=["answer the stated decision", "support material claims with evidence"],
+            ui_generation_spec=ui_generation_spec,
             output_format="json",
             confidence=1.0,
             clarification_needed=False
