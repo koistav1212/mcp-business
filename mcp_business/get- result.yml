@@ -1,0 +1,16 @@
+info:
+  name: get- result
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: http://127.0.0.1:8000/workspace/status/300d7fa3-a9e6-4b45-90c0-c537c9d1ea77
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+​

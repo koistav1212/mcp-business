@@ -17,8 +17,11 @@ class Settings(BaseSettings):
     API_PORT: int = Field(default=8000)
 
     # LLM Settings
-    LLM_PROVIDER: str = Field(default="openai")
+    LLM_PROVIDER: str = Field(default="openrouter")
     OPENAI_API_KEY: str = Field(default="sk-placeholder")
+    OPENROUTER_API_KEY: str = Field(default="sk-placeholder")
+    GROQ_API_KEY: str = Field(default="sk-placeholder")
+    TOGETHER_API_KEY: str = Field(default="sk-placeholder")
     LLM_MODEL: str = Field(default="gpt-4o")
 
     # Logging Config

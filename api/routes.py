@@ -3,11 +3,11 @@ import json
 import logging
 from datetime import datetime
 from typing import Optional, List, Dict, Any
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 import httpx
 
-from services.research.orchestrator import ResearchOrchestrator
+from services.host.host_agent import HostAgent
 from services.research.models import ResearchContext
 from services.research.ui_response import build_ui_generation
 from core.config import settings
@@ -19,6 +19,10 @@ from tools.create_docs import CreateDocsTool
 
 router = APIRouter()
 logger = logging.getLogger("uvicorn.error")
+
+# In-memory dictionary to store background task status and results
+tasks_db = {}
+import uuid
 
 class ResearchRequest(BaseModel):
     company: Optional[str] = None
@@ -36,42 +40,69 @@ class GenerateArtifactResponse(BaseModel):
     format: str
 
 @router.post("/workspace/run")
-async def run_workspace(req: ResearchRequest):
+async def run_workspace(req: ResearchRequest, background_tasks: BackgroundTasks):
     """
     Triggers the central ResearchOrchestrator for the target company
-    and returns a fully resolved ResearchContext.
+    in the background to prevent HTTP timeouts.
     """
     if not req.company and not req.query:
         raise HTTPException(status_code=400, detail="Either company or query must be provided")
 
-    orchestrator = ResearchOrchestrator()
-    result = await orchestrator.run(company=req.company, generate_reports=False, user_query=req.query)
-    if isinstance(result, dict):
-        return result
-    response = result.model_dump(exclude_none=True)
-    response["ui_generation"] = build_ui_generation(result)
-    return response
+    task_id = str(uuid.uuid4())
+    tasks_db[task_id] = {
+        "status": "processing",
+        "result": None,
+        "error": None
+    }
+    
+    query = req.query or f"Research {req.company}"
 
-async def generate_content_via_llm(context: ResearchContext, format: str, style: str, prompt_text: str) -> Any:
+    async def _run_task(task_id: str, query: str):
+        try:
+            import json
+            orchestrator = HostAgent()
+            result = await orchestrator.run(query)
+            tasks_db[task_id]["status"] = "completed"
+            tasks_db[task_id]["result"] = json.loads(json.dumps(result, default=str))
+        except Exception as e:
+            logger.error(f"Task {task_id} failed: {e}")
+            tasks_db[task_id]["status"] = "failed"
+            tasks_db[task_id]["error"] = str(e)
+
+    background_tasks.add_task(_run_task, task_id, query)
+    return {
+        "task_id": task_id, 
+        "status": "processing", 
+        "message": "Task started in background. Poll /workspace/status/{task_id} for results."
+    }
+
+@router.get("/workspace/status/{task_id}")
+async def get_workspace_status(task_id: str):
+    """
+    Check the status of a background research or artifact generation task.
+    """
+    task = tasks_db.get(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return task
+
+async def generate_content_via_llm(context: dict, format: str, style: str, prompt_text: str) -> Any:
     # Build a clean context representation for the LLM
+    profile = context.get("profile", {})
+    financials = context.get("financials", {})
+    
     context_data = {
-        "company_name": context.profile.name,
-        "overview": context.profile.overview,
-        "headquarters": context.profile.headquarters.value if context.profile.headquarters else "Unknown",
-        "employee_count": context.profile.employee_count.value if context.profile.employee_count else 0,
-        "website": context.profile.website,
-        "founders": context.profile.founders,
-        "financials": {
-            "revenue_annual": context.financials.revenue_annual,
-            "funding_total": context.financials.funding_total,
-            "last_round": context.financials.last_round,
-            "market_cap": context.financials.market_cap,
-            "pe_ratio": context.financials.pe_ratio
-        } if context.financials else {},
-        "competitors": [{"name": c.name, "segment": c.segment} for c in context.competitors],
-        "leadership": [{"name": l.name, "role": l.role} for l in context.leadership],
-        "technology_stack": context.technology_stack,
-        "hiring_signals": [{"role": s.role_title, "department": s.department} for s in context.hiring_signals]
+        "company_name": profile.get("name"),
+        "overview": profile.get("overview"),
+        "headquarters": profile.get("headquarters"),
+        "employee_count": profile.get("employee_count"),
+        "website": profile.get("website"),
+        "founders": profile.get("founders", []),
+        "financials": financials,
+        "competitors": context.get("competitors", []),
+        "leadership": context.get("leadership", []),
+        "technology_stack": context.get("technology_stack", []),
+        "hiring_signals": context.get("hiring_signals", [])
     }
     
     system_instruction = "You are a professional business intelligence consultant."
@@ -149,12 +180,13 @@ Return your response in the following JSON format:
         content = result["choices"][0]["message"]["content"]
         return json.loads(content)
 
-def generate_custom_report_content(context: ResearchContext, format: str, style: str, prompt_text: str) -> Any:
-    company_name = context.profile.name
-    hq = context.profile.headquarters.value if context.profile.headquarters else "Unknown"
-    size = context.profile.employee_count.value if context.profile.employee_count else 0
+def generate_custom_report_content(context: dict, format: str, style: str, prompt_text: str) -> Any:
+    profile = context.get("profile", {})
+    company_name = profile.get("name", "Unknown")
+    hq = profile.get("headquarters", "Unknown")
+    size = profile.get("employee_count", 0)
     size_str = f"{size:,}" if size else "Unknown"
-    website = context.profile.website
+    website = profile.get("website", "")
     
     # 1. Parse prompt keywords to customize focus
     prompt_lower = (prompt_text or "").lower()
@@ -181,23 +213,25 @@ def generate_custom_report_content(context: ResearchContext, format: str, style:
             chosen_framework = "SWOT"
             
     # Gather variables
+    financials = context.get("financials", {})
     financials_text = "N/A"
-    if context.financials:
+    if financials:
         financials_text = (
-            f"Annual Revenue: {context.financials.revenue_annual} | "
-            f"Funding Total: {context.financials.funding_total} | "
-            f"Last Round: {context.financials.last_round}"
+            f"Annual Revenue: {financials.get('revenue_annual')} | "
+            f"Funding Total: {financials.get('funding_total')} | "
+            f"Last Round: {financials.get('last_round')}"
         )
-    competitors_list = [c.name for c in context.competitors]
+    competitors_list = [c.get("name") for c in context.get("competitors", [])]
     competitors_str = ", ".join(competitors_list) if competitors_list else "industry peers"
     
-    leaders_list = [f"{l.name} ({l.role})" for l in context.leadership]
+    leaders_list = [f"{l.get('name')} ({l.get('role')})" for l in context.get("leadership", [])]
     leaders_str = ", ".join(leaders_list) if leaders_list else "executive team"
     
-    hiring_list = [f"{h.role_title} in {h.department} ({h.location})" for h in context.hiring_signals]
+    hiring_list = [f"{h.get('role_title')} in {h.get('department')} ({h.get('location')})" for h in context.get("hiring_signals", [])]
     hiring_str = "; ".join(hiring_list[:3]) if hiring_list else "talent expansion"
     
-    tech_stack_str = ", ".join(context.technology_stack) if context.technology_stack else "modern tech stack"
+    tech_stack = context.get("technology_stack", [])
+    tech_stack_str = ", ".join(tech_stack) if tech_stack else "modern tech stack"
     
     # Construct customizable sections
     summary_section = (
@@ -334,9 +368,9 @@ def generate_custom_report_content(context: ResearchContext, format: str, style:
             {
                 "title": "Financial Profile",
                 "points": [
-                    f"Annual Revenue Indicator: {context.financials.revenue_annual if context.financials else 'N/A'}",
-                    f"Total Funding: {context.financials.funding_total if context.financials else 'N/A'}",
-                    f"Last Round: {context.financials.last_round if context.financials else 'N/A'}"
+                    f"Annual Revenue Indicator: {financials.get('revenue_annual') if financials else 'N/A'}",
+                    f"Total Funding: {financials.get('funding_total') if financials else 'N/A'}",
+                    f"Last Round: {financials.get('last_round') if financials else 'N/A'}"
                 ]
             },
             {
@@ -361,11 +395,11 @@ def generate_custom_report_content(context: ResearchContext, format: str, style:
             
         return {"presentation_title": presentation_title, "slides": slides}
 
-@router.post("/workspace/generate-artifact", response_model=GenerateArtifactResponse)
-async def generate_artifact(req: GenerateArtifactRequest):
+@router.post("/workspace/generate-artifact")
+async def generate_artifact(req: GenerateArtifactRequest, background_tasks: BackgroundTasks):
     """
     On-demand document/artifact generation (PDF, PPT, Word/Docs) for a target company
-    based on custom user prompt, style and format constraints.
+    executed as a background task to prevent HTTP timeouts.
     """
     company = req.company
     if not company:
@@ -377,68 +411,91 @@ async def generate_artifact(req: GenerateArtifactRequest):
         if not company:
             raise HTTPException(status_code=400, detail="Company name could not be inferred. Please provide it explicitly.")
 
-    # 1. Run the research pipeline (without auto generation)
-    orchestrator = ResearchOrchestrator()
-    context = await orchestrator.run(company=company, generate_reports=False)
-    
-    if not context:
-        raise HTTPException(status_code=404, detail=f"No research data found for company: {company}")
-        
-    if isinstance(context, dict) and context.get("status") == "needs_clarification":
-        raise HTTPException(status_code=400, detail=context.get("message", "Clarification needed"))
-        
     format_clean = req.format.lower().strip()
-    style_clean = req.style.lower().strip() if req.style else "professional"
-    prompt_clean = req.prompt.strip() if req.prompt else ""
-    
     if format_clean not in ["pdf", "ppt", "docs"]:
         raise HTTPException(status_code=400, detail="Invalid format. Supported formats: pdf, ppt, docs")
-        
-    # 2. Content synthesis
-    content = None
-    if settings.OPENAI_API_KEY and settings.OPENAI_API_KEY != "sk-placeholder":
+
+    task_id = str(uuid.uuid4())
+    tasks_db[task_id] = {
+        "status": "processing",
+        "result": None,
+        "error": None
+    }
+
+    async def _run_artifact_task(task_id: str, req: GenerateArtifactRequest, company: str, format_clean: str):
         try:
-            content = await generate_content_via_llm(context, format_clean, style_clean, prompt_clean)
-        except Exception as e:
-            logger.warning(f"LLM content generation failed, falling back to rule-based template: {e}")
+            # 1. Run the research pipeline (without auto generation)
+            orchestrator = HostAgent()
+            query = req.prompt or f"Research {company}"
+            context = await orchestrator.run(query)
             
-    if not content:
-        content = generate_custom_report_content(context, format_clean, style_clean, prompt_clean)
-        
-    # 3. Call generation tools based on format
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    company_slug = req.company.lower().replace(" ", "_")
+            if not context:
+                raise ValueError(f"No research data found for company: {company}")
+                
+            if isinstance(context, dict) and context.get("status") == "needs_clarification":
+                raise ValueError(context.get("message", "Clarification needed"))
+                
+            style_clean = req.style.lower().strip() if req.style else "professional"
+            prompt_clean = req.prompt.strip() if req.prompt else ""
+            
+            # 2. Content synthesis
+            content = None
+            if settings.OPENAI_API_KEY and settings.OPENAI_API_KEY != "sk-placeholder":
+                try:
+                    content = await generate_content_via_llm(context, format_clean, style_clean, prompt_clean)
+                except Exception as e:
+                    logger.warning(f"LLM content generation failed, falling back to rule-based template: {e}")
+                    
+            if not content:
+                content = generate_custom_report_content(context, format_clean, style_clean, prompt_clean)
+                
+            # 3. Call generation tools based on format
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            company_slug = company.lower().replace(" ", "_")
+            
+            if format_clean == "pdf":
+                tool = CreatePDFTool()
+                filename = f"{company_slug}_report_{timestamp}.pdf"
+                url = await tool.execute(
+                    filename=filename,
+                    title=content["title"],
+                    body_text=content["body"],
+                    style=style_clean
+                )
+            elif format_clean == "docs":
+                tool = CreateDocsTool()
+                filename = f"{company_slug}_report_{timestamp}.docx"
+                url = await tool.execute(
+                    filename=filename,
+                    title=content["title"],
+                    body_text=content["body"],
+                    style=style_clean
+                )
+            else:  # ppt
+                tool = CreatePPTTool()
+                filename = f"{company_slug}_deck_{timestamp}.pptx"
+                url = await tool.execute(
+                    filename=filename,
+                    presentation_title=content["presentation_title"],
+                    slides=content["slides"],
+                    style=style_clean
+                )
+                
+            tasks_db[task_id]["status"] = "completed"
+            tasks_db[task_id]["result"] = {
+                "url": url,
+                "filename": filename,
+                "format": format_clean
+            }
+        except Exception as e:
+            logger.error(f"Artifact task {task_id} failed: {e}")
+            tasks_db[task_id]["status"] = "failed"
+            tasks_db[task_id]["error"] = str(e)
+
+    background_tasks.add_task(_run_artifact_task, task_id, req, company, format_clean)
     
-    if format_clean == "pdf":
-        tool = CreatePDFTool()
-        filename = f"{company_slug}_report_{timestamp}.pdf"
-        url = await tool.execute(
-            filename=filename,
-            title=content["title"],
-            body_text=content["body"],
-            style=style_clean
-        )
-    elif format_clean == "docs":
-        tool = CreateDocsTool()
-        filename = f"{company_slug}_report_{timestamp}.docx"
-        url = await tool.execute(
-            filename=filename,
-            title=content["title"],
-            body_text=content["body"],
-            style=style_clean
-        )
-    else:  # ppt
-        tool = CreatePPTTool()
-        filename = f"{company_slug}_deck_{timestamp}.pptx"
-        url = await tool.execute(
-            filename=filename,
-            presentation_title=content["presentation_title"],
-            slides=content["slides"],
-            style=style_clean
-        )
-        
-    return GenerateArtifactResponse(
-        url=url,
-        filename=filename,
-        format=format_clean
-    )
+    return {
+        "task_id": task_id, 
+        "status": "processing", 
+        "message": "Artifact generation started in background. Poll /workspace/status/{task_id} for results."
+    }

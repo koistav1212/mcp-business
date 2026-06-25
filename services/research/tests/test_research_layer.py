@@ -1,6 +1,6 @@
 import pytest
 from services.research.base import BaseProvider
-from services.research.orchestrator import ResearchOrchestrator
+from services.host.host_agent import HostAgent
 from services.research.models import ResearchContext, Source
 from services.research.providers.company_provider import CompanyProvider
 from services.research.providers.web_provider import WebProvider
@@ -22,43 +22,45 @@ def test_provider_inheritance():
 
 @pytest.mark.asyncio
 async def test_orchestrator_zoho_success():
-    orchestrator = ResearchOrchestrator()
-    context = await orchestrator.run("Zoho")
+    orchestrator = HostAgent()
+    context = await orchestrator.run("Research Zoho")
 
-    assert isinstance(context, ResearchContext)
+    assert isinstance(context, dict)
     
     # 1. Company profile verification
-    assert context.profile.name == "Zoho Corporation"
-    assert context.profile.employee_count.value == 12000
-    assert context.profile.headquarters.value == "Chennai, India & Austin, Texas"
+    profile = context.get("profile", {})
+    assert profile.get("name") == "Zoho Corporation"
+    assert profile.get("employee_count", {}).get("value") == 12000
+    assert profile.get("headquarters", {}).get("value") == "Chennai, India & Austin, Texas"
     
     # 2. Technology stack
-    assert "React" in context.technology_stack
-    assert "PostgreSQL" in context.technology_stack
+    tech_stack = context.get("technology_stack", [])
+    assert "React" in tech_stack
+    assert "PostgreSQL" in tech_stack
     
     # 3. Leadership & Competitors
-    leaders = [l.name for l in context.leadership]
+    leaders = [l.get("name") for l in context.get("leadership", [])]
     assert "Sridhar Vembu" in leaders
     assert "Radha Vembu" in leaders
     
-    competitors = [c.name for c in context.competitors]
+    competitors = [c.get("name") for c in context.get("competitors", [])]
     assert "Salesforce" in competitors
     assert "HubSpot" in competitors
 
     # 4. News aggregation
-    news_titles = [n.title for n in context.news]
+    news_titles = [n.get("title") for n in context.get("news", [])]
     assert "Zoho launches new AI-driven CRM tools" in news_titles
 
     # 5. Hiring Signals
-    signals = [s.role_title for s in context.hiring_signals]
+    signals = [s.get("role_title") for s in context.get("hiring_signals", [])]
     assert "Senior React Developer" in signals
 
     # 6. Source citation check
-    assert len(context.sources) >= 3
+    assert len(context.get("sources", [])) >= 3
 
     # 7. Confidence & Timestamp metadata
-    assert context.confidence_score > 0.5
-    assert context.generated_at is not None
+    assert context.get("confidence_score", 0) > 0.5
+    assert context.get("generated_at") is not None
 
 @pytest.mark.asyncio
 async def test_conflict_detection_and_resolution():
@@ -107,54 +109,59 @@ async def test_conflict_detection_and_resolution():
 
 @pytest.mark.asyncio
 async def test_orchestrator_generic_fallback():
-    orchestrator = ResearchOrchestrator()
+    orchestrator = HostAgent()
     context = await orchestrator.run("AcmeCorp")
 
-    assert context.profile.name == "Acmecorp"
-    assert context.profile.employee_count.value == 100
-    assert context.profile.headquarters.value == "Unknown"
+    profile = context.get("profile", {})
+    assert profile.get("name") == "Acmecorp"
+    assert profile.get("employee_count", {}).get("value") == 100
+    assert profile.get("headquarters", {}).get("value") == "Unknown"
     
-    assert context.confidence_score <= 0.6
+    assert context.get("confidence_score", 1.0) <= 0.6
 
 @pytest.mark.asyncio
 async def test_real_data_provider_nvidia():
-    orchestrator = ResearchOrchestrator()
-    context = await orchestrator.run("Nvidia")
+    orchestrator = HostAgent()
+    context = await orchestrator.run("Research Nvidia")
 
-    assert isinstance(context, ResearchContext)
+    assert isinstance(context, dict)
     
     # 1. Company profile verification from Wikipedia/yfinance
-    assert "Nvidia" in context.profile.name or "NVIDIA" in context.profile.name
-    assert "Santa Clara" in context.profile.headquarters.value or "California" in context.profile.headquarters.value
-    assert context.profile.employee_count.value > 1000
-    assert "nvidia.com" in context.profile.website
-    assert "Jensen Huang" in context.profile.founders
+    profile = context.get("profile", {})
+    assert "Nvidia" in profile.get("name", "") or "NVIDIA" in profile.get("name", "")
+    assert "Santa Clara" in profile.get("headquarters", {}).get("value", "") or "California" in profile.get("headquarters", {}).get("value", "")
+    assert profile.get("employee_count", {}).get("value", 0) > 1000
+    assert "nvidia.com" in profile.get("website", "")
+    assert "Jensen Huang" in profile.get("founders", [])
     
     # 2. Financials from yfinance/sec
-    assert context.financials is not None
-    assert context.financials.market_cap > 100_000_000_000 # Nvidia market cap is > $100B
-    assert len(context.financials.revenue_history) > 0
-    assert len(context.financials.net_income_history) > 0
-    assert len(context.financials.assets_history) > 0
-    assert len(context.financials.liabilities_history) > 0
-    assert len(context.financials.cash_flow_history) > 0
+    financials = context.get("financials", {})
+    assert financials is not None
+    assert financials.get("market_cap", 0) > 100_000_000_000 # Nvidia market cap is > $100B
+    assert len(financials.get("revenue_history", {})) > 0
+    assert len(financials.get("net_income_history", {})) > 0
+    assert len(financials.get("assets_history", {})) > 0
+    assert len(financials.get("liabilities_history", {})) > 0
+    assert len(financials.get("cash_flow_history", {})) > 0
 
     # 3. News aggregation
-    assert len(context.news) > 0
-    news_types = [n.type for n in context.news]
+    news = context.get("news", [])
+    assert len(news) > 0
+    news_types = [n.get("type") for n in news]
     assert any(nt in ["product_launch", "earnings", "litigation", "acquisition", "investment", "leadership_change", "general"] for nt in news_types)
 
     # 4. Raw data storage
-    assert "company" in context.raw_data
-    assert "financials" in context.raw_data
-    assert "news" in context.raw_data
-    assert "market_data" in context.raw_data
-    assert "cik" in context.raw_data["financials"]
-    assert "ticker" in context.raw_data["market_data"]
+    raw_data = context.get("raw_data", {})
+    assert "company" in raw_data
+    assert "financials" in raw_data
+    assert "news" in raw_data
+    assert "market_data" in raw_data
+    assert "cik" in raw_data.get("financials", {})
+    assert "ticker" in raw_data.get("market_data", {})
 
 @pytest.mark.asyncio
 async def test_confidence_gate_rejection():
-    orchestrator = ResearchOrchestrator()
+    orchestrator = HostAgent()
     # Misspelled company that won't resolve with high confidence
     result = await orchestrator.run("Nivdia deep analysis")
     
@@ -166,17 +173,17 @@ async def test_confidence_gate_rejection():
 
 @pytest.mark.asyncio
 async def test_dynamic_intent_filtering_financial_only():
-    orchestrator = ResearchOrchestrator()
+    orchestrator = HostAgent()
     # Ask explicitly for financial history only
-    context = await orchestrator.run("Zoho", user_query="Get Zoho's financial history and stock valuation details only")
+    context = await orchestrator.run("Get Zoho's financial history and stock valuation details only")
     
-    assert isinstance(context, ResearchContext)
+    assert isinstance(context, dict)
     # Financials should exist
-    assert context.financials is not None
-    assert context.technology_stack is None
-    assert context.hiring_signals is None
-    assert context.leadership is None
-    assert context.news is None
+    assert context.get("financials") is not None
+    assert context.get("technology_stack") is None
+    assert context.get("hiring_signals") is None
+    assert context.get("leadership") is None
+    assert context.get("news") is None
 
 
 def test_no_hardcoded_company_branches():

@@ -39,8 +39,8 @@ class ResearchDirectorAgent:
             "research_depth": "standard",
             "required_sources": ["company", "news"],
             "research_questions": [f"What evidence supports the intent: {intent.decision_type}?"],
-            "research_iterations": 1,
-            "minimum_sources": 5
+            "research_iterations": 5,
+            "minimum_sources": 50
         }
 
         if self.json_generator:
@@ -100,8 +100,8 @@ class ResearchDirectorAgent:
 
         return ResearchPlan(
             research_depth=fallback_plan.get("research_depth", "standard"),
-            research_iterations=fallback_plan.get("research_iterations", 1),
-            minimum_sources=fallback_plan.get("minimum_sources", 5),
+            research_iterations=fallback_plan.get("research_iterations", 5),
+            minimum_sources=fallback_plan.get("minimum_sources", 50),
             providers=[p for p in provider_order if p in unique_providers],
             research_questions=fallback_plan.get("research_questions", []),
             calculations=intent.required_calculations,

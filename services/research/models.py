@@ -80,8 +80,8 @@ class IntentPlan(BaseModel):
 
 class ResearchPlan(BaseModel):
     research_depth: str = "standard"
-    research_iterations: int = 1
-    minimum_sources: int = 5
+    research_iterations: int = 5
+    minimum_sources: int = 50
     providers: List[str] = Field(default_factory=list)
     research_questions: List[str] = Field(default_factory=list)
     calculations: List[str] = Field(default_factory=list)
@@ -133,10 +133,21 @@ class DraftReport(BaseModel):
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
     evidence_gaps: List[str] = Field(default_factory=list)
 
+from pydantic import ConfigDict
+
 class CriticResult(BaseModel):
-    valid: bool
+    valid: bool = True
     issues: List[str] = Field(default_factory=list)
     recommended_fixes: List[str] = Field(default_factory=list)
+    score: float = 0.0
+    feedback: List[str] = Field(default_factory=list)
+    missing_data: List[str] = Field(default_factory=list)
+    hallucinations_detected: List[str] = Field(default_factory=list)
+    checks: Dict[str, bool] = Field(default_factory=dict)
+    coverage_score: float = 0.0
+    completeness_score: float = 0.0
+    
+    model_config = ConfigDict(extra='allow')
 
 class SocialSentiment(BaseModel):
     bullish: float = 0.0
