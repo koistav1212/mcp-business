@@ -469,9 +469,9 @@ class UIAgent:
 
         checks = {
             # Entity
-            "entity.company_name":              is_real(context_dict.get("entity", {}).get("company_name")),
-            "entity.ticker":                    is_real(context_dict.get("entity", {}).get("ticker")),
-            "entity.exchange":                  context_dict.get("entity", {}).get("exchange") not in (None, "UNKNOWN", "PRIVATE"),
+            "entity.company_name":              is_real((context_dict.get("entity") or {}).get("company_name")),
+            "entity.ticker":                    is_real((context_dict.get("entity") or {}).get("ticker")),
+            "entity.exchange":                  (context_dict.get("entity") or {}).get("exchange") not in (None, "UNKNOWN", "PRIVATE"),
             # Profile
             "profile.overview":                 is_real((context_dict.get("profile") or {}).get("overview")),
             "profile.headquarters":             is_real((context_dict.get("profile") or {}).get("headquarters")),

@@ -1,7 +1,7 @@
 import json
 import logging
 from services.models.planning_models import EntityExtractionResult
-from services.research.json_llm import ModelRouter
+from services.llm.provider_router import ProviderRouter
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -25,15 +25,13 @@ Return ONLY the raw JSON object. Do not include markdown formatting.
 """
 
 class EntityExtractorAgent:
-    def __init__(self):
-        self.model = ModelRouter().get_model_for_role("entity_extractor")
-
     async def execute(self, user_query: str) -> EntityExtractionResult:
-        if self.model:
+        if True:
             try:
-                payload = await self.model.generate_json(
-                    EXTRACTOR_SYSTEM_PROMPT,
-                    json.dumps({"prompt": user_query})
+                payload = await ProviderRouter.generate_json(
+                    agent_name="entity_extractor",
+                    system_prompt=EXTRACTOR_SYSTEM_PROMPT,
+                    user_prompt=json.dumps({"prompt": user_query})
                 )
                 return EntityExtractionResult.model_validate(payload)
             except Exception as e:

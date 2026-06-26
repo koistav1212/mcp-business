@@ -1,22 +1,17 @@
 import httpx
 from typing import Dict, Any, List, Optional
 from services.research.base import BaseProvider
+from services.knowledge.evidence import ResearchEvidence
+from services.knowledge.citation_manager import CitationManager
 
 class SECEdgarProvider(BaseProvider):
     """
     Fetches official 10-K filing metrics from the SEC EDGAR CompanyFacts API.
-    Supports 10 years of financial history for:
-    - Revenue
-    - Net Income
-    - Assets
-    - Liabilities
-    - Operating Cash Flow
-    - Shares Outstanding
+    Returns typed ResearchEvidence lists.
     """
 
     def _get_sec_metric(self, facts: dict, concepts: list) -> Dict[str, float]:
         merged_by_year = {}
-        # Try concepts in reverse order of priority, so higher priority overrides them
         for c in reversed(concepts):
             if c in facts:
                 concept_data = facts[c]
@@ -26,7 +21,6 @@ class SECEdgarProvider(BaseProvider):
                 unit_key = list(units.keys())[0]
                 entries = units[unit_key]
                 
-                # Filter for 10-K filings
                 k_entries = [e for e in entries if e.get("form") == "10-K"]
                 for e in k_entries:
                     fy = e.get("fy")
@@ -34,39 +28,30 @@ class SECEdgarProvider(BaseProvider):
                     val = e.get("val")
                     if fy is None or val is None:
                         continue
-                    # Group by fiscal year (fy), picking the latest filed value
                     if fy not in merged_by_year or filed > merged_by_year[fy].get("filed", ""):
                         merged_by_year[fy] = e
                         
-        # Sort by year, keep last 10 years
         sorted_years = sorted(merged_by_year.keys())
         last_10_years = sorted_years[-10:] if len(sorted_years) > 10 else sorted_years
-        
         return {str(fy): float(merged_by_year[fy]["val"]) for fy in last_10_years}
 
-    async def fetch(self, cik: Optional[str]) -> Dict[str, Any]:
-        empty_data = {
-            "revenue_history": {},
-            "net_income_history": {},
-            "operating_income_history": {},
-            "assets_history": {},
-            "liabilities_history": {},
-            "cash_flow_history": {},
-            "shares_outstanding_history": {},
-            "buybacks_history": {},
-            "dividends_history": {},
-            "capex_history": {},
-            "raw_data": {"note": "No CIK provided or private company."}
-        }
-        
+    def _extract_cik(self, target: Any) -> Optional[str]:
+        if not target:
+            return None
+        if hasattr(target, "cik") and target.cik:
+            return target.cik
+        if isinstance(target, dict) and target.get("cik"):
+            return target.get("cik")
+        return str(target)
+
+    async def fetch(self, target: Any) -> List[ResearchEvidence]:
+        cik = self._extract_cik(target)
         if not cik:
-            return empty_data
+            return []
             
         cik_str = str(cik).strip()
-        # If it's a mock/private CIK
         if cik_str == "0000000000" or not cik_str.isdigit():
-            # Placeholder CIK indicates unresolved or private entity — no EDGAR lookup possible.
-            return empty_data
+            return []
 
         cik_padded = cik_str.zfill(10)
         url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik_padded}.json"
@@ -74,6 +59,7 @@ class SECEdgarProvider(BaseProvider):
             "User-Agent": "MCPBusinessIntelligenceBot/1.0 (contact@mcp-business.com)"
         }
         
+        evidence_list = []
         try:
             async with httpx.AsyncClient() as client:
                 r = await client.get(url, headers=headers, timeout=10.0)
@@ -81,79 +67,32 @@ class SECEdgarProvider(BaseProvider):
                     raw_data = r.json()
                     facts = raw_data.get("facts", {}).get("us-gaap", {})
                     
-                    revenue = self._get_sec_metric(facts, [
-                        "Revenues", 
-                        "RevenueFromContractWithCustomerExcludingAssessedTax", 
-                        "SalesRevenueNet", 
-                        "SalesRevenueGoodsNet"
-                    ])
-                    net_income = self._get_sec_metric(facts, ["NetIncomeLoss"])
-                    operating_income = self._get_sec_metric(facts, ["OperatingIncomeLoss", "OperatingProfitLoss"])
-                    assets = self._get_sec_metric(facts, ["Assets"])
-                    liabilities = self._get_sec_metric(facts, ["Liabilities"])
-                    cash_flow = self._get_sec_metric(facts, ["NetCashProvidedByUsedInOperatingActivities"])
-                    shares = self._get_sec_metric(facts, [
-                        "CommonStockSharesOutstanding", 
-                        "EntityCommonStockSharesOutstanding"
-                    ])
-                    
-                    buybacks = self._get_sec_metric(facts, [
-                        "PaymentsForRepurchaseOfCommonStock",
-                        "PaymentsForRepurchaseOfTreasuryStock",
-                        "StockRepurchaseProgramAuthorizedAmount"
-                    ])
-                    dividends = self._get_sec_metric(facts, [
-                        "PaymentsOfDividends",
-                        "PaymentsOfDividendsCommonStock",
-                        "PaymentsOfDividendsMinorityInterest"
-                    ])
-                    capex = self._get_sec_metric(facts, [
-                        "PaymentsToAcquirePropertyPlantAndEquipment",
-                        "CapitalExpenditures",
-                        "PaymentsToAcquirePropertyPlantAndEquipmentAndOtherIntangibleAssets"
-                    ])
-                    
-                    return {
-                        "revenue_history": revenue,
-                        "net_income_history": net_income,
-                        "operating_income_history": operating_income,
-                        "assets_history": assets,
-                        "liabilities_history": liabilities,
-                        "cash_flow_history": cash_flow,
-                        "shares_outstanding_history": shares,
-                        "buybacks_history": buybacks,
-                        "dividends_history": dividends,
-                        "capex_history": capex,
-                        "raw_data": {
-                            "cik": cik_padded,
-                            "entityName": raw_data.get("entityName")
-                        }
+                    data_map = {
+                        "revenue_history": self._get_sec_metric(facts, ["Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", "SalesRevenueNet", "SalesRevenueGoodsNet"]),
+                        "net_income_history": self._get_sec_metric(facts, ["NetIncomeLoss"]),
+                        "operating_income_history": self._get_sec_metric(facts, ["OperatingIncomeLoss", "OperatingProfitLoss"]),
+                        "assets_history": self._get_sec_metric(facts, ["Assets"]),
+                        "liabilities_history": self._get_sec_metric(facts, ["Liabilities"]),
+                        "cash_flow_history": self._get_sec_metric(facts, ["NetCashProvidedByUsedInOperatingActivities"]),
+                        "shares_outstanding_history": self._get_sec_metric(facts, ["CommonStockSharesOutstanding", "EntityCommonStockSharesOutstanding"]),
+                        "buybacks_history": self._get_sec_metric(facts, ["PaymentsForRepurchaseOfCommonStock", "PaymentsForRepurchaseOfTreasuryStock", "StockRepurchaseProgramAuthorizedAmount"]),
+                        "dividends_history": self._get_sec_metric(facts, ["PaymentsOfDividends", "PaymentsOfDividendsCommonStock", "PaymentsOfDividendsMinorityInterest"]),
+                        "capex_history": self._get_sec_metric(facts, ["PaymentsToAcquirePropertyPlantAndEquipment", "CapitalExpenditures", "PaymentsToAcquirePropertyPlantAndEquipmentAndOtherIntangibleAssets"])
                     }
-                else:
-                    return {
-                        "revenue_history": {},
-                        "net_income_history": {},
-                        "operating_income_history": {},
-                        "assets_history": {},
-                        "liabilities_history": {},
-                        "cash_flow_history": {},
-                        "shares_outstanding_history": {},
-                        "buybacks_history": {},
-                        "dividends_history": {},
-                        "capex_history": {},
-                        "raw_data": {"error": f"SEC EDGAR returned status code {r.status_code}"}
-                    }
+                    
+                    for attr, val in data_map.items():
+                        if val:
+                            evidence_list.append(ResearchEvidence(
+                                id=CitationManager.generate_id("sec_data", cik_padded, attr, "current"),
+                                entity=cik_padded,
+                                attribute=attr,
+                                value=val,
+                                source="sec_data",
+                                source_type="mcp",
+                                confidence=0.99
+                            ))
+                            
         except Exception as e:
-            return {
-                "revenue_history": {},
-                "net_income_history": {},
-                "operating_income_history": {},
-                "assets_history": {},
-                "liabilities_history": {},
-                "cash_flow_history": {},
-                "shares_outstanding_history": {},
-                "buybacks_history": {},
-                "dividends_history": {},
-                "capex_history": {},
-                "raw_data": {"error": str(e)}
-            }
+            pass
+            
+        return evidence_list

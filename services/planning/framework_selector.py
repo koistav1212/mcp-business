@@ -4,7 +4,7 @@ from enum import Enum
 from typing import Any, Awaitable, Callable, Dict, Optional
 from pydantic import BaseModel
 
-from services.research.json_llm import configured_json_generator
+from services.llm.provider_router import ProviderRouter
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -42,22 +42,22 @@ class FrameworkSelector:
     Selects the analytical and report framework structure based on research intent and details.
     """
     def __init__(self, json_generator: Optional[Callable[[str, str], Awaitable[Dict[str, Any]]]] = None):
-        self.json_generator = json_generator or configured_json_generator()
+        self.json_generator = json_generator
 
     async def select(self, intent: str, goal_details: Optional[Dict[str, Any]] = None) -> FrameworkSelection:
         """
         Selects report framework.
-        Uses OpenAIJSONGenerator if configured, otherwise falls back to heuristics.
+        Uses ProviderRouter.generate_json if configured, otherwise falls back to heuristics.
         """
-        if self.json_generator:
-            try:
-                payload = await self.json_generator(
-                    FRAMEWORK_SELECTOR_SYSTEM_PROMPT,
-                    json.dumps({"intent": intent, "goal_details": goal_details or {}})
-                )
-                return FrameworkSelection.model_validate(payload)
-            except Exception as e:
-                logger.warning(f"LLM framework selection failed: {e}. Falling back to heuristics.")
+        try:
+            payload = await ProviderRouter.generate_json(
+                agent_name="planner",
+                system_prompt=FRAMEWORK_SELECTOR_SYSTEM_PROMPT,
+                user_prompt=json.dumps({"intent": intent, "goal_details": goal_details or {}})
+            )
+            return FrameworkSelection.model_validate(payload)
+        except Exception as e:
+            logger.warning(f"LLM framework selection failed: {e}. Falling back to heuristics.")
 
         return self._heuristic_select(intent, goal_details)
 

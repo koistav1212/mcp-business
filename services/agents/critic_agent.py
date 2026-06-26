@@ -1,6 +1,6 @@
 import json
 import logging
-from services.research.json_llm import ModelRouter
+from services.llm.provider_router import ProviderRouter
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -28,28 +28,25 @@ Return ONLY the raw JSON object. Do not include markdown formatting.
 """
 
 class CriticAgent:
-    def __init__(self):
-        self.model = ModelRouter().critic()
-
-    async def review(self, context):
-        if not context:
+    async def execute(self, synthesized_report: dict, planning: dict):
+        if not synthesized_report:
             return None
             
-        original_request = context.get("planning", {}).get("goal", "Unknown Request")
-        payload_data = {
+        original_request = planning.get("goal", "Unknown Request")
+        input_data = {
             "original_request": original_request,
-            "drafted_synthesis": context
+            "drafted_synthesis": synthesized_report
         }
         
-        if self.model:
-            try:
-                payload = await self.model.generate_json(
-                    CRITIC_SYSTEM_PROMPT,
-                    json.dumps(payload_data)
-                )
-                return payload
-            except Exception as e:
-                logger.warning(f"Critic LLM failed: {e}. Returning fallback.")
+        try:
+            payload = await ProviderRouter.generate_json(
+                agent_name="critic",
+                system_prompt=CRITIC_SYSTEM_PROMPT,
+                user_prompt=json.dumps(input_data)
+            )
+            return payload
+        except Exception as e:
+            logger.warning(f"Critic LLM failed: {e}. Returning fallback.")
                 
         # Fallback
         return {

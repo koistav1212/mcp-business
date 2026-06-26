@@ -1,6 +1,5 @@
 import asyncio
 from services.agents.planner_agent import PlannerAgent
-from services.agents.research_director_agent import ResearchDirectorAgent
 from services.agents.tool_router_agent import ToolRouterAgent
 from services.agents.synthesizer_agent import SynthesizerAgent
 from services.agents.critic_agent import CriticAgent
@@ -11,6 +10,9 @@ from services.agents.entity_extractor_agent import EntityExtractorAgent
 from services.research.compressor import ResearchMemory, AgentMemoryBuilder
 from services.research.models import ResearchContext, EvidenceGraph, EvidenceNode, DraftReport, CompanyProfile, FinancialData, EntityResolution, CriticResult
 from services.analytics.financial_calculator import FinancialCalculator
+from services.knowledge.evidence_store import EvidenceStore
+from services.knowledge.knowledge_router import KnowledgeRouter
+from services.knowledge.views.view_factory import ViewFactory
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -18,7 +20,6 @@ class HostAgent:
     def __init__(self):
         self.entity_extractor = EntityExtractorAgent()
         self.planner = PlannerAgent()
-        self.research_director = ResearchDirectorAgent()
         self.tool_router = ToolRouterAgent()
         self.synthesizer = SynthesizerAgent()
         self.critic = CriticAgent()
@@ -33,98 +34,88 @@ class HostAgent:
         logger.info("START planner")
         planning = await self.planner.execute(query)
         
-        # 2. Research Direction
-        logger.info("START director")
-        mission = await self.research_director.execute(planning)
-        
-        # 3. Centralized Tool Execution & Compression
+        # 2. (Deprecated) Research Direction bypassed by ExecutionPlan
+        # 3. Knowledge Layer Setup
         self.memory = ResearchMemory()
+        evidence_store = EvidenceStore()
+        knowledge_router = KnowledgeRouter(self.tool_router, evidence_store)
         
-        target = company_entity.company_name if company_entity and hasattr(company_entity, "company_name") else planning.companies[0] if planning.companies else "Unknown"
-        target_ticker = company_entity.ticker if company_entity and hasattr(company_entity, "ticker") else target
+        # Determine target to pass down
+        if company_entity and hasattr(company_entity, "company") and company_entity.company:
+            target = company_entity.company
+        elif hasattr(planning, "company") and planning.company:
+            target = planning.company
+        elif hasattr(planning, "entities") and planning.entities:
+            target = planning.entities[0]
+        else:
+            target = "Unknown"
+            
+        target_ticker = company_entity.ticker if company_entity and hasattr(company_entity, "ticker") and company_entity.ticker else target
         target_cik = company_entity.cik if company_entity and hasattr(company_entity, "cik") else target_ticker
 
-        all_needed_tools = set()
-        for agent in mission.agents:
-            all_needed_tools.update(AgentFactory._AGENTS.get(agent, []))
-            
-        tool_requests = {}
-        for tool in all_needed_tools:
-            if tool == "financial_data": tool_requests[tool] = target_cik
-            elif tool == "market_data": tool_requests[tool] = target_ticker
-            else: tool_requests[tool] = target
-            
-        logger.info("START mcp_tools")
-        raw_data = await self.tool_router.execute_batch(tool_requests)
-        
-        # Store raw responses in local memory
-        for tool_name, data in raw_data.items():
-            self.memory.store_raw("mcp", tool_name, data)
+        # Backwards compatibility context for UIAgent later
+        # We fetch all required sources upfront via knowledge_router to prepopulate evidence_store
+        logger.info("START mcp_tools via KnowledgeRouter")
+        raw_context_dict = {}
+        for source in planning.required_sources:
+            ev = await knowledge_router.get_evidence(source, target)
+            # Store something in raw_context_dict so UIAgent doesn't break
+            if ev:
+                raw_context_dict[source] = ev[0].value
+                
+        # Also fetch sources for individual tasks to prepopulate store
+        for task in planning.research_tasks:
+            for source in task.required_sources:
+                await knowledge_router.get_evidence(source, target)
 
-        # Build Context Dict for Memory Builder
-        raw_context_dict = {
-            "profile": raw_data.get("company_profile"),
-            "entity": company_entity.model_dump() if company_entity and hasattr(company_entity, "model_dump") else {},
-            "financials": raw_data.get("financial_data"),
-            "news": raw_data.get("news_feed"),
-            "technology_stack": raw_data.get("technology_stack"),
-            # We don't have competitor_analysis tool anymore, maybe it's inside profile
-            "competitors": raw_data.get("company_profile", {}).get("competitors", []) if isinstance(raw_data.get("company_profile"), dict) else [],
-            "social_sentiment": raw_data.get("news_feed", {}).get("sentiment", {}) if isinstance(raw_data.get("news_feed"), dict) else {},
-            "hiring_signals": raw_data.get("company_profile", {}).get("hiring", []) if isinstance(raw_data.get("company_profile"), dict) else [],
-        }
-
-        # Build Agent Memories
-        intent_dict = planning.model_dump() if hasattr(planning, "model_dump") else (planning if isinstance(planning, dict) else getattr(planning, "__dict__", {}))
-        agent_memories = AgentMemoryBuilder.build_all(raw_context_dict, intent_dict)
-
-        # 4. Specialized Agent Execution
-        iterations = getattr(mission, "iterations", 1)
-        
-        STAGES = [
-            ["news_agent", "industry_agent"],
-            ["competitor_agent", "financial_agent"],
-            ["strategy_agent", "ai_agent", "tech_agent", "risk_agent"]
-        ]
-        
-        sem = asyncio.Semaphore(2)
+        # 4. Wave-based Agent Execution
+        sem = asyncio.Semaphore(5)
 
         async def guarded_call(coro):
             async with sem:
                 return await coro
         
         current_agent_results = {}
-        for loop_idx in range(iterations):
-            mission_agents = set(mission.agents)
-            staged_execution_plan = []
+        
+        for wave in planning.execution_waves:
+            logger.info(f"START Wave {wave.wave_id} with {len(wave.tasks)} tasks.")
+            agent_tasks = []
+            agent_names_in_wave = []
             
-            for stage in STAGES:
-                stage_agents = [a for a in stage if a in mission_agents]
-                if stage_agents:
-                    staged_execution_plan.append(stage_agents)
-                mission_agents -= set(stage_agents)
+            for task in wave.tasks:
+                agent_name = task.owner_agent
                 
-            if mission_agents:
-                staged_execution_plan.append(list(mission_agents))
+                if agent_name == "entity_extractor":
+                    current_agent_results[agent_name] = company_entity
+                    continue
+                    
+                agent = AgentFactory.get_agent(agent_name)
+                if not agent:
+                    logger.warning(f"Agent {agent_name} not found in factory.")
+                    continue
+                    
+                # Extract previous findings from dependencies
+                previous_findings = []
+                for dep in task.dependencies:
+                    dep_task = next((t for t in planning.research_tasks if t.task_id == dep), None)
+                    if dep_task and dep_task.owner_agent in current_agent_results:
+                        res = current_agent_results[dep_task.owner_agent]
+                        if hasattr(res, "findings"):
+                            previous_findings.extend(res.findings)
+                            
+                # Build context via KnowledgeView
+                knowledge_view = ViewFactory.get(agent_name)
+                # Pass 'target' as the entity name string
+                context = knowledge_view.build(target, evidence_store)
                 
-            for stage_agents in staged_execution_plan:
-                agent_tasks = []
-                for agent_name in stage_agents:
-                    agent = AgentFactory.get_agent(agent_name)
-                    # Get the built memory object for this agent
-                    memory_obj = agent_memories.get(agent_name)
-                    
-                    previous_findings = current_agent_results.get(agent_name, None)
-                    prev_findings_list = previous_findings.findings if hasattr(previous_findings, "findings") else None
-                    
-                    coro = agent.execute(planning, self.tool_router, company_entity=company_entity, previous_findings=prev_findings_list, memory_obj=memory_obj)
-                    agent_tasks.append(guarded_call(coro))
-                    
-                # Execute this stage concurrently
+                coro = agent.execute(planning, self.tool_router, company_entity=company_entity, previous_findings=previous_findings if previous_findings else None, knowledge_view=context)
+                agent_tasks.append(guarded_call(coro))
+                agent_names_in_wave.append(agent_name)
+                
+            if agent_tasks:
                 agent_results_list = await asyncio.gather(*agent_tasks)
                 
-                # Update the accumulated results
-                for agent_name, result in zip(stage_agents, agent_results_list):
+                for agent_name, result in zip(agent_names_in_wave, agent_results_list):
                     current_agent_results[agent_name] = result
                     if hasattr(result, "model_dump"):
                         self.memory.store_agent_output(agent_name, result.model_dump())
@@ -132,9 +123,22 @@ class HostAgent:
                         self.memory.store_agent_output(agent_name, {"findings": result.findings} if hasattr(result, "findings") else {})
 
             
+        # 3.5 Synchronization Barrier
+        logger.info("Verifying Synchronization Barrier...")
+        missing_agents = []
+        for task in planning.research_tasks:
+            agent = task.owner_agent
+            if agent not in current_agent_results and agent != "entity_extractor":
+                missing_agents.append(agent)
+                
+        if missing_agents:
+            logger.warning(f"Synchronization Barrier Warning: The following planned agents did not complete successfully: {missing_agents}")
+            # Depending on strictness, we could raise an error or halt.
+            # We'll log it as a critical warning and proceed with partial data for now.
+            
         # 4. Meta Synthesis
         logger.info("START synthesis")
-        synthesis = await self.synthesizer.execute(current_agent_results, planning, mission)
+        synthesis = await self.synthesizer.execute(current_agent_results, planning, planning)
         
         # 5. Review/Critique
         logger.info("START critic")

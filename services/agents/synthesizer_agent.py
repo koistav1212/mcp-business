@@ -1,58 +1,66 @@
 import json
 import logging
-from typing import Dict
+from typing import Dict, Any
 from services.models.planning_models import PlanningResult
-from services.models.research_models import ResearchMission, AgentResult
-from services.research.json_llm import ModelRouter
+from services.models.research_models import AgentResult
+from services.llm.provider_router import ProviderRouter
 
 logger = logging.getLogger("uvicorn.error")
 
-META_SYNTHESIS_PROMPT = """You are a Meta Synthesizer.
-Your job is to combine multiple specialized research reports into one cohesive, executive-ready report structure.
+META_SYNTHESIS_PROMPT = """You are a Senior Partner at McKinsey.
+Inputs are evidence-backed findings.
+Do NOT summarize.
 
-Analyze the compiled inputs from all specialized agents and output a JSON object exactly matching this schema:
+Instead construct a highly synthesized report focusing on insight, narrative, and actionable recommendations.
+Each statement must reference evidence IDs.
+Never invent facts.
+Never restate agent outputs verbatim.
+Synthesize. Highlight contradictions. Explain why. State confidence. State missing evidence.
+
+Output schema must be valid JSON:
 {
   "executive_summary": "string",
-  "company_overview": "string",
-  "industry_summary": "string",
-  "financial_analysis": "string",
-  "competitive_analysis": "string",
-  "ai_strategy": "string",
-  "technology_analysis": "string",
-  "swot": "string",
-  "risks": ["list of strings"],
-  "opportunities": ["list of strings"],
+  "company_story": "string",
+  "industry_story": "string",
+  "financial_story": "string",
+  "competition_story": "string",
+  "technology_story": "string",
+  "ai_story": "string",
+  "risk_story": "string",
+  "strategic_priorities": ["list of strings"],
   "recommendations": ["list of strings"],
-  "evidence_gaps": ["list of strings"],
-  "appendix": "string",
-  "confidence": 0.95
+  "implementation_roadmap": ["list of strings"],
+  "evidence_appendix": ["list of strings"],
+  "confidence": 0.95,
+  "missing_evidence": ["list of strings"]
 }
 
 Return ONLY the raw JSON object. Do not include markdown formatting.
 """
 
 class SynthesizerAgent:
-    def __init__(self):
-        self.model = ModelRouter().synthesizer()
-
-    async def execute(self, agent_results: Dict[str, AgentResult], planning: PlanningResult, mission: ResearchMission, company_entity=None):
+    async def execute(self, agent_results: Dict[str, Any], planning: PlanningResult, unused_mission=None, company_entity=None):
         # Aggregate the reports (strip evidence to save tokens)
         agent_reports_stripped = {}
         for name, result in agent_results.items():
-            result_dict = result.model_dump()
-            result_dict.pop("evidence", None)
-            agent_reports_stripped[name] = result_dict
+            if hasattr(result, "model_dump"):
+                result_dict = result.model_dump()
+                result_dict.pop("evidence", None)
+                agent_reports_stripped[name] = result_dict
+            else:
+                agent_reports_stripped[name] = {"findings": result.findings} if hasattr(result, "findings") else str(result)
             
         aggregated_payload = {
-            "planning": planning.model_dump(),
+            "planning": planning.model_dump() if hasattr(planning, "model_dump") else {},
             "agent_reports": agent_reports_stripped
         }
         
-        if self.model:
+        if True:
             try:
-                payload = await self.model.generate_json(
-                    META_SYNTHESIS_PROMPT,
-                    json.dumps(aggregated_payload)
+                payload = await ProviderRouter.generate_json(
+                    agent_name="synthesizer",
+                    system_prompt=META_SYNTHESIS_PROMPT,
+                    user_prompt=json.dumps(aggregated_payload)
                 )
                 return payload
             except Exception as e:
@@ -61,17 +69,17 @@ class SynthesizerAgent:
         # Fallback
         return {
             "executive_summary": "Basic synthesized summary.",
-            "company_overview": "",
-            "industry_summary": "",
-            "financial_analysis": "",
-            "competitive_analysis": "",
-            "ai_strategy": "",
-            "technology_analysis": "",
-            "swot": "",
-            "risks": [],
-            "opportunities": [],
+            "company_story": "",
+            "industry_story": "",
+            "financial_story": "",
+            "competition_story": "",
+            "technology_story": "",
+            "ai_story": "",
+            "risk_story": "",
+            "strategic_priorities": [],
             "recommendations": ["Recommendation 1"],
-            "evidence_gaps": [],
-            "appendix": "",
-            "confidence": 0.5
+            "implementation_roadmap": [],
+            "evidence_appendix": [],
+            "confidence": 0.5,
+            "missing_evidence": []
         }

@@ -3,7 +3,7 @@ import logging
 from typing import Optional, Callable, Awaitable, Dict, Any
 
 from services.research.models import IndustryContext, IntentPlan, CompanyProfile
-from services.research.json_llm import configured_json_generator
+from services.llm.provider_router import ProviderRouter
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -31,9 +31,6 @@ Return ONLY the raw JSON object. Do not include markdown code block formatting (
 class IndustryClassifier:
     """Classifies the industry of a target company using an LLM and multiple data sources."""
 
-    def __init__(self, json_generator: Optional[Callable[[str, str], Awaitable[Dict[str, Any]]]] = None):
-        self.json_generator = json_generator or configured_json_generator()
-
     async def classify(
         self,
         intent: IntentPlan,
@@ -49,7 +46,7 @@ class IndustryClassifier:
             strategic_themes=["market position", "operating performance", "risk"]
         )
 
-        if not self.json_generator:
+        if False:
             return fallback
 
         # Prepare payload (trim fields slightly to avoid massive tokens)
@@ -79,9 +76,10 @@ class IndustryClassifier:
         }
 
         try:
-            payload = await self.json_generator(
-                CLASSIFIER_SYSTEM_PROMPT,
-                json.dumps(payload_data)
+            payload = await ProviderRouter.generate_json(
+                agent_name="planner",
+                system_prompt=CLASSIFIER_SYSTEM_PROMPT,
+                user_prompt=json.dumps(payload_data)
             )
             
             return IndustryContext(

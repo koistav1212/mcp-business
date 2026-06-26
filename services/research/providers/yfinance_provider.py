@@ -1,7 +1,9 @@
 import math
 import yfinance as yf
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from services.research.base import BaseProvider
+from services.knowledge.evidence import ResearchEvidence
+from services.knowledge.citation_manager import CitationManager
 
 def clean_nan(obj):
     if isinstance(obj, float):
@@ -19,52 +21,47 @@ class YFinanceProvider(BaseProvider):
     Provides live market data for a resolved corporate ticker using yfinance.
     """
 
-    async def fetch(self, ticker_symbol: Optional[str]) -> Dict[str, Any]:
-        empty_data = {
-            "market_cap": None,
-            "pe_ratio": None,
-            "current_price": None,
-            "fifty_two_week_high": None,
-            "fifty_two_week_low": None,
-            "raw_data": {"note": "No ticker symbol resolved or private company."}
-        }
-        
+    async def fetch(self, target: Any) -> List[ResearchEvidence]:
+        ticker_symbol = self._extract_identifier(target)
         if not ticker_symbol:
-            return empty_data
+            return []
             
         ticker_clean = str(ticker_symbol).strip().upper()
 
-
+        evidence_list = []
         try:
             ticker = yf.Ticker(ticker_clean)
             info = ticker.info or {}
             
-            market_cap = info.get("marketCap")
-            pe_ratio = info.get("trailingPE") or info.get("forwardPE")
-            current_price = info.get("currentPrice") or info.get("regularMarketPrice") or info.get("regularMarketPreviousClose")
-            high_52w = info.get("fiftyTwoWeekHigh")
-            low_52w = info.get("fiftyTwoWeekLow")
+            market_cap = clean_nan(info.get("marketCap"))
+            pe_ratio = clean_nan(info.get("trailingPE") or info.get("forwardPE"))
+            current_price = clean_nan(info.get("currentPrice") or info.get("regularMarketPrice") or info.get("regularMarketPreviousClose"))
+            high_52w = clean_nan(info.get("fiftyTwoWeekHigh"))
+            low_52w = clean_nan(info.get("fiftyTwoWeekLow"))
             
-            return {
-                "market_cap": clean_nan(market_cap),
-                "pe_ratio": clean_nan(pe_ratio),
-                "current_price": clean_nan(current_price),
-                "fifty_two_week_high": clean_nan(high_52w),
-                "fifty_two_week_low": clean_nan(low_52w),
-                "raw_data": {
-                    "ticker": ticker_clean,
-                    "info": clean_nan(info)
-                }
+            # Map into ResearchEvidence
+            data_map = {
+                "market_cap": market_cap,
+                "pe_ratio": pe_ratio,
+                "current_price": current_price,
+                "fifty_two_week_high": high_52w,
+                "fifty_two_week_low": low_52w,
             }
+            
+            for attr, val in data_map.items():
+                if val is not None:
+                    evidence_list.append(ResearchEvidence(
+                        id=CitationManager.generate_id("market_data", ticker_clean, attr, "current"),
+                        entity=ticker_clean,
+                        attribute=attr,
+                        value=val,
+                        source="market_data",
+                        source_type="mcp",
+                        confidence=0.9
+                    ))
+                    
         except Exception as e:
-            return {
-                "market_cap": None,
-                "pe_ratio": None,
-                "current_price": None,
-                "fifty_two_week_high": None,
-                "fifty_two_week_low": None,
-                "raw_data": {
-                    "error": str(e),
-                    "ticker": ticker_clean
-                }
-            }
+            # We don't append evidence on failure, just return empty
+            pass
+            
+        return evidence_list

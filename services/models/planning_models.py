@@ -1,5 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
+from services.planning.models import ExecutionPlan, ExecutionWave, ResearchTask, DependencyGraph
 
 class EntityExtractionResult(BaseModel):
     company: str
@@ -12,15 +13,21 @@ class EntityExtractionResult(BaseModel):
     country: Optional[str] = None
     headquarters: Optional[str] = None
 
-class ResearchTrack(BaseModel):
-    agent: str
-    objective: str
-
 class PlanningResult(BaseModel):
-    intent: str
-    workspace_type: str
-    companies: List[str]
-    research_depth: str
-    report_style: str
-    required_outputs: List[str]
-    research_tracks: List[ResearchTrack]
+    intent: str = "general"
+    workspace_type: str = "DEEP_RESEARCH"
+    companies: List[str] = []
+    research_depth: str = "comprehensive"
+    report_style: str = "executive"
+    required_outputs: List[str] = []
+    
+    execution_plan: Optional[ExecutionPlan] = None
+    research_tasks: List[ResearchTask] = []
+    execution_waves: List[ExecutionWave] = []
+    token_budget: int = 0
+    estimated_runtime: int = 0
+    estimated_cost: float = 0.0
+    required_sources: List[str] = []
+    dependency_graph: Optional[DependencyGraph] = None
+    
+    model_config = ConfigDict(extra='allow')

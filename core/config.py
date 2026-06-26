@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     OPENROUTER_API_KEY: str = Field(default="sk-placeholder")
     GROQ_API_KEY: str = Field(default="sk-placeholder")
     TOGETHER_API_KEY: str = Field(default="sk-placeholder")
+    GITHUB_TOKEN: str = Field(default="sk-placeholder")
     LLM_MODEL: str = Field(default="gpt-4o")
 
     # Logging Config

@@ -3,6 +3,8 @@ import httpx
 import yfinance as yf
 from typing import Dict, Any, List, Optional
 from services.research.base import BaseProvider
+from services.knowledge.evidence import ResearchEvidence
+from services.knowledge.citation_manager import CitationManager
 
 def resolve_templates(text: str) -> str:
     while True:
@@ -231,11 +233,12 @@ class CompanyProvider(BaseProvider):
             {"name": "Alphabet", "website": "https://google.com", "segment": "Tech & Search"}
         ]
 
-    async def fetch(self, company: str) -> Dict[str, Any]:
+    async def fetch(self, target: Any) -> List[ResearchEvidence]:
+        company = self._extract_identifier(target)
+        if not company:
+            return []
+            
         company_clean = company.strip()
-        
-
-
         # Real sourcing
         resolved_name = company_clean
         overview = f"{company_clean} is an unverified business entity."
@@ -411,10 +414,9 @@ class CompanyProvider(BaseProvider):
         # Fetch competitors dynamically
         competitors = await self._fetch_competitors(resolved_name, yf_raw.get("info", {}))
 
-        return {
-            "source_title": source_title,
-            "source_url": source_url,
-            "source_type": "official_website" if wiki_title else "directory",
+        evidence_list = []
+        
+        data_map = {
             "name": resolved_name,
             "overview": overview,
             "headquarters": headquarters,
@@ -423,8 +425,18 @@ class CompanyProvider(BaseProvider):
             "founders": founders,
             "leadership": leadership,
             "competitors": competitors,
-            "raw_data": {
-                "wikipedia": wiki_raw,
-                "yfinance": yf_raw
-            }
         }
+        
+        for attr, val in data_map.items():
+            if val is not None and val != []:
+                evidence_list.append(ResearchEvidence(
+                    id=CitationManager.generate_id("company_profile", company_clean, attr, "current"),
+                    entity=company_clean,
+                    attribute=attr,
+                    value=val,
+                    source="company_profile",
+                    source_type="mcp",
+                    confidence=0.9
+                ))
+                
+        return evidence_list

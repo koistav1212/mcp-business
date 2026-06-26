@@ -3,7 +3,7 @@ import logging
 from typing import Optional, Callable, Awaitable, Dict, Any
 
 from services.research.models import IntentPlan, ResearchPlan
-from services.research.json_llm import configured_json_generator
+from services.llm.provider_router import ProviderRouter
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -30,9 +30,6 @@ Return ONLY the raw JSON object. Do not include markdown code block formatting (
 class ResearchDirectorAgent:
     """Dynamically plans the research strategy and specifies required provider configurations."""
 
-    def __init__(self, json_generator: Optional[Callable[[str, str], Awaitable[Dict[str, Any]]]] = None):
-        self.json_generator = json_generator or configured_json_generator()
-
     async def plan(self, intent: IntentPlan) -> ResearchPlan:
         # Fallback plan in case of LLM failure
         fallback_plan = {
@@ -43,11 +40,12 @@ class ResearchDirectorAgent:
             "minimum_sources": 50
         }
 
-        if self.json_generator:
+        if True:
             try:
-                payload = await self.json_generator(
-                    DIRECTOR_SYSTEM_PROMPT,
-                    json.dumps({
+                payload = await ProviderRouter.generate_json(
+                    agent_name="director",
+                    system_prompt=DIRECTOR_SYSTEM_PROMPT,
+                    user_prompt=json.dumps({
                         "primary_goal": intent.primary_goal,
                         "decision_type": intent.decision_type,
                         "workspace_type": intent.workspace_type

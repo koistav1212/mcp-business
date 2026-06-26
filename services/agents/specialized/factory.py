@@ -5,7 +5,7 @@ from services.models.planning_models import PlanningResult
 from services.models.research_models import AgentResult
 from services.agents.tool_router_agent import ToolRouterAgent
 from services.agents.specialized.base import BaseResearchAgent
-from services.research.json_llm import ModelRouter
+from services.llm.provider_router import ProviderRouter
 
 # Import memory and engines
 from services.research.compressor import ResearchMemory, ContextCompressor
@@ -20,41 +20,48 @@ class GenericLLMAgent(BaseResearchAgent):
     def __init__(self, agent_name: str, tools_needed: list[str]):
         self.agent_name = agent_name
         self.tools_needed = tools_needed
-        self.model = ModelRouter().get_model_for_role(agent_name)
         # We no longer instantiate ResearchMemory here; it's injected/handled via memory_obj
         self.memory = None
         
-    async def execute(self, planning: PlanningResult, tool_router: ToolRouterAgent, company_entity=None, previous_findings: list[str]=None, memory_obj=None) -> AgentResult:
-        # We now rely entirely on the memory_obj built by AgentMemoryBuilder in host_agent.py
-        from services.research.compressor import AGENT_PROMPTS
+    async def execute(self, planning: PlanningResult, tool_router: ToolRouterAgent, company_entity=None, previous_findings: list[str]=None, knowledge_view=None) -> AgentResult:
         
-        system_prompt = AGENT_PROMPTS.get(self.agent_name)
-        if not system_prompt:
-            # Fallback if agent not in AGENT_PROMPTS
-            target = company_entity.company_name if company_entity and hasattr(company_entity, "company_name") else planning.companies[0] if planning.companies else "Unknown"
-            system_prompt = self._get_prompt(target)
-            
-        if memory_obj and hasattr(memory_obj, "to_user_prompt"):
-            user_prompt = memory_obj.to_user_prompt()
-            
-            # If there's previous iteration findings, append them
-            if previous_findings:
-                user_prompt += f"\n\nPrevious Findings to build upon:\n{previous_findings}"
-                
+        # Extract target safely
+        if company_entity and hasattr(company_entity, "company") and company_entity.company:
+            target = company_entity.company
+        elif hasattr(planning, "company") and planning.company:
+            target = planning.company
+        elif hasattr(planning, "entities") and planning.entities:
+            target = planning.entities[0]
         else:
-            # Fallback for agents that don't have a specific memory_obj (e.g. strategy_agent, ai_agent if not mapped)
-            user_payload = {"agent": self.agent_name, "status": "No specific memory mapping"}
-            if previous_findings:
-                user_payload["previous_iteration_findings"] = previous_findings
-            user_prompt = json.dumps(user_payload)
+            target = "Unknown"
+            
+        system_prompt = self._get_prompt(target)
+            
+        # Serialize the knowledge_view list of ResearchEvidence
+        if knowledge_view is not None:
+            view_dicts = [ev.model_dump() if hasattr(ev, "model_dump") else (ev if isinstance(ev, dict) else getattr(ev, "__dict__", {})) for ev in knowledge_view]
+            user_payload = {"agent": self.agent_name, "evidence": view_dicts}
+        else:
+            user_payload = {"agent": self.agent_name, "evidence": []}
+
+        # If there's previous iteration findings, append them
+        if previous_findings:
+            user_payload["previous_iteration_findings"] = previous_findings
+            
+        user_prompt = json.dumps(user_payload, default=str)
             
         logger.info(f"{self.agent_name} payload size: {len(system_prompt) + len(user_prompt)} chars")
         
-        if self.model:
+        if True:
             try:
-                payload = await self.model.generate_json(system_prompt, user_prompt)
+                # Relying on router to enforce token limits natively
+                payload = await ProviderRouter.generate_json(
+                    agent_name=self.agent_name,
+                    system_prompt=system_prompt,
+                    user_prompt=user_prompt
+                )
                 
-                # Ensure evidence is empty as we don't need it anymore
+                # Ensure evidence is empty as we don't need to pass it back
                 payload["evidence"] = []
                 
                 return AgentResult.model_validate(payload)
@@ -69,32 +76,46 @@ class GenericLLMAgent(BaseResearchAgent):
         )
 
     def _get_prompt(self, target: str) -> str:
+        universal_rules = (
+            "You are ONLY allowed to use the evidence supplied.\n"
+            "Never assume missing facts.\n"
+            "Never ask for additional company information.\n"
+            "Ignore any domain outside your specialization.\n"
+            "Return structured findings only.\n"
+            "If confidence < 0.7 return NeedMoreEvidence."
+        )
         prompts = {
-            "news_agent": f"""You are a News Intelligence Analyst.
-Analyze only:
-- recent news
-- press releases
-- earnings call headlines
-- regulatory announcements
+            "news_agent": f"""You are a Market Intelligence Analyst.
+Analyze ONLY supplied news.
 
-Ignore:
-- valuation
-- financial modeling
-- competitors
+Tasks:
+- Build Timeline
+- Identify Catalysts
+- Identify Market Moving Events
+- Estimate Sentiment
+- Extract Risks
+- Extract Opportunities
+- Detect Contradictions
+
+Never discuss:
+- Financial Statements
+- SWOT
+- Technology
+- Products
+- Valuation
 
 Return ONLY valid JSON:
 {{
-  "findings": [],
+  "timeline": [],
+  "catalysts": [],
   "sentiment": "positive|neutral|negative",
-  "confidence": 0.0
-}}""",
+  "evidence_ids": [],
+  "confidence": 0.0,
+  "findings": []
+}}
+{universal_rules}""",
             "competitor_agent": f"""You are a Competitive Intelligence Analyst.
-Tasks:
-1. Identify top competitors
-2. Compare products
-3. Compare pricing
-4. Compare market share
-5. Identify threats
+Tasks: Identify top competitors, Compare products, Compare pricing, Compare market share, Identify threats.
 
 Return ONLY valid JSON:
 {{
@@ -103,15 +124,10 @@ Return ONLY valid JSON:
   "threats": [],
   "findings": [],
   "confidence": 0.0
-}}""",
+}}
+{universal_rules}""",
             "industry_agent": f"""You are an Industry Research Analyst.
-Focus:
-- TAM
-- industry growth
-- regulations
-- market trends
-
-Ignore company-specific financials.
+Focus: TAM, industry growth, regulations, market trends.
 
 Return ONLY valid JSON:
 {{
@@ -120,19 +136,10 @@ Return ONLY valid JSON:
   "industry_risks": [],
   "findings": [],
   "confidence": 0.0
-}}""",
+}}
+{universal_rules}""",
             "financial_agent": f"""You are a Financial Analyst.
-Focus only on:
-- revenue
-- margins
-- EBITDA
-- debt
-- cash flow
-
-Ignore:
-- competitors
-- news
-- AI strategy
+Focus only on: revenue, margins, EBITDA, debt, cash flow.
 
 Return ONLY valid JSON:
 {{
@@ -141,14 +148,15 @@ Return ONLY valid JSON:
   "risks": [],
   "findings": [],
   "confidence": 0.0
-}}"""
+}}
+{universal_rules}"""
         }
         if self.agent_name in prompts:
             return prompts[self.agent_name]
             
         return f"""You are the {self.agent_name}. 
 Your task is to analyze the context provided for {target} and produce a structured JSON report.
-Ensure findings strictly relate to your specialization.
+{universal_rules}
 
 Output schema:
 {{
@@ -169,15 +177,21 @@ class DeterministicAgent(BaseResearchAgent):
         self.tools_needed = tools_needed
         self.memory = None
         
-    async def execute(self, planning: PlanningResult, tool_router: ToolRouterAgent, company_entity=None, previous_findings: list[str]=None, memory_obj=None) -> AgentResult:
-        # Determine target
-        target = company_entity.company_name if company_entity and hasattr(company_entity, "company_name") else planning.companies[0] if planning.companies else "Unknown"
+    async def execute(self, planning: PlanningResult, tool_router: ToolRouterAgent, company_entity=None, previous_findings: list[str]=None, knowledge_view=None) -> AgentResult:
+        # Extract target safely
+        if company_entity and hasattr(company_entity, "company") and company_entity.company:
+            target = company_entity.company
+        elif hasattr(planning, "company") and planning.company:
+            target = planning.company
+        elif hasattr(planning, "entities") and planning.entities:
+            target = planning.entities[0]
+        else:
+            target = "Unknown"
         
-        # We don't fetch data here anymore, it's done centrally in host_agent
-        # For DeterministicAgents, we just return a placeholder or use the raw data if we can get it from memory_obj
+        # Format the context dict for engines to ingest
         raw_data = {}
-        if memory_obj:
-            raw_data = memory_obj if isinstance(memory_obj, dict) else getattr(memory_obj, "__dict__", {})
+        if knowledge_view:
+            raw_data = {"evidence": [ev.model_dump() if hasattr(ev, "model_dump") else (ev if isinstance(ev, dict) else getattr(ev, "__dict__", {})) for ev in knowledge_view]}
         
         # Process via Analytics Engines if applicable
         engine_output = None
@@ -212,7 +226,6 @@ class AgentFactory:
         "valuation_agent": ["financial_data", "market_data"],
         "growth_agent": ["financial_data", "market_data"],
         "ai_agent": ["technology_stack", "news_feed"],
-        "strategy_agent": ["company_profile", "financial_data"],
         "mna_agent": ["financial_data", "market_data"]
     }
 

@@ -3,7 +3,7 @@ import logging
 from typing import Any, Awaitable, Callable, Dict, Optional
 from pydantic import BaseModel
 
-from services.research.json_llm import configured_json_generator
+from services.llm.provider_router import ProviderRouter
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -31,19 +31,17 @@ class GoalExtractor:
     """
     Extracts high-level goals, problems, desired outputs, and decision types from raw user requests.
     """
-    def __init__(self, json_generator: Optional[Callable[[str, str], Awaitable[Dict[str, Any]]]] = None):
-        self.json_generator = json_generator or configured_json_generator()
-
     async def extract(self, prompt: str) -> ResearchGoal:
         """
         Extracts research goals from the prompt.
-        Uses OpenAIJSONGenerator if configured, otherwise falls back to heuristics.
+        Uses Multi-Provider routing, otherwise falls back to heuristics.
         """
-        if self.json_generator:
+        if True:
             try:
-                payload = await self.json_generator(
-                    GOAL_EXTRACTOR_SYSTEM_PROMPT,
-                    json.dumps({"prompt": prompt})
+                payload = await ProviderRouter.generate_json(
+                    agent_name="planner",
+                    system_prompt=GOAL_EXTRACTOR_SYSTEM_PROMPT,
+                    user_prompt=json.dumps({"prompt": prompt})
                 )
                 return ResearchGoal.model_validate(payload)
             except Exception as e:

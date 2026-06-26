@@ -13,7 +13,7 @@ TOOLS = {
         "quality": 0.9,
         "instance": CompanyProvider()
     },
-    "financial_data": {
+    "sec_data": {
         "mcp_server": "sec-mcp",
         "cost": 2,
         "quality": 0.95,
