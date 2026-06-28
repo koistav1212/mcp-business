@@ -8,6 +8,7 @@ from services.models.research_execution_plan import (
     ExecutionWave, ResearchTask, DependencyEdge, StopCondition
 )
 from services.planning.planner_prompts import PLANNER_SYSTEM_PROMPT
+from services.planning.research_planner import DynamicResearchPlanner
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -15,81 +16,48 @@ def parse_execution_plan(data: Dict[str, Any]) -> ResearchExecutionPlan:
     """
     Parses a raw JSON dictionary into the structured ResearchExecutionPlan dataclass.
     """
-    waves = []
-    for wave_data in data.get("execution_waves", []):
-        tasks = []
-        for task_data in wave_data.get("tasks", []):
-            task = ResearchTask(
-                task_id=task_data.get("task_id", ""),
-                provider_name=task_data.get("provider_name", ""),
-                target_field=task_data.get("target_field", "canonical_name"),
-                priority=Priority(task_data.get("priority", Priority.MEDIUM.value)),
-                timeout_seconds=task_data.get("timeout_seconds", 30.0),
-                max_retries=task_data.get("max_retries", 2),
-                dependencies=task_data.get("dependencies", []),
-                fallback_provider=task_data.get("fallback_provider"),
-                consuming_agents=task_data.get("consuming_agents", []),
-                estimated_latency_ms=task_data.get("estimated_latency_ms", 5000),
-                estimated_tokens=task_data.get("estimated_tokens", 200),
-                cost_signal=task_data.get("cost_signal", "free")
-            )
-            tasks.append(task)
-            
-        wave = ExecutionWave(
-            wave_number=wave_data.get("wave_number", 1),
-            name=wave_data.get("name", "Unknown Wave"),
-            tasks=tasks,
-            is_mandatory=wave_data.get("is_mandatory", True),
-            stop_on_failure=wave_data.get("stop_on_failure", False)
-        )
-        waves.append(wave)
-
-    dependencies = []
-    for dep_data in data.get("dependency_graph", []):
-        dep = DependencyEdge(
-            from_task=dep_data.get("from_task", ""),
-            to_task=dep_data.get("to_task", ""),
-            dependency_type=dep_data.get("dependency_type", "data"),
-            reason=dep_data.get("reason", "")
-        )
-        dependencies.append(dep)
-
-    stops = []
-    for stop_data in data.get("stop_conditions", []):
-        stop = StopCondition(
-            condition_type=stop_data.get("condition_type", ""),
-            threshold=stop_data.get("threshold", 0.0),
-            action=stop_data.get("action", "skip_optional")
-        )
-        stops.append(stop)
+    # Parse intent and required_sources from simplified JSON
+    intent = data.get("intent", "comprehensive_research")
+    required_sources = data.get("required_sources", [])
+    
+    # Use DynamicResearchPlanner to resolve tasks
+    planner = DynamicResearchPlanner()
+    mapped_tasks = planner.plan({"intent": intent, "required_sources": required_sources})
+    
+    tasks = []
+    required_providers = []
+    
+    for i, t in enumerate(mapped_tasks):
+        provider = t["provider"]
+        required_providers.append(provider)
+        tasks.append(ResearchTask(
+            task_id=f"{provider}_{i}",
+            provider_name=provider,
+            target_field="canonical_name",
+            priority=Priority.MEDIUM,
+            timeout_seconds=30.0,
+            max_retries=2
+        ))
+        
+    wave = ExecutionWave(
+        wave_number=1,
+        name="Wave 1: Data Gathering",
+        tasks=tasks,
+        is_mandatory=True,
+        stop_on_failure=False
+    )
 
     return ResearchExecutionPlan(
         plan_id=data.get("plan_id", "plan_001"),
         goal=data.get("goal", ""),
-        intent=data.get("intent", ""),
+        intent=intent,
         research_type=ResearchType(data.get("research_type", ResearchType.COMPANY_DEEP_DIVE.value)),
         decision_type=data.get("decision_type", "informational"),
         workspace_type=data.get("workspace_type", "GENERAL"),
         primary_entity_query=data.get("primary_entity_query", ""),
-        comparison_entity_queries=data.get("comparison_entity_queries", []),
-        entity_confidence_threshold=data.get("entity_confidence_threshold", 0.55),
-        execution_waves=waves,
-        dependency_graph=dependencies,
-        required_providers=data.get("required_providers", []),
-        optional_providers=data.get("optional_providers", []),
-        required_domains=data.get("required_domains", []),
-        agent_dependencies=data.get("agent_dependencies", {}),
-        analysis_depth=AnalysisDepth(data.get("analysis_depth", AnalysisDepth.STANDARD.value)),
-        max_execution_seconds=data.get("max_execution_seconds", 90.0),
-        max_total_tokens=data.get("max_total_tokens", 12000),
-        estimated_cost=data.get("estimated_cost", "free"),
-        stop_conditions=stops,
-        success_criteria=data.get("success_criteria", []),
-        minimum_evidence_coverage=data.get("minimum_evidence_coverage", 0.60),
-        required_data=data.get("required_data", []),
-        max_research_iterations=data.get("max_research_iterations", 1),
-        created_at=data.get("created_at", ""),
-        planner_reasoning=data.get("planner_reasoning", [])
+        execution_waves=[wave] if tasks else [],
+        required_providers=list(set(required_providers)),
+        required_domains=required_sources
     )
 
 class PlannerAgent:

@@ -76,37 +76,113 @@ class HostAgent:
         raw_context_dict = {}
         all_evidence = evidence_store.get_all()
         for ev in all_evidence:
-            # Depending on how the provider writes its attribute/source,
-            # we attempt to map it to the raw_context_dict
             key = ev.source
-            if "sec" in key or "finance" in key:
-                # Merge into financials
+            attr = ev.attribute
+            val = ev.value
+            
+            # Map by attribute or key based on the emitted provider sources
+            if key in ["sec_edgar", "sec_edgar_10k", "yfinance"]:
                 if "financials" not in raw_context_dict:
                     raw_context_dict["financials"] = {}
-                # This is a simplification; in reality, we'd merge the dicts
-                if isinstance(ev.value, dict):
-                    raw_context_dict["financials"].update(ev.value)
-            elif "news" in key:
+                raw_context_dict["financials"][attr] = val
+            elif key == "news_intelligence_pipeline":
                 if "news" not in raw_context_dict:
                     raw_context_dict["news"] = []
-                if isinstance(ev.value, list):
-                    raw_context_dict["news"].extend(ev.value)
-            elif "company" in key or "web" in key:
+                if isinstance(val, list):
+                    for item in val:
+                        raw_context_dict["news"].append({
+                            "title": item.get("headline", item.get("title", "")),
+                            "url": item.get("url", ev.source_url or ""),
+                            "date": item.get("published_at", item.get("date")),
+                            "snippet": item.get("summary", item.get("snippet", "")),
+                            "type": "general"
+                        })
+                elif isinstance(val, dict):
+                    raw_context_dict["news"].append({
+                        "title": val.get("headline", val.get("title", "")),
+                        "url": ev.source_url or val.get("url", ""),
+                        "date": val.get("published_at", val.get("date")),
+                        "snippet": val.get("summary", val.get("snippet", "")),
+                        "type": "general"
+                    })
+                else:
+                    raw_context_dict["news"].append(val)
+            elif key in ["company_profile", "crunchbase", "similarweb", "web_technology_profile"]:
                 if "profile" not in raw_context_dict:
                     raw_context_dict["profile"] = {}
-                if isinstance(ev.value, dict):
-                    raw_context_dict["profile"].update(ev.value)
-            elif "people" in key:
-                if "leadership" not in raw_context_dict:
-                    raw_context_dict["leadership"] = []
-                if isinstance(ev.value, list):
-                    raw_context_dict["leadership"].extend(ev.value)
+                raw_context_dict["profile"][attr] = val
+            elif key in ["people_pipeline", "indeed", "github", "glassdoor"]:
+                if "people" not in raw_context_dict:
+                    raw_context_dict["people"] = {}
+                raw_context_dict["people"][attr] = val
+            elif key in ["reddit", "stocktwits", "hackernews", "social_intel"]:
+                if "social" not in raw_context_dict:
+                    raw_context_dict["social"] = {}
+                raw_context_dict["social"][attr] = val
             else:
-                raw_context_dict[key] = ev.value
+                raw_context_dict[attr] = val
+
+        analytics_data = FinancialCalculator.generate_analytics(raw_context_dict.get("financials", {}))
+
+        evidence_graph = EvidenceGraph(nodes=[
+            EvidenceNode(id=ev.id, fact=str(ev.value)[:100], agent=ev.source)
+            for ev in all_evidence
+        ])
+
+        # Re-build fully populated ResearchContext to pass to Synthesizer and UIAgent
+        entity_res = None
+        if company_entity:
+            entity_res = EntityResolution(
+                company_name=getattr(company_entity, "company", target),
+                ticker=getattr(company_entity, "ticker", None),
+                cik=getattr(company_entity, "cik", None),
+                exchange=getattr(company_entity, "exchange", None),
+                website=getattr(company_entity, "website", None),
+                confidence=getattr(company_entity, "confidence", 1.0)
+            )
+
+        profile_data = raw_context_dict.get("profile", {})
+        profile_res = None
+        if profile_data:
+            profile_data_copy = profile_data.copy()
+            hq = profile_data_copy.get("headquarters")
+            emp = profile_data_copy.get("employee_count")
+            if hq is not None and not isinstance(hq, dict):
+                profile_data_copy["headquarters"] = {"value": hq}
+            if emp is not None and not isinstance(emp, dict):
+                profile_data_copy["employee_count"] = {"value": emp}
+            profile_res = CompanyProfile(**profile_data_copy)
+
+        tech_stack_raw = raw_context_dict.get("profile", {}).get("technology_stack", [])
+        if isinstance(tech_stack_raw, dict):
+            tech_stack_raw = tech_stack_raw.get("technologies", [])
+            
+        financial_data_res = None
+        if raw_context_dict.get("financials"):
+            # Ensure safe kwargs mapping
+            financial_data_res = FinancialData(**raw_context_dict.get("financials", {}))
+
+        context_obj = ResearchContext(
+            entity=entity_res,
+            profile=profile_res,
+            financials=financial_data_res,
+            analytics=analytics_data,
+            news=raw_context_dict.get("news", []),
+            technology_stack=tech_stack_raw,
+            leadership=raw_context_dict.get("profile", {}).get("leadership", []),
+            competitors=raw_context_dict.get("profile", {}).get("competitors", []),
+            competitive_positioning=raw_context_dict.get("competitive_positioning"),
+            swot=raw_context_dict.get("swot"),
+            risk_factors=raw_context_dict.get("financials", {}).get("risk_factors_text", []) if isinstance(raw_context_dict.get("financials", {}).get("risk_factors_text", []), list) else [],
+            management_commentary=raw_context_dict.get("financials", {}).get("mda_text", []) if isinstance(raw_context_dict.get("financials", {}).get("mda_text", []), list) else [],
+            industry_context=None,
+            evidence_graph=evidence_graph
+        )
+        context_dict = context_obj.model_dump()
 
         # 4. Meta Synthesis
         logger.info("START synthesis")
-        synthesis = await self.synthesizer.execute(plan, evidence_store, target)
+        synthesis = await self.synthesizer.execute(plan, context_dict, target)
         
         synthesis_dump = synthesis.model_dump() if hasattr(synthesis, "model_dump") else (synthesis if isinstance(synthesis, dict) else getattr(synthesis, "__dict__", {}))
         ArtifactWriter.write_json("synthesis/synthesis_result.json", synthesis_dump)
@@ -142,61 +218,11 @@ class HostAgent:
                     else:
                         formatted_list.append(item)
                 synthesis_dict[key] = formatted_list
-
-        analytics_data = FinancialCalculator.generate_analytics(raw_context_dict.get("financials", {}))
-
-        evidence_graph = EvidenceGraph(nodes=[
-            EvidenceNode(id=ev.id, fact=str(ev.value)[:100], agent=ev.source)
-            for ev in all_evidence
-        ])
-
-        # Re-build fully populated ResearchContext for UIAgent
-        entity_res = None
-        if company_entity:
-            entity_res = EntityResolution(
-                company_name=getattr(company_entity, "company", target),
-                ticker=getattr(company_entity, "ticker", None),
-                cik=getattr(company_entity, "cik", None),
-                exchange=getattr(company_entity, "exchange", None),
-                website=getattr(company_entity, "website", None),
-                confidence=getattr(company_entity, "confidence", 1.0)
-            )
-
-        profile_data = raw_context_dict.get("profile", {})
-        profile_res = None
-        if profile_data:
-            profile_data_copy = profile_data.copy()
-            hq = profile_data_copy.get("headquarters")
-            emp = profile_data_copy.get("employee_count")
-            if hq is not None and not isinstance(hq, dict):
-                profile_data_copy["headquarters"] = {"value": hq}
-            if emp is not None and not isinstance(emp, dict):
-                profile_data_copy["employee_count"] = {"value": emp}
-            profile_res = CompanyProfile(**profile_data_copy)
-
-        tech_stack_raw = raw_context_dict.get("technology_stack", [])
-        if isinstance(tech_stack_raw, dict):
-            tech_stack_raw = tech_stack_raw.get("technologies", [])
-
-        context_obj = ResearchContext(
-            entity=entity_res,
-            profile=profile_res,
-            financials=FinancialData(**raw_context_dict.get("financials", {})) if raw_context_dict.get("financials") else None,
-            analytics=analytics_data,
-            news=raw_context_dict.get("news", []),
-            technology_stack=tech_stack_raw,
-            leadership=raw_context_dict.get("leadership", []),
-            competitors=raw_context_dict.get("competitors", []),
-            competitive_positioning=raw_context_dict.get("competitive_positioning"),
-            swot=raw_context_dict.get("swot"),
-            risk_factors=raw_context_dict.get("risk_factors", []),
-            management_commentary=raw_context_dict.get("management_commentary", []),
-            industry_context=raw_context_dict.get("industry_context"),
-            draft_report=DraftReport(**synthesis_dict),
-            critique=CriticResult(**critique_dict) if critique_dict else None,
-            evidence_graph=evidence_graph
-        )
-        
+                
+        # Append Synthesis into Context object before UIAgent
+        context_obj.draft_report = DraftReport(**synthesis_dict)
+        if critique_dict:
+            context_obj.critique = CriticResult(**critique_dict)
         context_dict = context_obj.model_dump()
 
         # 6. UI Generation

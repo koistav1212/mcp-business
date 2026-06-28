@@ -7,43 +7,43 @@ from services.research.providers.people_provider import PeopleProvider
 from services.research.providers.reddit_provider import RedditProvider
 
 TOOLS = {
-    "company_profile": {
+    "company_provider": {
         "mcp_server": "company-mcp",
         "cost": 1,
         "quality": 0.9,
         "instance": CompanyProvider()
     },
-    "sec_data": {
+    "sec_edgar": {
         "mcp_server": "sec-mcp",
         "cost": 2,
         "quality": 0.95,
         "instance": SECEdgarProvider()
     },
-    "market_data": {
+    "yfinance": {
         "mcp_server": "market-mcp",
         "cost": 1,
         "quality": 0.9,
         "instance": YFinanceProvider()
     },
-    "news_feed": {
+    "news_provider": {
         "mcp_server": "news-mcp",
         "cost": 1,
         "quality": 0.8,
         "instance": NewsProvider()
     },
-    "technology_stack": {
+    "web_provider": {
         "mcp_server": "web-mcp",
         "cost": 1,
         "quality": 0.85,
         "instance": WebProvider()
     },
-    "people_data": {
+    "people_provider": {
         "mcp_server": "people-mcp",
         "cost": 3,
         "quality": 0.85,
         "instance": PeopleProvider()
     },
-    "social_sentiment": {
+    "reddit_provider": {
         "mcp_server": "social-mcp",
         "cost": 1,
         "quality": 0.7,

@@ -91,9 +91,6 @@
       "Workspace: CEO_REPORT. Theme: executive_dark."
     ],
     "data_gaps": [
-      "Field 'profile.overview' is unavailable \u2014 component omitted",
-      "Field 'profile.headquarters' is unavailable \u2014 component omitted",
-      "Field 'profile.employee_count' is unavailable \u2014 component omitted",
       "Field 'financials.revenue_history' is unavailable \u2014 component omitted",
       "Field 'financials.net_income_history' is unavailable \u2014 component omitted",
       "Field 'financials.operating_income_history' is unavailable \u2014 component omitted",
@@ -106,7 +103,6 @@
       "Field 'analytics.operating_margin' is unavailable \u2014 component omitted",
       "Field 'analytics.debt_equity' is unavailable \u2014 component omitted",
       "Field 'valuation_multiples' is unavailable \u2014 component omitted",
-      "Field 'leadership' is unavailable \u2014 component omitted",
       "Field 'hiring_signals' is unavailable \u2014 component omitted",
       "Field 'competitors' is unavailable \u2014 component omitted",
       "Field 'competitive_positioning' is unavailable \u2014 component omitted",

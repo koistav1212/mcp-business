@@ -1,0 +1,166 @@
+[
+  {
+    "id": "company_profile_reliance_name_2026_06_28_476a17",
+    "entity": "Reliance",
+    "attribute": "name",
+    "value": "Reliance, Inc.",
+    "source": "company_profile",
+    "source_url": null,
+    "source_type": "mcp",
+    "retrieved_at": "2026-06-28T10:20:46.113012",
+    "confidence": 0.95,
+    "freshness": "2026-06-28",
+    "tags": [],
+    "raw_payload": null,
+    "metadata": {}
+  },
+  {
+    "id": "company_profile_reliance_overview_2026_06_28_23c77f",
+    "entity": "Reliance",
+    "attribute": "overview",
+    "value": "Reliance may refer to:",
+    "source": "company_profile",
+    "source_url": null,
+    "source_type": "mcp",
+    "retrieved_at": "2026-06-28T10:20:46.113054",
+    "confidence": 0.88,
+    "freshness": "2026-06-28",
+    "tags": [],
+    "raw_payload": null,
+    "metadata": {}
+  },
+  {
+    "id": "company_profile_reliance_headquarters_2026_06_28_d2dfec",
+    "entity": "Reliance",
+    "attribute": "headquarters",
+    "value": "Phoenix, AZ, United States",
+    "source": "company_profile",
+    "source_url": null,
+    "source_type": "mcp",
+    "retrieved_at": "2026-06-28T10:20:46.113079",
+    "confidence": 0.88,
+    "freshness": "2026-06-28",
+    "tags": [],
+    "raw_payload": null,
+    "metadata": {}
+  },
+  {
+    "id": "company_profile_reliance_website_2026_06_28_100ee2",
+    "entity": "Reliance",
+    "attribute": "website",
+    "value": "https://reliance.com",
+    "source": "company_profile",
+    "source_url": null,
+    "source_type": "mcp",
+    "retrieved_at": "2026-06-28T10:20:46.113101",
+    "confidence": 0.88,
+    "freshness": "2026-06-28",
+    "tags": [],
+    "raw_payload": null,
+    "metadata": {}
+  },
+  {
+    "id": "company_profile_reliance_employee_count_2026_06_28_9969ad",
+    "entity": "Reliance",
+    "attribute": "employee_count",
+    "value": 15700,
+    "source": "company_profile",
+    "source_url": null,
+    "source_type": "mcp",
+    "retrieved_at": "2026-06-28T10:20:46.113124",
+    "confidence": 0.82,
+    "freshness": "2026-06-28",
+    "tags": [],
+    "raw_payload": null,
+    "metadata": {}
+  },
+  {
+    "id": "company_profile_reliance_leadership_2026_06_28_ded2d0",
+    "entity": "Reliance",
+    "attribute": "leadership",
+    "value": [
+      {
+        "name": "Ms. Karla R. Lewis CPA",
+        "role": "President, CEO & Director"
+      },
+      {
+        "name": "Mr. Arthur  Ajemyan",
+        "role": "CFO & Senior VP"
+      },
+      {
+        "name": "Mr. Stephen P. Koch",
+        "role": "Executive VP & COO"
+      },
+      {
+        "name": "Mr. William A. Smith II",
+        "role": "Senior VP, General Counsel & Corporate Secretary"
+      },
+      {
+        "name": "Mr. Scott W. Ramsbottom",
+        "role": "VP & Chief Information Officer"
+      },
+      {
+        "name": "Ms. Vandy C. Lupton",
+        "role": "Vice President of Health & Human Resources"
+      },
+      {
+        "name": "Ms. Brenda S. Miyamoto CMT",
+        "role": "Senior Vice President of Strategic Planning & Programs"
+      }
+    ],
+    "source": "company_profile",
+    "source_url": null,
+    "source_type": "mcp",
+    "retrieved_at": "2026-06-28T10:20:46.113147",
+    "confidence": 0.8,
+    "freshness": "2026-06-28",
+    "tags": [],
+    "raw_payload": null,
+    "metadata": {}
+  },
+  {
+    "id": "yfinance_reliance_industry_2026_06_28_0db68d",
+    "entity": "Reliance",
+    "attribute": "industry",
+    "value": "Steel",
+    "source": "yfinance",
+    "source_url": null,
+    "source_type": "mcp",
+    "retrieved_at": "2026-06-28T10:20:46.113169",
+    "confidence": 0.85,
+    "freshness": "2026-06-28",
+    "tags": [],
+    "raw_payload": null,
+    "metadata": {}
+  },
+  {
+    "id": "yfinance_reliance_sector_2026_06_28_6147fb",
+    "entity": "Reliance",
+    "attribute": "sector",
+    "value": "Basic Materials",
+    "source": "yfinance",
+    "source_url": null,
+    "source_type": "mcp",
+    "retrieved_at": "2026-06-28T10:20:46.113189",
+    "confidence": 0.85,
+    "freshness": "2026-06-28",
+    "tags": [],
+    "raw_payload": null,
+    "metadata": {}
+  },
+  {
+    "id": "yfinance_reliance_ticker_2026_06_28_9932cc",
+    "entity": "Reliance",
+    "attribute": "ticker",
+    "value": "RS",
+    "source": "yfinance",
+    "source_url": null,
+    "source_type": "mcp",
+    "retrieved_at": "2026-06-28T10:20:46.113208",
+    "confidence": 0.95,
+    "freshness": "2026-06-28",
+    "tags": [],
+    "raw_payload": null,
+    "metadata": {}
+  }
+]

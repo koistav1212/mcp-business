@@ -8,15 +8,15 @@ class DynamicResearchPlanner:
     
     # Predefined tasks for specific sources to ensure standard mappings
     SOURCE_TASK_MAP = {
-        "sec": {"task": "financial_history", "provider": "sec"},
+        "sec": {"task": "financial_history", "provider": "sec_edgar"},
         "yfinance": {"task": "market_valuation", "provider": "yfinance"},
-        "news": {"task": "recent_developments", "provider": "news"},
-        "reddit": {"task": "social_sentiment", "provider": "reddit"},
-        "company": {"task": "company_profile", "provider": "company"},
-        "people": {"task": "leadership", "provider": "people"},
-        "hiring": {"task": "hiring_signals", "provider": "people"},
-        "competitors": {"task": "competitor_mapping", "provider": "web"},
-        "web": {"task": "web_research", "provider": "web"}
+        "news": {"task": "recent_developments", "provider": "news_provider"},
+        "reddit": {"task": "social_sentiment", "provider": "reddit_provider"},
+        "company": {"task": "company_profile", "provider": "company_provider"},
+        "people": {"task": "leadership", "provider": "people_provider"},
+        "hiring": {"task": "hiring_signals", "provider": "people_provider"},
+        "competitors": {"task": "competitor_mapping", "provider": "web_provider"},
+        "web": {"task": "web_research", "provider": "web_provider"}
     }
     
     def plan(self, plan_data: Any) -> List[Dict[str, str]]:

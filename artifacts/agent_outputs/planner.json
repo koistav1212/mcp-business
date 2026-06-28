@@ -1,117 +1,19 @@
 {
-  "raw_llm_response": "```\n{\n  \"execution_id\": \"analyze_apple\",\n  \"research_objective\": \"Comprehensive research on Apple\",\n  \"company\": \"Apple\",\n  \"entities\": [\"Apple\", \"Tim Cook\", \"iPhone\", \"Mac\"],\n  \"research_tasks\": [\n    {\n      \"task_id\": \"task_1\",\n      \"title\": \"Financial History Analysis\",\n      \"objective\": \"Analyze Apple's financial history\",\n      \"priority\": \"Critical\",\n      \"owner_agent\": \"Financial Analyst\",\n      \"dependencies\": [],\n      \"required_evidence\": [\"annual reports\", \"financial statements\"],\n      \"required_sources\": [\"SEC filings\", \"financial databases\"],\n      \"expected_output\": \"Financial performance summary\",\n      \"success_criteria\": [\"revenue growth\", \"profit margins\"],\n      \"estimated_tokens\": 1000,\n      \"parallelizable\": true\n    },\n    {\n      \"task_id\": \"task_2\",\n      \"title\": \"Market Data Analysis\",\n      \"objective\": \"Analyze Apple's market data\",\n      \"priority\": \"High\",\n      \"owner_agent\": \"Market Researcher\",\n      \"dependencies\": [\"task_1\"],\n      \"required_evidence\": [\"market trends\", \"competitor analysis\"],\n      \"required_sources\": [\"market research reports\", \"industry publications\"],\n      \"expected_output\": \"Market share summary\",\n      \"success_criteria\": [\"market share growth\", \"customer satisfaction\"],\n      \"estimated_tokens\": 1000,\n      \"parallelizable\": true\n    },\n    {\n      \"task_id\": \"task_3\",\n      \"title\": \"News and Sentiment Analysis\",\n      \"objective\": \"Analyze news and sentiment around Apple\",\n      \"priority\": \"Medium\",\n      \"owner_agent\": \"News Analyst\",\n      \"dependencies\": [\"task_2\"],\n      \"required_evidence\": [\"news articles\", \"social media posts\"],\n      \"required_sources\": [\"news databases\", \"social media platforms\"],\n      \"expected_output\": \"Sentiment analysis report\",\n      \"success_criteria\": [\"sentiment score\", \"media coverage\"],\n      \"estimated_tokens\": 1000,\n      \"parallelizable\": true\n    },\n    {\n      \"task_id\": \"task_4\",\n      \"title\": \"Leadership Analysis\",\n      \"objective\": \"Analyze Apple's leadership\",\n      \"priority\": \"Low\",\n      \"owner_agent\": \"Leadership Analyst\",\n      \"dependencies\": [\"task_3\"],\n      \"required_evidence\": [\"executive profiles\", \"leadership structure\"],\n      \"required_sources\": [\"company website\", \"leadership directories\"],\n      \"expected_output\": \"Leadership profile\",\n      \"success_criteria\": [\"leadership experience\", \"succession planning\"],\n      \"estimated_tokens\": 1000,\n      \"parallelizable\": true\n    }\n  ]\n}\n```",
+  "raw_llm_response": "{\"intent\": \"comprehensive_research\", \"required_sources\": [\"sec\", \"company\", \"news\", \"people\", \"yfinance\", \"reddit\", \"web\", \"competitors\"]}",
   "parsed_json": {
-    "execution_id": "analyze_apple",
-    "research_objective": "Comprehensive research on Apple",
-    "company": "Apple",
-    "entities": [
-      "Apple",
-      "Tim Cook",
-      "iPhone",
-      "Mac"
-    ],
-    "research_tasks": [
-      {
-        "task_id": "task_1",
-        "title": "Financial History Analysis",
-        "objective": "Analyze Apple's financial history",
-        "priority": "Critical",
-        "owner_agent": "Financial Analyst",
-        "dependencies": [],
-        "required_evidence": [
-          "annual reports",
-          "financial statements"
-        ],
-        "required_sources": [
-          "SEC filings",
-          "financial databases"
-        ],
-        "expected_output": "Financial performance summary",
-        "success_criteria": [
-          "revenue growth",
-          "profit margins"
-        ],
-        "estimated_tokens": 1000,
-        "parallelizable": true
-      },
-      {
-        "task_id": "task_2",
-        "title": "Market Data Analysis",
-        "objective": "Analyze Apple's market data",
-        "priority": "High",
-        "owner_agent": "Market Researcher",
-        "dependencies": [
-          "task_1"
-        ],
-        "required_evidence": [
-          "market trends",
-          "competitor analysis"
-        ],
-        "required_sources": [
-          "market research reports",
-          "industry publications"
-        ],
-        "expected_output": "Market share summary",
-        "success_criteria": [
-          "market share growth",
-          "customer satisfaction"
-        ],
-        "estimated_tokens": 1000,
-        "parallelizable": true
-      },
-      {
-        "task_id": "task_3",
-        "title": "News and Sentiment Analysis",
-        "objective": "Analyze news and sentiment around Apple",
-        "priority": "Medium",
-        "owner_agent": "News Analyst",
-        "dependencies": [
-          "task_2"
-        ],
-        "required_evidence": [
-          "news articles",
-          "social media posts"
-        ],
-        "required_sources": [
-          "news databases",
-          "social media platforms"
-        ],
-        "expected_output": "Sentiment analysis report",
-        "success_criteria": [
-          "sentiment score",
-          "media coverage"
-        ],
-        "estimated_tokens": 1000,
-        "parallelizable": true
-      },
-      {
-        "task_id": "task_4",
-        "title": "Leadership Analysis",
-        "objective": "Analyze Apple's leadership",
-        "priority": "Low",
-        "owner_agent": "Leadership Analyst",
-        "dependencies": [
-          "task_3"
-        ],
-        "required_evidence": [
-          "executive profiles",
-          "leadership structure"
-        ],
-        "required_sources": [
-          "company website",
-          "leadership directories"
-        ],
-        "expected_output": "Leadership profile",
-        "success_criteria": [
-          "leadership experience",
-          "succession planning"
-        ],
-        "estimated_tokens": 1000,
-        "parallelizable": true
-      }
+    "intent": "comprehensive_research",
+    "required_sources": [
+      "sec",
+      "company",
+      "news",
+      "people",
+      "yfinance",
+      "reddit",
+      "web",
+      "competitors"
     ]
   },
   "validation_result": "success",
-  "execution_time": 1466.4640426635742,
+  "execution_time": 396.91901206970215,
   "errors": []
 }

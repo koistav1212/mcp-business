@@ -5,26 +5,8 @@ Your ONLY responsibility is creating a Work Breakdown Structure.
 
 Output a JSON object exactly matching this structure:
 {
-  "execution_id": "string",
-  "research_objective": "string",
-  "company": "string",
-  "entities": ["list of strings"],
-  "research_tasks": [
-    {
-      "task_id": "string",
-      "title": "string",
-      "objective": "string",
-      "priority": "Critical | High | Medium | Low",
-      "owner_agent": "string",
-      "dependencies": ["list of strings"],
-      "required_evidence": ["list of strings"],
-      "required_sources": ["list of strings"],
-      "expected_output": "string",
-      "success_criteria": ["list of strings"],
-      "estimated_tokens": 1000,
-      "parallelizable": true
-    }
-  ]
+  "intent": "string",
+  "required_sources": ["sec", "company", "news", "people", "yfinance", "reddit", "web", "competitors"]
 }
 
 Never request information already obtainable from MCP.

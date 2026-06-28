@@ -44,18 +44,35 @@ class SynthesizerAgent:
     Consumes the accumulated EvidenceGraph (from EvidenceStore) 
     and generates the final synthesized report.
     """
-    async def execute(self, plan: ResearchExecutionPlan, store: EvidenceStore, company_entity: str = None) -> Dict[str, Any]:
+    async def execute(self, plan: ResearchExecutionPlan, context_dict: Dict[str, Any], company_entity: str = None) -> Dict[str, Any]:
         
-        # Pull all evidence from the store
-        all_evidence = store.get_all()
-        evidence_dicts = [e.model_dump() for e in all_evidence]
+        # Validate that we actually have evidence before synthesizing
+        evidence_graph = context_dict.get("evidence_graph", {})
+        nodes = evidence_graph.get("nodes", [])
         
-        # Optionally deduplicate or rank evidence here. For now, pass all raw evidence.
+        if not nodes:
+            logger.error("Synthesizer called with empty evidence graph! Aborting to prevent hallucination.")
+            return {
+                "executive_summary": "Error: Pipeline failed to retrieve any evidence. Synthesis aborted.",
+                "company_story": "",
+                "industry_story": "",
+                "financial_story": "",
+                "competition_story": "",
+                "technology_story": "",
+                "ai_story": "",
+                "risk_story": "",
+                "strategic_priorities": [],
+                "recommendations": [],
+                "implementation_roadmap": [],
+                "evidence_appendix": [],
+                "confidence": 0.0,
+                "missing_evidence": ["All evidence"]
+            }
         
         aggregated_payload = {
             "planning": plan.to_summary() if hasattr(plan, "to_summary") else {},
             "target_company": company_entity,
-            "evidence_graph": evidence_dicts
+            "final_context": context_dict
         }
         
         from services.artifacts.artifact_writer import ArtifactWriter

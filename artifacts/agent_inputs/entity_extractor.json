@@ -1,6 +1,6 @@
 {
   "system_prompt": "You are a Data Extraction Entity.\nExtract the company name, industry, and country from the user's research query.\n\nAnalyze the query and output a JSON object exactly matching this schema:\n{\n  \"company\": \"string (The core company name to research)\",\n  \"ticker\": \"string (The stock ticker, if public)\",\n  \"exchange\": \"string (The stock exchange, if public)\",\n  \"cik\": \"string (The SEC CIK number, if applicable)\",\n  \"website\": \"string (The company's primary website)\",\n  \"industry\": \"string (The industry they operate in)\",\n  \"subindustry\": \"string (The sub-industry they operate in)\",\n  \"country\": \"string (The primary country, default to US if unknown)\",\n  \"headquarters\": \"string (The city/state of headquarters)\"\n}\n\nReturn ONLY the raw JSON object. Do not include markdown formatting.\n",
-  "user_prompt": "{\"prompt\": \"Analyze Apple\"}",
+  "user_prompt": "{\"prompt\": \"Analyze Reliance\"}",
   "messages": [],
   "token_estimate": 500,
   "provider": "groq",

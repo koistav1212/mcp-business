@@ -38,8 +38,16 @@ class EntityExtractorAgent:
                 logger.warning(f"Entity extractor LLM failed: {e}. Falling back to basic parsing.")
                 
         # Basic heuristic fallback
+        query = user_query.strip()
+        for verb in ["analyze", "research", "investigate", "tell me about", "look up", "find", "get"]:
+            if query.lower().startswith(verb):
+                query = query[len(verb):].strip()
+        
+        # Remove punctuation
+        query = query.strip(" .:,;!?")
+                
         return EntityExtractionResult(
-            company=user_query.strip()[:50],
+            company=query[:50],
             industry="Technology",
             country="US",
             ticker=None,

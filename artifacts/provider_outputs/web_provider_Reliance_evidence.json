@@ -1,0 +1,64 @@
+[
+  {
+    "id": "technology_profile_reliance_technology_profile_current_823877",
+    "entity": "reliance",
+    "attribute": "technology_profile",
+    "value": {
+      "languages": [
+        "Go",
+        "Rust"
+      ],
+      "ai_frameworks": [],
+      "cloud": [],
+      "containers": [],
+      "developer_platforms": [],
+      "products": [],
+      "innovation_focus": []
+    },
+    "source": "web_technology_profile",
+    "source_url": null,
+    "source_type": "mcp",
+    "retrieved_at": "2026-06-28 10:20:59.025825",
+    "confidence": 0.7,
+    "freshness": "current",
+    "tags": [],
+    "raw_payload": null,
+    "metadata": {}
+  },
+  {
+    "id": "technology_intelligence_reliance_technology_intelligence_current_7d2082",
+    "entity": "reliance",
+    "attribute": "technology_intelligence",
+    "value": {
+      "core_platforms": [],
+      "programming_languages": [
+        "Go",
+        "Rust"
+      ],
+      "frontend_frameworks": [],
+      "backend_frameworks": [],
+      "ai_ml_frameworks": [],
+      "cloud_providers": [],
+      "databases": [],
+      "data_engineering": [],
+      "containerization": [],
+      "orchestration": [],
+      "ci_cd": [],
+      "monitoring": [],
+      "security": [],
+      "cdn": [],
+      "api_technologies": [],
+      "mobile_technologies": [],
+      "web_servers": []
+    },
+    "source": "web_technology_profile",
+    "source_url": null,
+    "source_type": "mcp",
+    "retrieved_at": "2026-06-28 10:20:59.025858",
+    "confidence": 0.7,
+    "freshness": "current",
+    "tags": [],
+    "raw_payload": null,
+    "metadata": {}
+  }
+]
