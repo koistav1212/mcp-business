@@ -1,2 +1,18 @@
 .env*
 .env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+
+# Artifacts
+artifacts/*
+!artifacts/.gitkeep
