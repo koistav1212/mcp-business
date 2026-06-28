@@ -1,0 +1,111 @@
+{
+  "execution_id": "analyze_apple",
+  "research_objective": "Comprehensive research on Apple",
+  "company": "Apple",
+  "entities": [
+    "Apple",
+    "Tim Cook",
+    "iPhone",
+    "Mac"
+  ],
+  "research_tasks": [
+    {
+      "task_id": "task_1",
+      "title": "Financial History Analysis",
+      "objective": "Analyze Apple's financial history",
+      "priority": "Critical",
+      "owner_agent": "Financial Analyst",
+      "dependencies": [],
+      "required_evidence": [
+        "annual reports",
+        "financial statements"
+      ],
+      "required_sources": [
+        "SEC filings",
+        "financial databases"
+      ],
+      "expected_output": "Financial performance summary",
+      "success_criteria": [
+        "revenue growth",
+        "profit margins"
+      ],
+      "estimated_tokens": 1000,
+      "parallelizable": true
+    },
+    {
+      "task_id": "task_2",
+      "title": "Market Data Analysis",
+      "objective": "Analyze Apple's market data",
+      "priority": "High",
+      "owner_agent": "Market Researcher",
+      "dependencies": [
+        "task_1"
+      ],
+      "required_evidence": [
+        "market trends",
+        "competitor analysis"
+      ],
+      "required_sources": [
+        "market research reports",
+        "industry publications"
+      ],
+      "expected_output": "Market share summary",
+      "success_criteria": [
+        "market share growth",
+        "customer satisfaction"
+      ],
+      "estimated_tokens": 1000,
+      "parallelizable": true
+    },
+    {
+      "task_id": "task_3",
+      "title": "News and Sentiment Analysis",
+      "objective": "Analyze news and sentiment around Apple",
+      "priority": "Medium",
+      "owner_agent": "News Analyst",
+      "dependencies": [
+        "task_2"
+      ],
+      "required_evidence": [
+        "news articles",
+        "social media posts"
+      ],
+      "required_sources": [
+        "news databases",
+        "social media platforms"
+      ],
+      "expected_output": "Sentiment analysis report",
+      "success_criteria": [
+        "sentiment score",
+        "media coverage"
+      ],
+      "estimated_tokens": 1000,
+      "parallelizable": true
+    },
+    {
+      "task_id": "task_4",
+      "title": "Leadership Analysis",
+      "objective": "Analyze Apple's leadership",
+      "priority": "Low",
+      "owner_agent": "Leadership Analyst",
+      "dependencies": [
+        "task_3"
+      ],
+      "required_evidence": [
+        "executive profiles",
+        "leadership structure"
+      ],
+      "required_sources": [
+        "company website",
+        "leadership directories"
+      ],
+      "expected_output": "Leadership profile",
+      "success_criteria": [
+        "leadership experience",
+        "succession planning"
+      ],
+      "estimated_tokens": 1000,
+      "parallelizable": true
+    }
+  ]
+}

@@ -8,10 +8,10 @@ class NewsView(KnowledgeView):
         all_evidence = evidence_store.get_all_for_entity(entity)
         
         # Filter for news-related evidence
-        allowed_sources = ["news_feed", "social_sentiment"]
+        allowed_sources = ["news_feed", "social_sentiment", "news_intelligence_pipeline"]
         news_evidence = [
             ev for ev in all_evidence 
-            if ev.source in allowed_sources or ev.attribute in ["news", "sentiment"]
+            if ev.source in allowed_sources or ev.attribute in ["news", "sentiment", "news_intelligence"]
         ]
         
         # Sort by freshness if available

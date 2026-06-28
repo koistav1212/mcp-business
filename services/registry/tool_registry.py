@@ -1,6 +1,6 @@
 from services.research.providers.sec_edgar_provider import SECEdgarProvider
 from services.research.providers.yfinance_provider import YFinanceProvider
-from services.research.providers.news_provider import NewsProvider
+from services.research.providers.news.news_provider import NewsProvider
 from services.research.providers.company_provider import CompanyProvider
 from services.research.providers.web_provider import WebProvider
 from services.research.providers.people_provider import PeopleProvider

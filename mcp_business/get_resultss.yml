@@ -1,0 +1,14 @@
+info:
+  name: get_resultss
+  type: http
+
+http:
+  method: GET
+  url: http://127.0.0.1:8000/workspace/status/3915cc9b-fbcc-417a-b4ae-99b8ebb69a2d
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

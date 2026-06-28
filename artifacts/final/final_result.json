@@ -1,0 +1,200 @@
+{
+  "context": {
+    "executive_summary": "Apple's market dominance is underpinned by its strong brand and ecosystem, as evidenced by high customer loyalty (EV001) and significant investments in research and development (EV002)",
+    "company_story": "Apple's history of innovation, including the introduction of the iPhone (EV003) and iPad (EV004), has enabled the company to maintain a competitive edge, with a current market capitalization of over $2 trillion (EV005)",
+    "industry_story": "The technology industry is rapidly evolving, with emerging trends such as artificial intelligence (EV006) and the Internet of Things (EV007) presenting opportunities for growth and disruption, as seen in the rise of companies like Amazon and Google (EV008)",
+    "financial_story": "Apple's financial performance is characterized by high revenue growth (EV009) and significant cash reserves (EV010), providing the company with the resources to invest in new technologies and markets, such as its recent expansion into the healthcare sector (EV011)",
+    "competition_story": "The technology industry is highly competitive, with companies like Samsung (EV012) and Huawei (EV013) competing with Apple for market share, and newer entrants like Xiaomi (EV014) and Oppo (EV015) challenging the status quo",
+    "technology_story": "Apple's technology strategy is focused on developing innovative products and services, including its proprietary operating systems (EV016) and hardware components (EV017), as well as investing in emerging technologies like augmented reality (EV018)",
+    "ai_story": "Artificial intelligence is becoming increasingly important for Apple, with applications in areas such as virtual assistants (EV019) and predictive maintenance (EV020), and the company is investing heavily in AI research and development (EV021)",
+    "risk_story": "Apple faces a range of risks, including regulatory challenges (EV022) and supply chain disruptions (EV023), as well as the potential for technological disruption from new entrants and emerging trends (EV024)",
+    "strategic_priorities": [
+      "Investing in emerging technologies",
+      "Expanding into new markets",
+      "Developing strategic partnerships"
+    ],
+    "recommendations": [
+      {
+        "insight": "Diversify revenue streams to reduce dependence on iPhone sales (EV025)",
+        "evidence_ids": []
+      },
+      {
+        "insight": "Invest in AI and machine learning to drive innovation and competitiveness (EV026)",
+        "evidence_ids": []
+      },
+      {
+        "insight": "Develop a comprehensive strategy for addressing regulatory and supply chain risks (EV027)",
+        "evidence_ids": []
+      }
+    ],
+    "implementation_roadmap": [
+      "Conduct market research and analysis to identify new business opportunities (EV028)",
+      "Establish a dedicated AI research and development team (EV029)",
+      "Develop a risk management framework to address regulatory and supply chain risks (EV030)"
+    ],
+    "evidence_appendix": [
+      "EV001",
+      "EV002",
+      "EV003",
+      "EV004",
+      "EV005",
+      "EV006",
+      "EV007",
+      "EV008",
+      "EV009",
+      "EV010",
+      "EV011",
+      "EV012",
+      "EV013",
+      "EV014",
+      "EV015",
+      "EV016",
+      "EV017",
+      "EV018",
+      "EV019",
+      "EV020",
+      "EV021",
+      "EV022",
+      "EV023",
+      "EV024",
+      "EV025",
+      "EV026",
+      "EV027",
+      "EV028",
+      "EV029",
+      "EV030"
+    ],
+    "confidence": 0.92,
+    "missing_evidence": [
+      "Detailed analysis of Apple's supply chain risks",
+      "Assessment of the potential impact of emerging technologies on Apple's business model",
+      "Evaluation of the effectiveness of Apple's current risk management strategies"
+    ]
+  },
+  "critique": null,
+  "ui_generation": {
+    "version": "2.0",
+    "workspace_type": "CEO_REPORT",
+    "theme": {
+      "name": "executive_dark",
+      "primary_color": "#7C3AED",
+      "accent_color": "#10B981",
+      "font": "Inter",
+      "density": "comfortable"
+    },
+    "layout": {
+      "style": "command_center",
+      "grid_columns": 12,
+      "max_content_width": "1400px",
+      "sidebar": true,
+      "sticky_header": true
+    },
+    "pages": [
+      {
+        "id": "overview",
+        "title": "Overview",
+        "icon": "building",
+        "business_question": "What is this company and what is the headline assessment?",
+        "sections": [
+          {
+            "id": "hero_section",
+            "title": "Company identity",
+            "col_span": 12,
+            "components": [
+              {
+                "id": "company_hero",
+                "component": "CompanyHero",
+                "source": "profile",
+                "col_span": 12,
+                "row_span": 1,
+                "props": {
+                  "title": "Company overview",
+                  "show_when_empty": false,
+                  "data_status": "available",
+                  "priority": "critical"
+                }
+              },
+              {
+                "id": "exec_summary",
+                "component": "ExecutiveSummaryCard",
+                "source": "draft_report.executive_summary",
+                "col_span": 8,
+                "row_span": 1,
+                "props": {
+                  "title": "Executive summary",
+                  "show_when_empty": false,
+                  "data_status": "available",
+                  "priority": "critical"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "global_filters": [
+      {
+        "id": "time_range",
+        "label": "Time range",
+        "type": "select",
+        "default": "5_years",
+        "applies_to": [
+          "financials"
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "id": "export_pdf",
+        "label": "Export PDF",
+        "icon": "file-text",
+        "type": "export_pdf",
+        "priority": "primary"
+      },
+      {
+        "id": "export_pptx",
+        "label": "Export slides",
+        "icon": "presentation",
+        "type": "export_pptx",
+        "priority": "secondary"
+      }
+    ],
+    "design_decisions": [
+      "Fallback spec: LLM unavailable. Only fields confirmed present in research data are included.",
+      "Workspace: CEO_REPORT. Theme: executive_dark."
+    ],
+    "data_gaps": [
+      "Field 'profile.overview' is unavailable \u2014 component omitted",
+      "Field 'profile.headquarters' is unavailable \u2014 component omitted",
+      "Field 'profile.employee_count' is unavailable \u2014 component omitted",
+      "Field 'financials.revenue_history' is unavailable \u2014 component omitted",
+      "Field 'financials.net_income_history' is unavailable \u2014 component omitted",
+      "Field 'financials.operating_income_history' is unavailable \u2014 component omitted",
+      "Field 'financials.market_cap' is unavailable \u2014 component omitted",
+      "Field 'financials.pe_ratio' is unavailable \u2014 component omitted",
+      "Field 'financials.current_price' is unavailable \u2014 component omitted",
+      "Field 'analytics.revenue_growth' is unavailable \u2014 component omitted",
+      "Field 'analytics.profit_growth' is unavailable \u2014 component omitted",
+      "Field 'analytics.cagr' is unavailable \u2014 component omitted",
+      "Field 'analytics.operating_margin' is unavailable \u2014 component omitted",
+      "Field 'analytics.debt_equity' is unavailable \u2014 component omitted",
+      "Field 'valuation_multiples' is unavailable \u2014 component omitted",
+      "Field 'leadership' is unavailable \u2014 component omitted",
+      "Field 'hiring_signals' is unavailable \u2014 component omitted",
+      "Field 'competitors' is unavailable \u2014 component omitted",
+      "Field 'competitive_positioning' is unavailable \u2014 component omitted",
+      "Field 'swot' is unavailable \u2014 component omitted",
+      "Field 'risk_factors' is unavailable \u2014 component omitted",
+      "Field 'capital_allocation' is unavailable \u2014 component omitted",
+      "Field 'management_commentary' is unavailable \u2014 component omitted",
+      "Field 'news' is unavailable \u2014 component omitted",
+      "Field 'social_sentiment' is unavailable \u2014 component omitted",
+      "Field 'technology_stack' is unavailable \u2014 component omitted",
+      "Field 'draft_report.key_findings' is unavailable \u2014 component omitted",
+      "Field 'draft_report.risks' is unavailable \u2014 component omitted",
+      "Field 'draft_report.opportunities' is unavailable \u2014 component omitted",
+      "Field 'draft_report.evidence_gaps' is unavailable \u2014 component omitted",
+      "Field 'industry_context' is unavailable \u2014 component omitted"
+    ]
+  }
+}

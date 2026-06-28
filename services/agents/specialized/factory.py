@@ -2,7 +2,7 @@ import json
 import logging
 from typing import Dict, Any
 from services.models.planning_models import PlanningResult
-from services.models.research_models import AgentResult
+from services.models.research_models import AgentResult, Finding
 from services.agents.tool_router_agent import ToolRouterAgent
 from services.agents.specialized.base import BaseResearchAgent
 from services.llm.provider_router import ProviderRouter
@@ -43,6 +43,9 @@ class GenericLLMAgent(BaseResearchAgent):
             user_payload = {"agent": self.agent_name, "evidence": view_dicts}
         else:
             user_payload = {"agent": self.agent_name, "evidence": []}
+            
+        from services.artifacts.artifact_writer import ArtifactWriter
+        ArtifactWriter.write_json(f"knowledge_views/{self.agent_name}.json", user_payload)
 
         # If there's previous iteration findings, append them
         if previous_findings:
@@ -61,6 +64,9 @@ class GenericLLMAgent(BaseResearchAgent):
                     user_prompt=user_prompt
                 )
                 
+                if not isinstance(payload, dict):
+                    raise ValueError(f"LLM returned {type(payload)} instead of dict. Content: {payload}")
+                
                 # Ensure evidence is empty as we don't need to pass it back
                 payload["evidence"] = []
                 
@@ -70,7 +76,14 @@ class GenericLLMAgent(BaseResearchAgent):
                 
         # Fallback
         return AgentResult(
-            findings=[f"Basic finding from {self.agent_name}"],
+            findings=[
+                Finding(
+                    id=f"FB-{self.agent_name}",
+                    description=f"Basic finding from {self.agent_name}",
+                    evidence_refs=[],
+                    confidence=0.5
+                )
+            ],
             evidence=[],
             confidence=0.5
         )
@@ -207,7 +220,20 @@ class DeterministicAgent(BaseResearchAgent):
         findings_data = engine_output if engine_output else raw_data
         
         # Format directly to AgentResult bypassing LLM
-        findings = [f"Raw data collected and analyzed for {target}:", str(findings_data)[:500] + "..."]
+        findings = [
+            Finding(
+                id=f"RAW-{self.agent_name}-1",
+                description=f"Raw data collected and analyzed for {target}:",
+                evidence_refs=[],
+                confidence=1.0
+            ),
+            Finding(
+                id=f"RAW-{self.agent_name}-2",
+                description=str(findings_data)[:500] + "...",
+                evidence_refs=[],
+                confidence=1.0
+            )
+        ]
         
         return AgentResult(
             findings=findings,

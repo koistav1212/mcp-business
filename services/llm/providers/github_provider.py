@@ -47,9 +47,16 @@ class GithubModelsProvider(BaseProvider):
             
             latency_ms = (time.time() - start_time) * 1000
             
+            raw_usage = data.get("usage", {})
+            normalized_usage = {
+                "prompt_tokens": int(raw_usage.get("prompt_tokens") or 0),
+                "completion_tokens": int(raw_usage.get("completion_tokens") or 0),
+                "total_tokens": int(raw_usage.get("total_tokens") or 0)
+            }
+            
             return LLMResponse(
                 content=data["choices"][0]["message"]["content"],
-                usage=data.get("usage", {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}),
+                usage=normalized_usage,
                 provider=self.provider_name,
                 model=request.model,
                 latency_ms=latency_ms,

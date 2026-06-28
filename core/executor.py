@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from typing import Dict, List, Any
 from core.state import AgentState, AgentStep, AgentStatus
 from core.exceptions import ToolExecutionException
+from services.artifacts.artifact_writer import ArtifactWriter
 from tools.base import BaseTool
 
 logger = logging.getLogger(__name__)
@@ -50,11 +51,16 @@ class AgentExecutor:
             output = await tool.execute(**validated_inputs)
             step.tool_output = output
             step.status = "completed"
+            
+            # Save step output to artifacts
+            ArtifactWriter.write_json(f"agent_outputs/step_{step.step_id}_{step.tool_name}_output.json", {"tool_name": step.tool_name, "output": output})
+            
             return output
         except Exception as e:
             step.status = "failed"
             step.error = str(e)
             logger.error(f"Step {step.step_id} execution failed: {e}")
+            ArtifactWriter.write_json(f"agent_outputs/step_{step.step_id}_{step.tool_name}_error.json", {"error": str(e)})
             raise ToolExecutionException(f"Failed to execute tool {step.tool_name}: {e}") from e
         finally:
             step.completed_at = datetime.now(timezone.utc)
@@ -69,10 +75,18 @@ class AgentExecutor:
             return state
 
         state.update_status(AgentStatus.EXECUTING)
+        
+        # Save the plan to artifacts before executing
+        ArtifactWriter.write_json("agent_outputs/execution_plan.json", state.plan.model_dump())
+        
         for index, step in enumerate(state.plan.steps):
             if step.status == "completed":
                 continue
             state.current_step_index = index
+            
+            # Save step input
+            ArtifactWriter.write_json(f"agent_inputs/step_{step.step_id}_{step.tool_name}_input.json", {"tool_name": step.tool_name, "input": step.tool_input})
+            
             try:
                 await self.execute_step(step, state)
             except Exception as e:

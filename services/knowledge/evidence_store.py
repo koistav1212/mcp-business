@@ -42,3 +42,6 @@ class EvidenceStore:
 
     def get_by_id(self, evidence_id: str) -> Optional[ResearchEvidence]:
         return self._id_index.get(evidence_id)
+
+    def get_all(self) -> List[ResearchEvidence]:
+        return list(self._id_index.values())

@@ -1,71 +1,102 @@
-from .models import ExecutionPlan, ExecutionWave, DependencyGraph
+import asyncio
 import logging
+from typing import Dict, Any
+
+from services.models.research_execution_plan import ResearchExecutionPlan, ExecutionWave, ResearchTask
+from services.agents.tool_router_agent import ToolRouterAgent
+from services.knowledge.knowledge_router import KnowledgeRouter
+from services.artifacts.artifact_writer import ArtifactWriter
 
 logger = logging.getLogger("uvicorn.error")
 
 class TaskScheduler:
     """
-    Sorts tasks by priority, resolves dependencies, and groups them into parallel execution waves
-    while strictly respecting Token-Per-Minute (TPM) limits.
+    Orchestrates the execution of a ResearchExecutionPlan.
+    Reads execution waves, handles parallel execution, retries, and timeouts.
     """
-    MAX_TPM = 25000
+    
+    def __init__(self, knowledge_router: KnowledgeRouter):
+        self.knowledge_router = knowledge_router
 
-    @classmethod
-    def schedule(cls, plan: ExecutionPlan) -> ExecutionPlan:
-        tasks_by_id = {task.task_id: task for task in plan.research_tasks}
-        in_degree = {task.task_id: len(task.dependencies) for task in plan.research_tasks}
+    async def execute(self, plan: ResearchExecutionPlan, entity_data: Dict[str, Any]) -> None:
+        """
+        Executes the provided research execution plan wave by wave.
+        `entity_data` should contain the ResolvedCompany fields (like canonical_name, ticker, etc.)
+        """
+        logger.info(f"Scheduler starting execution of plan {plan.plan_id}")
         
-        adj = {task.task_id: [] for task in plan.research_tasks}
-        for task in plan.research_tasks:
-            for dep in task.dependencies:
-                if dep in adj:
-                    adj[dep].append(task.task_id)
-                    
-        plan.dependency_graph = DependencyGraph(nodes=tasks_by_id, edges=adj)
-        
-        waves = []
-        wave_id = 1
-        
-        while in_degree:
-            current_wave_ids = [tid for tid, deg in in_degree.items() if deg == 0]
+        for wave in plan.execution_waves:
+            logger.info(f"Executing {wave.name} (Wave {wave.wave_number})")
             
-            if not current_wave_ids:
-                logger.error("Cycle detected during scheduling! Or isolated dependencies.")
+            wave_tasks = []
+            for task in wave.tasks:
+                # The task target_field tells us which field of the resolved entity to pass
+                target_val = entity_data.get(task.target_field)
+                if not target_val:
+                    logger.warning(f"Task {task.task_id}: Target field '{task.target_field}' not found in entity data. Using full entity.")
+                    target_val = entity_data
+
+                wave_tasks.append(
+                    self._execute_task_with_retries(task, target_val)
+                )
+
+            # Execute all tasks in this wave in parallel
+            results = await asyncio.gather(*wave_tasks, return_exceptions=True)
+            
+            failed = False
+            wave_results_dict = {}
+            for task, res in zip(wave.tasks, results):
+                if isinstance(res, Exception):
+                    logger.error(f"Task {task.task_id} failed: {res}")
+                    wave_results_dict[task.task_id] = {"error": str(res)}
+                    if wave.stop_on_failure:
+                        failed = True
+                        break
+                else:
+                    wave_results_dict[task.task_id] = res
+
+            ArtifactWriter.write_json(f"agent_outputs/wave_{wave.wave_number}_results.json", wave_results_dict)
+
+            if failed:
+                logger.error(f"Wave {wave.wave_number} failed and stop_on_failure is True. Aborting pipeline.")
                 break
-                
-            priority_map = {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}
-            current_wave_ids.sort(key=lambda tid: priority_map.get(tasks_by_id[tid].priority, 4))
-            
-            # Pack tasks into waves based on token limits
-            current_wave_tasks = []
-            current_wave_tokens = 0
-            
-            tasks_processed_in_this_step = []
-            
-            for tid in current_wave_ids:
-                task = tasks_by_id[tid]
-                task_tokens = task.estimated_tokens + getattr(task, 'max_completion_tokens', 1500)
-                
-                # If adding this task exceeds MAX_TPM and we already have tasks in the wave, 
-                # we stop adding to this wave. (If it's the only task, we must add it anyway)
-                if current_wave_tokens + task_tokens > cls.MAX_TPM and current_wave_tasks:
-                    break
-                    
-                current_wave_tasks.append(task)
-                current_wave_tokens += task_tokens
-                tasks_processed_in_this_step.append(tid)
 
-            waves.append(ExecutionWave(wave_id=wave_id, tasks=current_wave_tasks))
-            
-            # Remove processed tasks from in_degree and decrement dependents
-            for tid in tasks_processed_in_this_step:
-                del in_degree[tid]
-                for dependent in adj[tid]:
-                    if dependent in in_degree:
-                        in_degree[dependent] -= 1
-                        
-            wave_id += 1
-            
-        plan.execution_waves = waves
-        logger.info(f"Scheduled {len(waves)} execution waves for {len(plan.research_tasks)} tasks.")
-        return plan
+        logger.info(f"Scheduler completed execution of plan {plan.plan_id}")
+
+    async def _execute_task_with_retries(self, task: ResearchTask, target: Any) -> Any:
+        attempts = 0
+        max_attempts = task.max_retries + 1
+        
+        while attempts < max_attempts:
+            try:
+                # Execute with timeout
+                result = await asyncio.wait_for(
+                    self.knowledge_router.execute_task(task, target),
+                    timeout=task.timeout_seconds
+                )
+                return result
+            except asyncio.TimeoutError:
+                attempts += 1
+                logger.warning(f"Task {task.task_id} timed out on attempt {attempts}")
+                if attempts >= max_attempts and task.fallback_provider:
+                    logger.info(f"Task {task.task_id} using fallback provider {task.fallback_provider}")
+                    try:
+                        fallback_task = ResearchTask(
+                            task_id=f"{task.task_id}_fallback",
+                            provider_name=task.fallback_provider,
+                            target_field=task.target_field
+                        )
+                        return await asyncio.wait_for(
+                            self.knowledge_router.execute_task(fallback_task, target),
+                            timeout=task.timeout_seconds
+                        )
+                    except Exception as e:
+                        logger.error(f"Task {task.task_id} fallback also failed: {e}")
+                        raise e
+            except Exception as e:
+                attempts += 1
+                logger.warning(f"Task {task.task_id} failed with error {e} on attempt {attempts}")
+                if attempts >= max_attempts:
+                    raise e
+                    
+        raise Exception(f"Task {task.task_id} exceeded max retries")

@@ -56,6 +56,9 @@ class ResearchSynthesizer:
             "social": reddit_data.get("raw_data", {})
         }
 
+        from services.artifacts.artifact_writer import ArtifactWriter
+        ArtifactWriter.write_json("synthesis/raw_web_data_debug.json", raw_data)
+
         # Helper to track source citations
         def register_source(title: str, url: str, source_type: str):
             key = (title, url)

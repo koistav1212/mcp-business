@@ -60,6 +60,9 @@ async def run_workspace(req: ResearchRequest, background_tasks: BackgroundTasks)
     async def _run_task(task_id: str, query: str):
         try:
             import json
+            from services.artifacts.artifact_manager import ArtifactManager
+            ArtifactManager.initialize_workspace()
+            
             orchestrator = HostAgent()
             result = await orchestrator.run(query)
             tasks_db[task_id]["status"] = "completed"

@@ -12,6 +12,8 @@ Output a JSON object exactly matching this structure:
   "research_tasks": [
     {
       "task_id": "string",
+      "title": "string",
+      "objective": "string",
       "priority": "Critical | High | Medium | Low",
       "owner_agent": "string",
       "dependencies": ["list of strings"],

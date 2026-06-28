@@ -1,0 +1,1 @@
+Apple's market dominance is underpinned by its strong brand and ecosystem, as evidenced by high customer loyalty (EV001) and significant investments in research and development (EV002)

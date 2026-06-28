@@ -34,8 +34,10 @@ class ProviderRouter:
         registry_entry = MODEL_REGISTRY.get(agent_name, MODEL_REGISTRY.get("router")) # Fallback to generic router config
         token_budget = registry_entry.get("token_budget", 1500)
         
+        from services.artifacts.artifact_writer import ArtifactWriter
+
         fallback_chain = ["primary", "secondary", "tertiary"]
-        
+
         for priority in fallback_chain:
             config = registry_entry.get(priority)
             if not config:
@@ -57,10 +59,19 @@ class ProviderRouter:
                 max_tokens=token_budget
             )
             
-            max_retries = 3
-            base_delay = 2.0
+            # Save Input Artifact
+            ArtifactWriter.write_json(f"agent_inputs/{agent_name}.json", {
+                "system_prompt": system_prompt,
+                "user_prompt": user_prompt,
+                "messages": messages or [],
+                "token_estimate": token_budget,
+                "provider": provider_name,
+                "model": model_name
+            })
             
-            for attempt in range(max_retries):
+            base_delay = 2.0
+            attempt = 0
+            while True:
                 try:
                     logger.info(f"LLM Routing -> Agent: {agent_name} | Provider: {provider_name} | Model: {model_name} | Attempt: {attempt+1}")
                     
@@ -74,24 +85,53 @@ class ProviderRouter:
                     )
                     
                     try:
-                        return json.loads(response.content)
+                        parsed = json.loads(response.content)
                     except json.JSONDecodeError:
-                        return extract_json(response.content)
+                        parsed = extract_json(response.content)
+                        
+                    # Save Output Artifact (Success)
+                    ArtifactWriter.write_json(f"agent_outputs/{agent_name}.json", {
+                        "raw_llm_response": response.content,
+                        "parsed_json": parsed,
+                        "validation_result": "success",
+                        "execution_time": response.latency_ms,
+                        "errors": []
+                    })
+                    
+                    return parsed
                         
                 except Exception as e:
-                    # Specific handling for rate limits or server errors
-                    error_msg = str(e)
-                    is_rate_limit = "429" in error_msg
+                    error_msg = str(e).lower()
+                    error_type = str(type(e)).lower()
                     
-                    if is_rate_limit:
+                    # Save Output Artifact (Failure)
+                    ArtifactWriter.write_json(f"agent_outputs/{agent_name}_error_{attempt}.json", {
+                        "raw_llm_response": getattr(response, 'content', None) if 'response' in locals() else None,
+                        "parsed_json": None,
+                        "validation_result": "failed",
+                        "execution_time": getattr(response, 'latency_ms', None) if 'response' in locals() else None,
+                        "errors": [str(e)]
+                    })
+                    
+                    is_validation = "validation" in error_msg or "validationerror" in error_type
+                    is_429 = "429" in error_msg
+                    
+                    if is_validation:
+                        logger.error(f"Provider {provider_name} validation error for {agent_name}. Failing fast: {e}")
+                        break  # No retries for validation error, fall back immediately
+                        
+                    if is_429:
+                        if attempt >= 1:
+                            logger.warning(f"Provider {provider_name} exhausted 429 retries for {agent_name}. Falling back.")
+                            break
                         logger.warning(f"Provider {provider_name} rate limited for {agent_name}. Retrying...")
                     else:
-                        logger.warning(f"Provider {provider_name} failed for {agent_name}: {e}")
+                        if attempt >= 2:
+                            logger.warning(f"Provider {provider_name} exhausted retries for {agent_name}. Falling back.")
+                            break
+                        logger.warning(f"Provider {provider_name} failed for {agent_name}: {e}. Retrying...")
                     
-                    if attempt == max_retries - 1:
-                        logger.warning(f"Provider {provider_name} exhausted retries for {agent_name}. Falling back.")
-                        break # Move to next provider in fallback chain
-                    
+                    attempt += 1
                     await asyncio.sleep(base_delay * (2 ** attempt))
                     
         raise Exception(f"All providers exhausted for agent: {agent_name}. Routing failed.")

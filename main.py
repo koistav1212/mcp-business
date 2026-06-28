@@ -10,6 +10,7 @@ from core.executor import AgentExecutor
 from core.router import AgentRouter
 from registry.tool_registry import tool_registry
 from registry.skill_registry import skill_registry
+from services.artifacts.artifact_writer import ArtifactWriter
 
 # Import tools
 from tools.search_company import SearchCompanyTool
@@ -118,6 +119,10 @@ def create_session(request: CreateSessionRequest):
         query=request.query
     )
     sessions[session_id] = state
+    
+    # Save the initial user input to artifacts
+    ArtifactWriter.write_json("agent_inputs/session_query.json", {"session_id": session_id, "query": request.query})
+    
     return state
 
 @app.get("/sessions/{session_id}", response_model=AgentState)
@@ -138,6 +143,9 @@ async def execute_session_plan(session_id: str):
     if session_id not in sessions:
         raise HTTPException(status_code=404, detail="Session not found")
     
+    from services.artifacts.artifact_manager import ArtifactManager
+    ArtifactManager.initialize_workspace()
+    
     state = sessions[session_id]
     
     # Sync executor tools with dynamic registry
@@ -149,16 +157,25 @@ async def execute_session_plan(session_id: str):
     if not skill:
         state.update_status(AgentStatus.FAILED)
         state.response = "Routing error: No skill found to handle the query."
+        ArtifactWriter.write_json("agent_outputs/routing_error.json", {"error": state.response})
         return state
     
     state.metadata["routed_skill"] = skill.name
+    ArtifactWriter.write_json("agent_outputs/routed_skill.json", {"routed_skill": skill.name})
     
     # 2. Run the matched skill
     try:
         updated_state = await skill.run(state.query, state, executor)
         sessions[session_id] = updated_state
+        
+        # Save final state and response
+        ArtifactWriter.write_json(f"final/session_state_{session_id}.json", updated_state.model_dump())
+        if updated_state.response:
+            ArtifactWriter.write_markdown(f"final/response_{session_id}.md", updated_state.response)
+            
         return updated_state
     except Exception as e:
         state.update_status(AgentStatus.FAILED)
         state.response = f"Unhandled skill execution failure: {str(e)}"
+        ArtifactWriter.write_json("final/execution_error.json", {"error": state.response})
         return state

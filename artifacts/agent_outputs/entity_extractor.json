@@ -1,0 +1,11 @@
+{
+  "company": "Apple",
+  "ticker": "AAPL",
+  "exchange": "NASDAQ",
+  "cik": "0000320193",
+  "website": "https://www.apple.com",
+  "industry": "Technology",
+  "subindustry": "Consumer Electronics",
+  "country": "United States",
+  "headquarters": "Cupertino, California"
+}

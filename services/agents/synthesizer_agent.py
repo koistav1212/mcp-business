@@ -1,14 +1,15 @@
 import json
 import logging
-from typing import Dict, Any
-from services.models.planning_models import PlanningResult
-from services.models.research_models import AgentResult
+from typing import Dict, Any, List
+
+from services.models.research_execution_plan import ResearchExecutionPlan
+from services.knowledge.evidence_store import EvidenceStore
 from services.llm.provider_router import ProviderRouter
 
 logger = logging.getLogger("uvicorn.error")
 
 META_SYNTHESIS_PROMPT = """You are a Senior Partner at McKinsey.
-Inputs are evidence-backed findings.
+Inputs are evidence-backed findings from a corporate intelligence pipeline.
 Do NOT summarize.
 
 Instead construct a highly synthesized report focusing on insight, narrative, and actionable recommendations.
@@ -39,47 +40,56 @@ Return ONLY the raw JSON object. Do not include markdown formatting.
 """
 
 class SynthesizerAgent:
-    async def execute(self, agent_results: Dict[str, Any], planning: PlanningResult, unused_mission=None, company_entity=None):
-        # Aggregate the reports (strip evidence to save tokens)
-        agent_reports_stripped = {}
-        for name, result in agent_results.items():
-            if hasattr(result, "model_dump"):
-                result_dict = result.model_dump()
-                result_dict.pop("evidence", None)
-                agent_reports_stripped[name] = result_dict
-            else:
-                agent_reports_stripped[name] = {"findings": result.findings} if hasattr(result, "findings") else str(result)
-            
+    """
+    Consumes the accumulated EvidenceGraph (from EvidenceStore) 
+    and generates the final synthesized report.
+    """
+    async def execute(self, plan: ResearchExecutionPlan, store: EvidenceStore, company_entity: str = None) -> Dict[str, Any]:
+        
+        # Pull all evidence from the store
+        all_evidence = store.get_all()
+        evidence_dicts = [e.model_dump() for e in all_evidence]
+        
+        # Optionally deduplicate or rank evidence here. For now, pass all raw evidence.
+        
         aggregated_payload = {
-            "planning": planning.model_dump() if hasattr(planning, "model_dump") else {},
-            "agent_reports": agent_reports_stripped
+            "planning": plan.to_summary() if hasattr(plan, "to_summary") else {},
+            "target_company": company_entity,
+            "evidence_graph": evidence_dicts
         }
         
-        if True:
-            try:
-                payload = await ProviderRouter.generate_json(
-                    agent_name="synthesizer",
-                    system_prompt=META_SYNTHESIS_PROMPT,
-                    user_prompt=json.dumps(aggregated_payload)
-                )
-                return payload
-            except Exception as e:
-                logger.warning(f"Meta Synthesizer LLM failed: {e}. Returning fallback.")
+        from services.artifacts.artifact_writer import ArtifactWriter
+        ArtifactWriter.write_markdown("synthesis/prompt.md", json.dumps(aggregated_payload, indent=2, default=str))
+        
+        try:
+            payload = await ProviderRouter.generate_json(
+                agent_name="synthesizer",
+                system_prompt=META_SYNTHESIS_PROMPT,
+                user_prompt=json.dumps(aggregated_payload, default=str)
+            )
+        except Exception as e:
+            logger.warning(f"Meta Synthesizer LLM failed: {e}. Returning fallback.")
+            payload = {
+                "executive_summary": "Basic synthesized summary.",
+                "company_story": "",
+                "industry_story": "",
+                "financial_story": "",
+                "competition_story": "",
+                "technology_story": "",
+                "ai_story": "",
+                "risk_story": "",
+                "strategic_priorities": [],
+                "recommendations": ["Recommendation 1"],
+                "implementation_roadmap": [],
+                "evidence_appendix": [],
+                "confidence": 0.5,
+                "missing_evidence": []
+            }
                 
-        # Fallback
-        return {
-            "executive_summary": "Basic synthesized summary.",
-            "company_story": "",
-            "industry_story": "",
-            "financial_story": "",
-            "competition_story": "",
-            "technology_story": "",
-            "ai_story": "",
-            "risk_story": "",
-            "strategic_priorities": [],
-            "recommendations": ["Recommendation 1"],
-            "implementation_roadmap": [],
-            "evidence_appendix": [],
-            "confidence": 0.5,
-            "missing_evidence": []
-        }
+        ArtifactWriter.write_json("synthesis/executive_report.json", payload)
+        ArtifactWriter.write_json("final/executive_report.json", payload)
+        
+        if "executive_summary" in payload:
+            ArtifactWriter.write_markdown("final/executive_summary.md", payload["executive_summary"])
+            
+        return payload

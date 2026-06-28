@@ -1,0 +1,71 @@
+{
+  "entity": {
+    "company_name": "Apple",
+    "ticker": "AAPL",
+    "cik": "0000320193",
+    "exchange": "NASDAQ",
+    "website": "https://www.apple.com",
+    "confidence": 1.0
+  },
+  "profile": null,
+  "company_profile": null,
+  "sources": [],
+  "confidence_score": 0.0,
+  "generated_at": "2026-06-28 08:52:03.002548",
+  "raw_data": {},
+  "pdf_url": null,
+  "ppt_url": null,
+  "intent": null,
+  "research_plan": null,
+  "industry_context": null,
+  "evidence_graph": {
+    "nodes": [],
+    "conflicts": [],
+    "coverage": {}
+  },
+  "report_plan": null,
+  "draft_report": {
+    "executive_summary": "Apple's market dominance is underpinned by its strong brand and ecosystem, as evidenced by high customer loyalty (EV001) and significant investments in research and development (EV002)",
+    "key_findings": [],
+    "risks": [],
+    "opportunities": [],
+    "recommendations": [
+      {
+        "insight": "Diversify revenue streams to reduce dependence on iPhone sales (EV025)",
+        "evidence_ids": []
+      },
+      {
+        "insight": "Invest in AI and machine learning to drive innovation and competitiveness (EV026)",
+        "evidence_ids": []
+      },
+      {
+        "insight": "Develop a comprehensive strategy for addressing regulatory and supply chain risks (EV027)",
+        "evidence_ids": []
+      }
+    ],
+    "confidence": 0.92,
+    "evidence_gaps": []
+  },
+  "critique": null,
+  "conflicts": [],
+  "social_sentiment": null,
+  "competitors": [],
+  "competitive_positioning": null,
+  "swot": null,
+  "management_commentary": [],
+  "leadership": [],
+  "hiring_signals": [],
+  "news": [],
+  "technology_stack": [],
+  "financials": null,
+  "analytics": {
+    "revenue_growth": {},
+    "profit_growth": {},
+    "cagr": {},
+    "debt_equity": null,
+    "operating_margin": {}
+  },
+  "valuation_multiples": null,
+  "capital_allocation": null,
+  "risk_factors": []
+}
