@@ -6,7 +6,7 @@ import httpx
 import re
 from typing import List, Dict, Any, Optional
 
-from services.research.models import EntityResolution
+from services.research.models import EntityResolution, EntityCore
 
 
 class EntityResolver:
@@ -126,14 +126,52 @@ class EntityResolver:
                 display_name = self._display_company_name(title)
                 # Stage 5: website discovery (initial guess, refined later)
                 website_guess = await self._guess_website(display_name, ticker)
+                
+                # NEW: enrich with structured metadata
+                meta = await self._enrich_company_metadata(
+                    company_name=display_name,
+                    ticker=ticker,
+                    exchange=None,
+                )
+                
+                # Build headquarters object if available
+                hq_obj = None
+                if meta.get("headquarters"):
+                    parts = [p.strip() for p in meta["headquarters"].split(",")]
+                    city = parts[0] if len(parts) > 0 else None
+                    state = parts[1] if len(parts) > 1 else None
+                    country = parts[2] if len(parts) > 2 else meta.get("country")
+                    from services.research.models import Headquarters
+                    hq_obj = Headquarters(city=city, state=state, country=country)
+
                 local_exact.append(
                     EntityResolution(
-                        company_name=display_name,
-                        ticker=ticker,
-                        cik=str(value.get("cik_str", "")).zfill(10) or None,
-                        exchange=None,
-                        website=website_guess,
-                        confidence=0.99,
+                        entity=EntityCore(
+                            name=display_name,
+                            ticker=ticker,
+                            cik=str(value.get("cik_str", "")).zfill(10) or None,
+                            exchange=None,
+                            website=website_guess,
+                            legal_name=meta.get("legal_name") or display_name,
+                            country=meta.get("country"),
+                            headquarters=hq_obj,
+                            industry=meta.get("industry"),
+                            subindustry=meta.get("subindustry"),
+                            founded=meta.get("founded"),
+                            canonical_domain=self._canonical_domain_from_website(website_guess),
+                            brand_names=[display_name],
+                            aliases=[],
+                        ),
+                        official_pages=None,
+                        social_profiles=None,
+                        mobile_apps=[],
+                        subsidiaries_or_brands=[],
+                        metadata={
+                            "confidence": 0.99,
+                            "resolver_version": "1.0",
+                            "source_type": "sec",
+                            "last_verified": None,
+                        },
                     )
                 )
 
@@ -238,14 +276,52 @@ class EntityResolver:
             # Stage 5: website discovery using heuristic + HTTP probing
             website_guess = await self._guess_website(resolved_name, base_symbol)
 
+            # NEW: enrich with structured metadata
+            meta = await self._enrich_company_metadata(
+                company_name=resolved_name,
+                ticker=base_symbol,
+                exchange=exchange,
+            )
+
+            # Build headquarters object if available
+            hq_obj = None
+            if meta.get("headquarters"):
+                # crude split "City, State, Country"
+                parts = [p.strip() for p in meta["headquarters"].split(",")]
+                city = parts[0] if len(parts) > 0 else None
+                state = parts[1] if len(parts) > 1 else None
+                country = parts[2] if len(parts) > 2 else meta.get("country")
+                from services.research.models import Headquarters  # adjust import path
+                hq_obj = Headquarters(city=city, state=state, country=country)
+
             candidates.append(
                 EntityResolution(
-                    company_name=resolved_name,
-                    ticker=symbol,
-                    cik=cik,
-                    exchange=exchange,
-                    website=website_guess,
-                    confidence=confidence,
+                    entity=EntityCore(
+                        name=resolved_name,
+                        ticker=symbol,
+                        cik=cik,
+                        exchange=exchange,
+                        website=website_guess,
+                        legal_name=meta.get("legal_name") or resolved_name,
+                        country=meta.get("country"),
+                        headquarters=hq_obj,
+                        industry=meta.get("industry"),
+                        subindustry=meta.get("subindustry"),
+                        founded=meta.get("founded"),
+                        canonical_domain=self._canonical_domain_from_website(website_guess),
+                        brand_names=[resolved_name],
+                        aliases=[],
+                    ),
+                    official_pages=None,
+                    social_profiles=None,
+                    mobile_apps=[],
+                    subsidiaries_or_brands=[],
+                    metadata={
+                        "confidence": confidence,
+                        "resolver_version": "1.0",
+                        "source_type": "sec_yahoo_or_wiki",
+                        "last_verified": None,
+                    },
                 )
             )
 
@@ -262,14 +338,52 @@ class EntityResolver:
         # If still nothing, create a very low-confidence guess
         if not candidates:
             website_guess = await self._guess_website(query_clean, None)
+            
+            # NEW: enrich with structured metadata
+            meta = await self._enrich_company_metadata(
+                company_name=query.capitalize(),
+                ticker=None,
+                exchange="UNKNOWN",
+            )
+            
+            # Build headquarters object if available
+            hq_obj = None
+            if meta.get("headquarters"):
+                parts = [p.strip() for p in meta["headquarters"].split(",")]
+                city = parts[0] if len(parts) > 0 else None
+                state = parts[1] if len(parts) > 1 else None
+                country = parts[2] if len(parts) > 2 else meta.get("country")
+                from services.research.models import Headquarters
+                hq_obj = Headquarters(city=city, state=state, country=country)
+
             candidates.append(
                 EntityResolution(
-                    company_name=query.capitalize(),
-                    ticker=None,
-                    cik=None,
-                    exchange="UNKNOWN",
-                    website=website_guess,
-                    confidence=0.1,
+                    entity=EntityCore(
+                        name=query.capitalize(),
+                        ticker=None,
+                        cik=None,
+                        exchange="UNKNOWN",
+                        website=website_guess,
+                        legal_name=meta.get("legal_name") or query.capitalize(),
+                        country=meta.get("country"),
+                        headquarters=hq_obj,
+                        industry=meta.get("industry"),
+                        subindustry=meta.get("subindustry"),
+                        founded=meta.get("founded"),
+                        canonical_domain=self._canonical_domain_from_website(website_guess),
+                        brand_names=[query.capitalize()],
+                        aliases=[],
+                    ),
+                    official_pages=None,
+                    social_profiles=None,
+                    mobile_apps=[],
+                    subsidiaries_or_brands=[],
+                    metadata={
+                        "confidence": 0.1,
+                        "resolver_version": "1.0",
+                        "source_type": "fallback",
+                        "last_verified": None,
+                    },
                 )
             )
 
@@ -375,6 +489,88 @@ class EntityResolver:
         # None resolved; return the first candidate as a best-effort guess
         return unique_candidates[0] if unique_candidates else f"{name_norm.replace(' ', '')}.com"
 
+    @staticmethod
+    def _canonical_domain_from_website(website: Optional[str]) -> Optional[str]:
+        if not website:
+            return None
+        try:
+            parsed = httpx.URL(website)  # or urllib.parse.urlparse
+            host = parsed.host or parsed.netloc
+            # strip 'www.' prefix
+            if host.startswith("www."):
+                host = host[4:]
+            return host
+        except Exception:
+            return None
+
+    # ----------------------------------------------------------------------
+    # Company metadata enrichment (industry, country, HQ, founded)
+    # ----------------------------------------------------------------------
+
+    async def _enrich_company_metadata(
+        self,
+        company_name: str,
+        ticker: Optional[str],
+        exchange: Optional[str],
+    ) -> Dict[str, Any]:
+        """
+        Fetch structured company metadata (industry, subindustry, country,
+        headquarters, founded) from external sources (e.g., Yahoo assetProfile).
+        """
+        meta: Dict[str, Any] = {
+            "industry": None,
+            "subindustry": None,
+            "country": None,
+            "headquarters": None,
+            "founded": None,
+            "legal_name": None,
+        }
+
+        # If we have a ticker, try Yahoo assetProfile
+        if ticker:
+            try:
+                profile_url = (
+                    "https://query1.finance.yahoo.com/v10/finance/quoteSummary/"
+                    f"{ticker}"
+                )
+                params = {"modules": "assetProfile"}
+                headers = {
+                    "User-Agent": (
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                        "AppleWebKit/537.36 (KHTML, like Gecko) "
+                        "Chrome/91.0.4472.124 Safari/537.36"
+                    )
+                }
+                async with httpx.AsyncClient() as client:
+                    r = await client.get(profile_url, params=params, headers=headers, timeout=10.0)
+                    if r.status_code == 200:
+                        data = r.json()
+                        profile = (
+                            data.get("quoteSummary", {})
+                            .get("result", [{}])[0]
+                            .get("assetProfile", {})
+                        )
+                        meta["industry"] = profile.get("industry")
+                        # you can store sector as subindustry for now
+                        meta["subindustry"] = profile.get("sector")
+                        meta["country"] = profile.get("country")
+
+                        city = profile.get("city")
+                        state = profile.get("state")
+                        hq_parts = [p for p in [city, state, meta["country"]] if p]
+                        if hq_parts:
+                            meta["headquarters"] = ", ".join(hq_parts)
+
+                        # foundedYear sometimes available as 'fullTimeEmployees' etc.,
+                        # but some APIs have 'foundedYear' – placeholder here:
+                        meta["founded"] = profile.get("foundedYear")
+                        meta["legal_name"] = company_name
+            except Exception:
+                # silent fail; we keep defaults
+                pass
+
+        return meta
+
     # ----------------------------------------------------------------------
     # Wikipedia fallback (Stage 6)
     # ----------------------------------------------------------------------
@@ -401,13 +597,51 @@ class EntityResolver:
                         if title:
                             first_word = title.lower().split()[0].replace(",", "").replace(".", "")
                             website_guess = await self._guess_website(title, None)
-                            return EntityResolution(
+                            
+                            # NEW: enrich with structured metadata
+                            meta = await self._enrich_company_metadata(
                                 company_name=title,
                                 ticker=None,
-                                cik=None,
                                 exchange="PRIVATE",
-                                website=website_guess,
-                                confidence=0.85,
+                            )
+                            
+                            # Build headquarters object if available
+                            hq_obj = None
+                            if meta.get("headquarters"):
+                                parts = [p.strip() for p in meta["headquarters"].split(",")]
+                                city = parts[0] if len(parts) > 0 else None
+                                state = parts[1] if len(parts) > 1 else None
+                                country = parts[2] if len(parts) > 2 else meta.get("country")
+                                from services.research.models import Headquarters
+                                hq_obj = Headquarters(city=city, state=state, country=country)
+
+                            return EntityResolution(
+                                entity=EntityCore(
+                                    name=title,
+                                    ticker=None,
+                                    cik=None,
+                                    exchange="PRIVATE",
+                                    website=website_guess,
+                                    legal_name=meta.get("legal_name") or title,
+                                    country=meta.get("country"),
+                                    headquarters=hq_obj,
+                                    industry=meta.get("industry"),
+                                    subindustry=meta.get("subindustry"),
+                                    founded=meta.get("founded"),
+                                    canonical_domain=self._canonical_domain_from_website(website_guess),
+                                    brand_names=[title],
+                                    aliases=[],
+                                ),
+                                official_pages=None,
+                                social_profiles=None,
+                                mobile_apps=[],
+                                subsidiaries_or_brands=[],
+                                metadata={
+                                    "confidence": 0.85,
+                                    "resolver_version": "1.0",
+                                    "source_type": "wikipedia",
+                                    "last_verified": None,
+                                },
                             )
         except Exception:
             return None

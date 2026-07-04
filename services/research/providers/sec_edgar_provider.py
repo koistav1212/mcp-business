@@ -161,8 +161,8 @@ class SECEdgarProvider(BaseProvider):
         cik = self._extract_cik(target)
         if not cik:
             return []
-        cik_str = cik.strip()
-        if cik_str in ("0000000000", "0", "") or not cik_str.isdigit():
+        cik_str = "".join(filter(str.isdigit, cik.strip()))
+        if not cik_str or cik_str in ("0000000000", "0"):
             return []
         cik_padded = cik_str.zfill(10)
         now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")

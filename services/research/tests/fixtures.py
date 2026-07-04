@@ -1,4 +1,4 @@
-from services.research.models import EntityResolution
+from services.research.models import EntityResolution, EntityCore
 
 MOCK_COMPANY_RESPONSES = {
     "zoho": {
@@ -73,12 +73,16 @@ MOCK_COMPANY_RESPONSES = {
         },
         "entity_resolution": [
             EntityResolution(
-                company_name="Zoho Corporation",
-                ticker="ZOHO.MOCK",
-                cik="0000000000",
-                exchange="PRIVATE",
-                website="zoho.com",
-                confidence=1.0
+                entity=EntityCore(
+                    name="Zoho Corporation",
+                    ticker="PRIVATE",
+                    cik=None,
+                    exchange="PRIVATE",
+                    website="zoho.com",
+                ),
+                metadata={
+                    "confidence": 0.95
+                }
             )
         ],
         "social": {
@@ -151,12 +155,16 @@ MOCK_COMPANY_RESPONSES = {
         },
         "entity_resolution": [
             EntityResolution(
-                company_name="Alphabet Inc.",
-                ticker="GOOGL",
-                cik="0001652044",
-                exchange="NASDAQ",
-                website="google.com",
-                confidence=1.0
+                entity=EntityCore(
+                    name="Alphabet Inc.",
+                    ticker="GOOGL",
+                    cik="0001652044",
+                    exchange="NASDAQ",
+                    website="abc.xyz",
+                ),
+                metadata={
+                    "confidence": 0.99
+                }
             )
         ]
     },
@@ -192,12 +200,16 @@ MOCK_COMPANY_RESPONSES = {
         },
         "entity_resolution": [
             EntityResolution(
-                company_name="Acmecorp",
-                ticker="ACME.MOCK",
-                cik="0000000000",
-                exchange="PRIVATE",
-                website="acmecorp.com",
-                confidence=1.0
+                entity=EntityCore(
+                    name="Acmecorp",
+                    ticker=None,
+                    cik=None,
+                    exchange=None,
+                    website="acmecorp.example.com",
+                ),
+                metadata={
+                    "confidence": 0.5
+                }
             )
         ]
     }

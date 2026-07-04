@@ -18,6 +18,8 @@ import asyncio
 import logging
 import httpx
 import yfinance as yf
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin, urlparse
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -479,6 +481,116 @@ class CompanyProvider(BaseProvider):
         peers = self._INDUSTRY_PEERS.get(industry) or self._INDUSTRY_PEERS.get(sector, [])
         return peers[:4]
 
+    async def _crawl_official_site(
+        self, client: httpx.AsyncClient, website: str
+    ) -> Dict[str, Any]:
+        """
+        One-hop crawl of the company's homepage to discover official pages
+        (about, products/services/solutions, careers, contact, investors)
+        and social profiles. Uses BeautifulSoup + httpx.
+        """
+        if not website:
+            return {}
+
+        # Normalize base URL
+        base = website.strip()
+        if not base.startswith(("http://", "https://")):
+            base = "https://" + base
+        # Drop trailing slashes for consistency
+        base = base.rstrip("/")
+
+        r = await _get(client, base, headers=_BROWSER_HEADERS)
+        if not r:
+            return {}
+
+        html = r.text
+        soup = BeautifulSoup(html, "html.parser")
+
+        # Collect all anchors
+        links = soup.find_all("a", href=True)
+
+        official_pages: Dict[str, str] = {}
+        products: List[Dict[str, str]] = []
+        services: List[str] = []
+        solutions_list: List[str] = []
+        social_profiles: Dict[str, str] = {}
+        contact_page: Optional[str] = None
+
+        # Simple keyword patterns
+        def norm(text: str) -> str:
+            return text.strip().lower()
+
+        for a in links:
+            text = (a.get_text() or "").strip()
+            href = a["href"].strip()
+            if not text and not href:
+                continue
+
+            # Resolve relative URLs
+            full_url = urljoin(base + "/", href)
+
+            # Skip obvious junk like mailto, tel, javascript
+            if href.startswith(("mailto:", "tel:", "javascript:")):
+                continue
+
+            t_norm = norm(text)
+            h_norm = norm(href)
+
+            # About / Company
+            if any(k in t_norm for k in ["about", "who we are", "our company"]) or "about" in h_norm:
+                official_pages.setdefault("about", full_url)
+
+            # Careers / Jobs
+            if any(k in t_norm for k in ["careers", "jobs", "join us"]) or "careers" in h_norm:
+                official_pages.setdefault("careers", full_url)
+
+            # Contact / Support
+            if any(k in t_norm for k in ["contact", "support"]) or "contact" in h_norm:
+                official_pages.setdefault("contact", full_url)
+                contact_page = full_url
+
+            # Investors / IR
+            if any(k in t_norm for k in ["investor", "investors", "ir"]) or "investor" in h_norm:
+                official_pages.setdefault("investors", full_url)
+
+            # Product / Service / Solution buckets
+            if any(k in t_norm for k in ["products", "product"]):
+                products.append({
+                    "name": text or "Product listing",
+                    "category": "product_nav_link"
+                })
+            if any(k in t_norm for k in ["services", "service"]):
+                services.append(text or "Service listing")
+            if any(k in t_norm for k in ["solutions", "solution"]):
+                solutions_list.append(text or "Solution listing")
+
+            # Social profiles by domain
+            parsed = urlparse(full_url)
+            host = parsed.netloc.lower()
+            if "linkedin.com" in host and "linkedin" not in social_profiles:
+                social_profiles["linkedin"] = full_url
+            elif any(s in host for s in ["twitter.com", "x.com"]) and "twitter" not in social_profiles:
+                social_profiles["twitter"] = full_url
+            elif "facebook.com" in host and "facebook" not in social_profiles:
+                social_profiles["facebook"] = full_url
+            elif "youtube.com" in host and "youtube" not in social_profiles:
+                social_profiles["youtube"] = full_url
+            elif "instagram.com" in host and "instagram" not in social_profiles:
+                social_profiles["instagram"] = full_url
+
+        solutions_dict = None
+        if solutions_list:
+            solutions_dict = {"enterprise": solutions_list}
+
+        return {
+            "official_pages": official_pages,
+            "products": products,
+            "services": services,
+            "solutions": solutions_dict,
+            "social_profiles": social_profiles or None,
+            "contact": contact_page,
+        }
+
     # ── Main fetch ──────────────────────────────────────────────────────────
 
     async def fetch(self, target: Any) -> List[ResearchEvidence]:
@@ -509,8 +621,15 @@ class CompanyProvider(BaseProvider):
             cb_task = self._fetch_crunchbase(client, company_clean)
             sw_task = self._fetch_similarweb(client, website_for_sw)
             li_task = self._fetch_linkedin(client, company_clean)
+            
+            website_candidate = (
+                yf_data.get("website")
+                or wiki_data.get("website")
+                or website_for_sw
+            )
+            crawl_task = self._crawl_official_site(client, website_candidate)
 
-            cb_data, sw_data, li_data = await asyncio.gather(cb_task, sw_task, li_task)
+            cb_data, sw_data, li_data, crawl_data = await asyncio.gather(cb_task, sw_task, li_task, crawl_task)
 
         # ── Merge: prefer high-authority over low-authority ────────────────
         def first_non_empty(*vals):
@@ -603,6 +722,14 @@ class CompanyProvider(BaseProvider):
         # Web presence signals
         emit("monthly_visits", monthly_visits, "similarweb", "mcp", 0.70)
         emit("global_web_rank", global_rank, "similarweb", "mcp", 0.70)
+        
+        # Official web footprint (from crawler)
+        emit("official_pages", crawl_data.get("official_pages"), "web_crawler", "mcp", 0.80)
+        emit("products", crawl_data.get("products"), "web_crawler", "mcp", 0.70)
+        emit("services", crawl_data.get("services"), "web_crawler", "mcp", 0.70)
+        emit("solutions", crawl_data.get("solutions"), "web_crawler", "mcp", 0.70)
+        emit("social_profiles", crawl_data.get("social_profiles"), "web_crawler", "mcp", 0.80)
+        emit("contact", crawl_data.get("contact"), "web_crawler", "mcp", 0.75)
         
         from services.research.providers.shared_utils import _write_json
         _write_json(

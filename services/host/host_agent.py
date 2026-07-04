@@ -13,7 +13,7 @@ from services.planning.task_scheduler import TaskScheduler
 from services.research.compressor import ResearchMemory
 from services.research.models import (
     ResearchContext, EvidenceGraph, EvidenceNode, DraftReport, 
-    CompanyProfile, FinancialData, EntityResolution, CriticResult
+    CompanyProfile, FinancialData, EntityResolution, EntityCore, CriticResult
 )
 from services.analytics.financial_calculator import FinancialCalculator
 from services.knowledge.evidence_store import EvidenceStore
@@ -23,6 +23,19 @@ from services.artifacts.artifact_writer import ArtifactWriter
 logger = logging.getLogger("uvicorn.error")
 
 class HostAgent:
+    @staticmethod
+    def _extract_domain(website: str) -> str:
+        if not website: return None
+        try:
+            import urllib.parse
+            if not website.startswith('http'): website = 'http://' + website
+            parsed = urllib.parse.urlparse(website)
+            host = parsed.netloc or parsed.path.split('/')[0]
+            if host.startswith("www."): host = host[4:]
+            return host
+        except Exception:
+            return None
+
     def __init__(self):
         self.entity_extractor = EntityExtractorAgent()
         self.planner = PlannerAgent()
@@ -51,7 +64,7 @@ class HostAgent:
 
         # 1. Planning
         logger.info("START planner")
-        plan = await self.planner.execute(query)
+        plan = await self.planner.execute(query, company_entity)
         ArtifactWriter.write_json("agent_outputs/execution_plan.json", plan.model_dump() if hasattr(plan, "model_dump") else plan)
         
         # Determine target to pass down
@@ -77,71 +90,293 @@ class HostAgent:
         all_evidence = evidence_store.get_all()
         for ev in all_evidence:
             key = ev.source
+            if key.startswith("social_intel"): key = "social_intel"
+            elif key.startswith("company_profile"): key = "company_profile"
+            elif key.startswith("news_intelligence"): key = "news_intelligence_pipeline"
+            elif key.startswith("technology_profile"): key = "technology_profile"
+            elif key.startswith("technology_intelligence"): key = "technology_intelligence"
+            elif key.startswith("sec_edgar"): key = "sec_edgar"
             attr = ev.attribute
             val = ev.value
             
             # Map by attribute or key based on the emitted provider sources
-            if key in ["sec_edgar", "sec_edgar_10k", "yfinance"]:
+            if key in ["sec_edgar", "sec_edgar_10k", "yfinance", "global_markets"]:
                 if "financials" not in raw_context_dict:
                     raw_context_dict["financials"] = {}
-                raw_context_dict["financials"][attr] = val
+                
+                if attr == "income_statements" and isinstance(val, list):
+                    rev_hist, ni_hist, op_hist = {}, {}, {}
+                    for stmt in val:
+                        year = str(stmt.get("calendarYear", stmt.get("date", "")[:4]))
+                        if not year: continue
+                        if "revenue" in stmt: rev_hist[year] = stmt["revenue"]
+                        elif "totalRevenue" in stmt: rev_hist[year] = stmt["totalRevenue"]
+                        if "netIncome" in stmt: ni_hist[year] = stmt["netIncome"]
+                        if "operatingIncome" in stmt: op_hist[year] = stmt["operatingIncome"]
+                    if rev_hist: raw_context_dict["financials"]["revenue_history"] = {"value": rev_hist, "source_ids": [ev.id], "confidence": ev.confidence}
+                    if ni_hist: raw_context_dict["financials"]["net_income_history"] = {"value": ni_hist, "source_ids": [ev.id], "confidence": ev.confidence}
+                    if op_hist: raw_context_dict["financials"]["operating_income_history"] = {"value": op_hist, "source_ids": [ev.id], "confidence": ev.confidence}
+                elif attr == "balance_sheets" and isinstance(val, list):
+                    ass_hist, liab_hist = {}, {}
+                    for stmt in val:
+                        year = str(stmt.get("calendarYear", stmt.get("date", "")[:4]))
+                        if not year: continue
+                        if "totalAssets" in stmt: ass_hist[year] = stmt["totalAssets"]
+                        if "totalLiabilities" in stmt: liab_hist[year] = stmt["totalLiabilities"]
+                    if ass_hist: raw_context_dict["financials"]["assets_history"] = {"value": ass_hist, "source_ids": [ev.id], "confidence": ev.confidence}
+                    if liab_hist: raw_context_dict["financials"]["liabilities_history"] = {"value": liab_hist, "source_ids": [ev.id], "confidence": ev.confidence}
+                elif attr == "cash_flow_statements" and isinstance(val, list):
+                    cf_hist = {}
+                    for stmt in val:
+                        year = str(stmt.get("calendarYear", stmt.get("date", "")[:4]))
+                        if not year: continue
+                        if "freeCashFlow" in stmt: cf_hist[year] = stmt["freeCashFlow"]
+                        elif "operatingCashFlow" in stmt: cf_hist[year] = stmt["operatingCashFlow"]
+                    if cf_hist: raw_context_dict["financials"]["cash_flow_history"] = {"value": cf_hist, "source_ids": [ev.id], "confidence": ev.confidence}
+                else:
+                    if attr == "revenue_ttm":
+                        raw_context_dict["financials"]["revenue_history"] = {"value": {"TTM": val}, "source_ids": [ev.id], "confidence": ev.confidence}
+                        raw_context_dict["financials"]["revenue_annual"] = str(val)
+                    elif attr == "net_income_ttm":
+                        raw_context_dict["financials"]["net_income_history"] = {"value": {"TTM": val}, "source_ids": [ev.id], "confidence": ev.confidence}
+                    elif attr == "ebitda_ttm":
+                        raw_context_dict["financials"]["operating_income_history"] = {"value": {"TTM": val}, "source_ids": [ev.id], "confidence": ev.confidence}
+                    elif attr == "free_cash_flow_ttm":
+                        raw_context_dict["financials"]["cash_flow_history"] = {"value": {"TTM": val}, "source_ids": [ev.id], "confidence": ev.confidence}
+                    
+                    raw_context_dict["financials"][attr] = {
+                        "value": val,
+                        "source_ids": [ev.id],
+                        "confidence": ev.confidence
+                    }
             elif key == "news_intelligence_pipeline":
                 if "news" not in raw_context_dict:
                     raw_context_dict["news"] = []
-                if isinstance(val, list):
-                    for item in val:
-                        raw_context_dict["news"].append({
-                            "title": item.get("headline", item.get("title", "")),
-                            "url": item.get("url", ev.source_url or ""),
-                            "date": item.get("published_at", item.get("date")),
-                            "snippet": item.get("summary", item.get("snippet", "")),
-                            "type": "general"
-                        })
-                elif isinstance(val, dict):
-                    raw_context_dict["news"].append({
-                        "title": val.get("headline", val.get("title", "")),
-                        "url": ev.source_url or val.get("url", ""),
-                        "date": val.get("published_at", val.get("date")),
-                        "snippet": val.get("summary", val.get("snippet", "")),
-                        "type": "general"
+                if "risk_factors" not in raw_context_dict.setdefault("financials", {}):
+                    raw_context_dict["financials"]["risk_factors"] = []
+                    
+                item = ev.value if isinstance(ev.value, dict) else {}
+                title = item.get("headline", item.get("title", ""))
+                snippet = item.get("summary", item.get("snippet", ""))
+                news_item = {
+                    "title": title,
+                    "url": item.get("url", ev.source_url or ""),
+                    "date": item.get("published_at", item.get("date")),
+                    "snippet": snippet,
+                    "type": item.get("signal_type", "general"),
+                }
+                raw_context_dict["news"].append({
+                    "value": news_item,
+                    "source_ids": [ev.id],
+                    "confidence": ev.confidence,
+                })
+                    
+                # Extract risk themes from news
+                text = f"{title} {snippet}".lower()
+                if any(w in text for w in ["regulation", "risk", "lawsuit", "shortage", "decline", "challenge", "competitor"]):
+                    raw_context_dict["financials"]["risk_factors"].append({
+                        "value": f"Market/Regulatory News: {title}",
+                        "source_ids": [ev.id],
+                        "confidence": ev.confidence
                     })
-                else:
-                    raw_context_dict["news"].append(val)
+
             elif key in ["company_profile", "crunchbase", "similarweb", "web_technology_profile"]:
                 if "profile" not in raw_context_dict:
                     raw_context_dict["profile"] = {}
-                raw_context_dict["profile"][attr] = val
-            elif key in ["people_pipeline", "indeed", "github", "glassdoor"]:
-                if "people" not in raw_context_dict:
-                    raw_context_dict["people"] = {}
-                raw_context_dict["people"][attr] = val
+                    
+                if attr == "competitors":
+                    if isinstance(val, list):
+                        raw_context_dict["competitors"] = [
+                            {"value": peer, "source_ids": [ev.id], "confidence": ev.confidence}
+                            for peer in val
+                        ]
+                elif attr == "leadership":
+                    if isinstance(val, list):
+                        raw_context_dict["leadership"] = [
+                            {"value": leader, "source_ids": [ev.id], "confidence": ev.confidence}
+                            for leader in val
+                        ]
+                elif attr in ["name", "overview"]:
+                    existing = raw_context_dict["profile"].get(attr, "")
+                    if len(str(val)) > len(str(existing)):
+                        raw_context_dict["profile"][attr] = val
+                elif attr == "founders":
+                    if "founders" not in raw_context_dict["profile"]:
+                        raw_context_dict["profile"]["founders"] = []
+                    founders = val if isinstance(val, list) else [val]
+                    for f in founders:
+                        if f not in raw_context_dict["profile"]["founders"]:
+                            raw_context_dict["profile"]["founders"].append(f)
+                else:
+                    raw_context_dict["profile"][attr] = {
+                        "value": val,
+                        "source_ids": [ev.id],
+                        "confidence": ev.confidence
+                    }
+                    
+            elif key.startswith("technology_profile") or key.startswith("technology_intelligence"):
+                if "technology_stack" not in raw_context_dict:
+                    raw_context_dict["technology_stack"] = []
+                raw_context_dict["technology_stack"].append({
+                    "value": val,
+                    "source_ids": [ev.id],
+                    "confidence": ev.confidence
+                })
+                
             elif key in ["reddit", "stocktwits", "hackernews", "social_intel"]:
                 if "social" not in raw_context_dict:
                     raw_context_dict["social"] = {}
                 raw_context_dict["social"][attr] = val
+                
+                # Extract risk factors from social complaints
+                is_pain_attr = attr in ["pain_points", "customer_pain_points"] or "pain" in attr.lower()
+                is_short_text = isinstance(val, str) and len(val) < 500
+                if is_pain_attr or (is_short_text and ("pain" in val.lower() or "complain" in val.lower())):
+                    if "risk_factors" not in raw_context_dict.setdefault("financials", {}):
+                        raw_context_dict["financials"]["risk_factors"] = []
+                    raw_context_dict["financials"]["risk_factors"].append({
+                        "value": f"Customer Sentiment Risk: {val}",
+                        "source_ids": [ev.id],
+                        "confidence": ev.confidence
+                    })
+                    
+            elif key in ["people_pipeline", "indeed", "github", "glassdoor"]:
+                if "people" not in raw_context_dict:
+                    raw_context_dict["people"] = {}
+                raw_context_dict["people"][attr] = val
             else:
                 raw_context_dict[attr] = val
+
+            # --- ID Prefix Based Mapping ---
+            parsed_val = val
+            if isinstance(val, str):
+                try:
+                    import json
+                    parsed_val = json.loads(val)
+                except Exception:
+                    try:
+                        import ast
+                        parsed_val = ast.literal_eval(val)
+                    except Exception:
+                        pass
+
+            if ev.id.startswith("social_intel_"):
+                if "market_sentiment" in ev.id or attr == "market_sentiment" or "intelligence_payload" in ev.id:
+                    if "social_sentiment" not in raw_context_dict:
+                        raw_context_dict["social_sentiment"] = {"value": {}, "source_ids": [], "confidence": ev.confidence}
+                    
+                    if isinstance(parsed_val, dict):
+                        raw_context_dict["social_sentiment"]["value"].update(parsed_val)
+                    else:
+                        if "raw" not in raw_context_dict["social_sentiment"]["value"]:
+                            raw_context_dict["social_sentiment"]["value"]["raw"] = []
+                        raw_context_dict["social_sentiment"]["value"]["raw"].append(parsed_val)
+                        
+                    if ev.id not in raw_context_dict["social_sentiment"]["source_ids"]:
+                        raw_context_dict["social_sentiment"]["source_ids"].append(ev.id)
+                    raw_context_dict["social_sentiment"]["confidence"] = max(raw_context_dict["social_sentiment"]["confidence"], ev.confidence)
+                        
+                if "competitor" in ev.id or attr == "competitors":
+                    if "competitors" not in raw_context_dict:
+                        raw_context_dict["competitors"] = []
+                    comps = parsed_val if isinstance(parsed_val, list) else [parsed_val]
+                    for comp in comps:
+                        raw_context_dict["competitors"].append({
+                            "value": comp,
+                            "source_ids": [ev.id],
+                            "confidence": ev.confidence
+                        })
+
+                if "management_commentary" in ev.id or attr == "management_commentary":
+                    if "financials" not in raw_context_dict:
+                        raw_context_dict["financials"] = {}
+                    if "mda_text" not in raw_context_dict["financials"]:
+                        raw_context_dict["financials"]["mda_text"] = []
+                    mcs = parsed_val if isinstance(parsed_val, list) else [parsed_val]
+                    for mc in mcs:
+                        raw_context_dict["financials"]["mda_text"].append(mc)
+
+
 
         analytics_data = FinancialCalculator.generate_analytics(raw_context_dict.get("financials", {}))
 
         evidence_graph = EvidenceGraph(nodes=[
-            EvidenceNode(id=ev.id, fact=str(ev.value)[:100], agent=ev.source)
+            EvidenceNode(
+                id=ev.id, 
+                fact=str(ev.value)[:100], 
+                confidence=ev.confidence,
+                category=ev.attribute or "general"
+            )
             for ev in all_evidence
         ])
 
         # Re-build fully populated ResearchContext to pass to Synthesizer and UIAgent
         entity_res = None
         if company_entity:
+            # Safely get crawler data
+            op_data = raw_context_dict.get("official_pages")
+            sp_data = raw_context_dict.get("social_profiles")
+            
+            contact_data = raw_context_dict.get("contact")
+            if isinstance(contact_data, str):
+                contact_data = {"support_url": contact_data}
+
             entity_res = EntityResolution(
-                company_name=getattr(company_entity, "company", target),
-                ticker=getattr(company_entity, "ticker", None),
-                cik=getattr(company_entity, "cik", None),
-                exchange=getattr(company_entity, "exchange", None),
-                website=getattr(company_entity, "website", None),
-                confidence=getattr(company_entity, "confidence", 1.0)
+                entity=EntityCore(
+                    name=getattr(company_entity, "company", target) or target,
+                    ticker=getattr(company_entity, "ticker", None),
+                    cik=getattr(company_entity, "cik", None),
+                    exchange=getattr(company_entity, "exchange", None),
+                    website=getattr(company_entity, "website", None),
+                    industry=getattr(company_entity, "industry", None),
+                    subindustry=getattr(company_entity, "subindustry", None),
+                    country=getattr(company_entity, "country", None),
+                    canonical_domain=HostAgent._extract_domain(getattr(company_entity, "website", None)),
+                ),
+                official_pages=op_data if isinstance(op_data, dict) else None,
+                products=raw_context_dict.get("products", []),
+                services=raw_context_dict.get("services", []),
+                solutions=raw_context_dict.get("solutions") if isinstance(raw_context_dict.get("solutions"), dict) else None,
+                social_profiles=sp_data if isinstance(sp_data, dict) else None,
+                contact=contact_data,
+                metadata={"confidence": getattr(company_entity, "confidence", 1.0)}
             )
 
         profile_data = raw_context_dict.get("profile", {})
+        
+        if entity_res and profile_data:
+            core = entity_res.entity
+            # Patch headquarters
+            if not core.headquarters and profile_data.get("headquarters"):
+                hq_val = profile_data["headquarters"]
+                if isinstance(hq_val, dict):
+                    hq_val = hq_val.get("value", "")
+                
+                if isinstance(hq_val, str) and hq_val:
+                    parts = [p.strip() for p in hq_val.split(",")]
+                    if len(parts) >= 3:
+                        core.headquarters = {"city": parts[0], "state": parts[1], "country": parts[-1]}
+                    elif len(parts) == 2:
+                        core.headquarters = {"city": parts[0], "country": parts[1]}
+                    elif len(parts) == 1:
+                        core.headquarters = {"country": parts[0]}
+
+            # Patch website
+            if not core.website and profile_data.get("website"):
+                web_val = profile_data["website"]
+                if isinstance(web_val, dict):
+                    core.website = web_val.get("value")
+                elif isinstance(web_val, str):
+                    core.website = web_val
+                    
+            # Patch industry (Optional but impactful)
+            if not core.industry and profile_data.get("industry"):
+                ind_val = profile_data["industry"]
+                if isinstance(ind_val, dict):
+                    core.industry = ind_val.get("value")
+                elif isinstance(ind_val, str):
+                    core.industry = ind_val
+
         profile_res = None
         if profile_data:
             profile_data_copy = profile_data.copy()
@@ -153,7 +388,9 @@ class HostAgent:
                 profile_data_copy["employee_count"] = {"value": emp}
             profile_res = CompanyProfile(**profile_data_copy)
 
-        tech_stack_raw = raw_context_dict.get("profile", {}).get("technology_stack", [])
+        tech_stack_raw = raw_context_dict.get("technology_stack", [])
+        if not tech_stack_raw:
+            tech_stack_raw = raw_context_dict.get("profile", {}).get("technology_stack", [])
         if isinstance(tech_stack_raw, dict):
             tech_stack_raw = tech_stack_raw.get("technologies", [])
             
@@ -162,21 +399,73 @@ class HostAgent:
             # Ensure safe kwargs mapping
             financial_data_res = FinancialData(**raw_context_dict.get("financials", {}))
 
+        hiring_signals_raw = raw_context_dict.get("people", {}).get("hiring_signals", {})
+        hiring_signals_res = []
+        if isinstance(hiring_signals_raw, dict):
+            for t in hiring_signals_raw.get("sample_titles", []):
+                hiring_signals_res.append({"role_title": t, "department": "General", "location": "Any"})
+
+        logger.info(f"RAW CONTEXT DICT KEYS: {list(raw_context_dict.keys())}")
+        if "financials" in raw_context_dict:
+            logger.info(f"FINANCIALS KEYS: {list(raw_context_dict['financials'].keys())}")
+        if "people" in raw_context_dict:
+            logger.info(f"PEOPLE KEYS: {list(raw_context_dict['people'].keys())}")
+        logger.info(f"RAW TECH STACK: {tech_stack_raw}")
+
+        valuation_multiples_res = None
+        capital_allocation_res = None
+        if raw_context_dict.get("financials"):
+            f = raw_context_dict["financials"]
+            # Valuation Multiples
+            val_mults = {}
+            if "pe_ratio" in f:
+                val_mults["pe_ratio"] = f["pe_ratio"].get("value") if isinstance(f["pe_ratio"], dict) else f["pe_ratio"]
+            if "ev_ebitda" in f:
+                val_mults["ev_ebitda"] = f["ev_ebitda"].get("value") if isinstance(f["ev_ebitda"], dict) else f["ev_ebitda"]
+            if "ps_ratio" in f:
+                val_mults["price_to_sales"] = f["ps_ratio"].get("value") if isinstance(f["ps_ratio"], dict) else f["ps_ratio"]
+            if val_mults:
+                from services.research.models import ValuationMultiples
+                try: valuation_multiples_res = ValuationMultiples(**val_mults)
+                except Exception: pass
+            
+            # Capital Allocation
+            cap_alloc = {}
+            if "buybacks_history" in f:
+                cap_alloc["buybacks"] = str(f["buybacks_history"].get("value") if isinstance(f["buybacks_history"], dict) else f["buybacks_history"])
+            if "dividends_history" in f:
+                cap_alloc["dividends"] = str(f["dividends_history"].get("value") if isinstance(f["dividends_history"], dict) else f["dividends_history"])
+            if "capex_history" in f:
+                cap_alloc["capex_trend"] = str(f["capex_history"].get("value") if isinstance(f["capex_history"], dict) else f["capex_history"])
+            if cap_alloc:
+                from services.research.models import CapitalAllocation
+                try: capital_allocation_res = CapitalAllocation(**cap_alloc)
+                except Exception: pass
+
+        industry_context_res = None
+        if entity_res and entity_res.entity.industry:
+            from services.research.models import IndustryContext
+            industry_context_res = IndustryContext(industry=entity_res.entity.industry, sub_industry=entity_res.entity.subindustry)
+
         context_obj = ResearchContext(
             entity=entity_res,
             profile=profile_res,
             financials=financial_data_res,
             analytics=analytics_data,
+            valuation_multiples=valuation_multiples_res,
+            capital_allocation=capital_allocation_res,
             news=raw_context_dict.get("news", []),
             technology_stack=tech_stack_raw,
-            leadership=raw_context_dict.get("profile", {}).get("leadership", []),
-            competitors=raw_context_dict.get("profile", {}).get("competitors", []),
+            leadership=raw_context_dict.get("leadership", []),
+            hiring_signals=hiring_signals_res,
+            competitors=raw_context_dict.get("competitors", []),
             competitive_positioning=raw_context_dict.get("competitive_positioning"),
             swot=raw_context_dict.get("swot"),
-            risk_factors=raw_context_dict.get("financials", {}).get("risk_factors_text", []) if isinstance(raw_context_dict.get("financials", {}).get("risk_factors_text", []), list) else [],
+            risk_factors=raw_context_dict.get("financials", {}).get("risk_factors", []),
             management_commentary=raw_context_dict.get("financials", {}).get("mda_text", []) if isinstance(raw_context_dict.get("financials", {}).get("mda_text", []), list) else [],
-            industry_context=None,
-            evidence_graph=evidence_graph
+            industry_context=industry_context_res,
+            evidence_graph=evidence_graph,
+            social_sentiment=raw_context_dict.get("social_sentiment")
         )
         context_dict = context_obj.model_dump()
 
@@ -233,6 +522,7 @@ class HostAgent:
         final_result = {
             "context": synthesis_dict,
             "critique": critique_dict,
+            "raw_research_context": context_dict,
             **ui
         }
         

@@ -1,11 +1,11 @@
 {
-  "company": "Reliance",
-  "ticker": "RIGD",
-  "exchange": "NSE",
-  "cik": "",
-  "website": "https://www.ril.com/",
-  "industry": "Energy",
-  "subindustry": "Oil and Gas Refining",
-  "country": "India",
-  "headquarters": "Mumbai"
+  "company": "Apple Inc.",
+  "ticker": "AAPL",
+  "exchange": "NASDAQ",
+  "cik": "0000320193",
+  "website": "aapl.com",
+  "industry": null,
+  "subindustry": null,
+  "country": null,
+  "headquarters": null
 }

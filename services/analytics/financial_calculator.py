@@ -2,9 +2,16 @@ from typing import Dict, Any
 
 class FinancialCalculator:
     @staticmethod
+    def _get_val(financials: Dict[str, Any], key: str) -> Any:
+        val = financials.get(key)
+        if isinstance(val, dict) and "value" in val:
+            return val["value"]
+        return val
+
+    @staticmethod
     def compute_growth(financials: Dict[str, Any]) -> Dict[str, float]:
         if not financials: return {}
-        revenue_history = financials.get("revenue_history", {})
+        revenue_history = FinancialCalculator._get_val(financials, "revenue_history") or {}
         if not revenue_history or len(revenue_history) < 2: return {}
         
         years = sorted(revenue_history.keys())
@@ -18,8 +25,8 @@ class FinancialCalculator:
     @staticmethod
     def compute_margin(financials: Dict[str, Any]) -> Dict[str, float]:
         if not financials: return {}
-        revenue_history = financials.get("revenue_history", {})
-        net_income_history = financials.get("net_income_history", {})
+        revenue_history = FinancialCalculator._get_val(financials, "revenue_history") or {}
+        net_income_history = FinancialCalculator._get_val(financials, "net_income_history") or {}
         
         margins = {}
         for year in revenue_history.keys():
@@ -30,7 +37,7 @@ class FinancialCalculator:
     @staticmethod
     def compute_cagr(financials: Dict[str, Any]) -> Dict[str, float]:
         if not financials: return {}
-        revenue_history = financials.get("revenue_history", {})
+        revenue_history = FinancialCalculator._get_val(financials, "revenue_history") or {}
         if not revenue_history or len(revenue_history) < 2: return {}
         
         years = sorted(revenue_history.keys())
@@ -50,10 +57,12 @@ class FinancialCalculator:
     def compute_ratios(financials: Dict[str, Any]) -> Dict[str, float]:
         # Return basic ratios like pe_ratio if available
         ratios = {}
-        if financials and financials.get("pe_ratio"):
-            ratios["pe_ratio"] = financials["pe_ratio"]
-        if financials and financials.get("market_cap"):
-            ratios["market_cap"] = financials["market_cap"]
+        pe_ratio = FinancialCalculator._get_val(financials, "pe_ratio")
+        if pe_ratio is not None:
+            ratios["pe_ratio"] = pe_ratio
+        market_cap = FinancialCalculator._get_val(financials, "market_cap")
+        if market_cap is not None:
+            ratios["market_cap"] = market_cap
         return ratios
 
     @staticmethod
@@ -62,9 +71,48 @@ class FinancialCalculator:
 
     @staticmethod
     def generate_analytics(financials: Dict[str, Any]) -> Dict[str, Any]:
-        analytics = {}
-        analytics.update(FinancialCalculator.compute_growth(financials))
-        analytics.update(FinancialCalculator.compute_margin(financials))
-        analytics.update(FinancialCalculator.compute_cagr(financials))
-        analytics.update(FinancialCalculator.compute_ratios(financials))
+        analytics = {
+            "revenue_growth": {},
+            "profit_growth": {},
+            "cagr": {},
+            "debt_equity": None,
+            "operating_margin": {},
+            "net_margin": {},
+            "fcf_margin": {},
+            "roa": {},
+            "roe": {},
+            "interest_coverage": {}
+        }
+        
+        growth = FinancialCalculator.compute_growth(financials)
+        if "revenue_yoy" in growth:
+            analytics["revenue_growth"]["YoY"] = growth["revenue_yoy"]
+            
+        margins = FinancialCalculator.compute_margin(financials)
+        if "net_margins" in margins:
+            analytics["net_margin"] = margins["net_margins"]
+            
+        cagr = FinancialCalculator.compute_cagr(financials)
+        analytics["cagr"] = cagr
+        
+        de = FinancialCalculator._get_val(financials, "debt_to_equity")
+        if de is not None:
+            try: analytics["debt_equity"] = float(de)
+            except Exception: pass
+            
+        roa = FinancialCalculator._get_val(financials, "return_on_assets")
+        if roa is not None:
+            try: analytics["roa"]["current"] = float(roa)
+            except Exception: pass
+            
+        roe = FinancialCalculator._get_val(financials, "return_on_equity")
+        if roe is not None:
+            try: analytics["roe"]["current"] = float(roe)
+            except Exception: pass
+            
+        op_margin = FinancialCalculator._get_val(financials, "operating_margin_ttm")
+        if op_margin is not None:
+            try: analytics["operating_margin"]["TTM"] = float(op_margin)
+            except Exception: pass
+            
         return analytics

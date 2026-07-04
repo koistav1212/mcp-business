@@ -1,18 +1,19 @@
 import json
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from services.llm.provider_router import ProviderRouter
 from services.models.research_execution_plan import (
     ResearchExecutionPlan, ResearchType, AnalysisDepth, Priority,
     ExecutionWave, ResearchTask, DependencyEdge, StopCondition
 )
+from services.research.models import EntityResolution
 from services.planning.planner_prompts import PLANNER_SYSTEM_PROMPT
 from services.planning.research_planner import DynamicResearchPlanner
 
 logger = logging.getLogger("uvicorn.error")
 
-def parse_execution_plan(data: Dict[str, Any]) -> ResearchExecutionPlan:
+def parse_execution_plan(data: Dict[str, Any], company_entity: Optional[EntityResolution] = None) -> ResearchExecutionPlan:
     """
     Parses a raw JSON dictionary into the structured ResearchExecutionPlan dataclass.
     """
@@ -22,7 +23,7 @@ def parse_execution_plan(data: Dict[str, Any]) -> ResearchExecutionPlan:
     
     # Use DynamicResearchPlanner to resolve tasks
     planner = DynamicResearchPlanner()
-    mapped_tasks = planner.plan({"intent": intent, "required_sources": required_sources})
+    mapped_tasks = planner.plan({"intent": intent, "required_sources": required_sources}, company_entity)
     
     tasks = []
     required_providers = []
@@ -30,10 +31,17 @@ def parse_execution_plan(data: Dict[str, Any]) -> ResearchExecutionPlan:
     for i, t in enumerate(mapped_tasks):
         provider = t["provider"]
         required_providers.append(provider)
+        
+        target_field = "canonical_name"
+        if provider in ["market_provider", "yfinance", "global_markets"]:
+            target_field = "ticker"
+        elif provider in ["sec_provider", "sec_edgar"]:
+            target_field = "cik"
+            
         tasks.append(ResearchTask(
             task_id=f"{provider}_{i}",
             provider_name=provider,
-            target_field="canonical_name",
+            target_field=target_field,
             priority=Priority.MEDIUM,
             timeout_seconds=30.0,
             max_retries=2
@@ -65,7 +73,7 @@ class PlannerAgent:
     The Brain of the system.
     Determines required domains and builds a complete ResearchExecutionPlan.
     """
-    async def execute(self, user_query: str) -> ResearchExecutionPlan:
+    async def execute(self, user_query: str, company_entity: Optional[EntityResolution] = None) -> ResearchExecutionPlan:
         try:
             planner_input = {
                 "user_query": user_query,
@@ -74,13 +82,20 @@ class PlannerAgent:
                 "available_domains": ["financial_history", "market_data", "news", "leadership"]
             }
             
-            payload = await ProviderRouter.generate_json(
+            payload_text = await ProviderRouter.generate_text(
                 agent_name="planner",
                 system_prompt=PLANNER_SYSTEM_PROMPT,
                 user_prompt=json.dumps(planner_input)
             )
             
-            plan = parse_execution_plan(payload)
+            from services.llm.provider_router import extract_json
+            try:
+                payload = extract_json(payload_text)
+            except Exception:
+                logger.warning("Could not extract JSON from planner text output. Falling back to basic WBS.")
+                return self._generate_fallback_plan(user_query)
+            
+            plan = parse_execution_plan(payload, company_entity)
             
             from services.artifacts.artifact_writer import ArtifactWriter
             ArtifactWriter.write_json("research_execution_plan.json", payload)
@@ -98,16 +113,34 @@ class PlannerAgent:
         company_name = user_query.replace("Research ", "").strip()[:50]
         
         task1 = ResearchTask(
+            task_id="CORE-001",
+            provider_name="company_provider",
+            target_field="canonical_name",
+            priority=Priority.HIGH
+        )
+        task1b = ResearchTask(
             task_id="FIN-001",
-            provider_name="sec_provider",
+            provider_name="yfinance",
             target_field="ticker",
+            priority=Priority.HIGH
+        )
+        task2 = ResearchTask(
+            task_id="CORE-002",
+            provider_name="news_provider",
+            target_field="query",
+            priority=Priority.HIGH
+        )
+        task3 = ResearchTask(
+            task_id="CORE-003",
+            provider_name="web_provider",
+            target_field="query",
             priority=Priority.HIGH
         )
         
         wave1 = ExecutionWave(
             wave_number=1,
-            name="Wave 1: Financials",
-            tasks=[task1]
+            name="Wave 1: Core Research",
+            tasks=[task1, task1b, task2, task3]
         )
         
         plan = ResearchExecutionPlan(

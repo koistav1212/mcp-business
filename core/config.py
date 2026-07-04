@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     GROQ_API_KEY: str = Field(default="sk-placeholder")
     TOGETHER_API_KEY: str = Field(default="sk-placeholder")
     GITHUB_TOKEN: str = Field(default="sk-placeholder")
+    NVDA_KEY: str = Field(default="sk-placeholder")
     LLM_MODEL: str = Field(default="gpt-4o")
 
     # Logging Config

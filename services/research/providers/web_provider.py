@@ -9,6 +9,8 @@ from services.research.base import BaseProvider
 from services.knowledge.evidence import ResearchEvidence
 from services.knowledge.citation_manager import CitationManager
 from services.research.providers.shared_utils import _write_json, BROWSER_HEADERS, logger
+from services.llm.provider_router import ProviderRouter
+import json
 
 
 class WebProvider(BaseProvider):
@@ -61,8 +63,8 @@ class WebProvider(BaseProvider):
                     if r.status_code == 200 and "text/html" in r.headers.get("Content-Type", ""):
                         crawled_pages[url] = r.text
                         logger.info("WebProvider: fetched %s", url)
-                except Exception:
-                    logger.exception("WebProvider: error fetching %s", url)
+                except Exception as e:
+                    logger.warning("WebProvider: error fetching %s (%r)", url, e)
 
             # Seed a small frontier: base, /careers, /jobs
             tasks = [
@@ -102,63 +104,55 @@ class WebProvider(BaseProvider):
                 github_langs = await self._fetch_github_languages(github_root)
 
         # ------------------------------------------------------------------
-        # 5) Detect technologies from text + GitHub
+        # 5) Detect technologies from text + GitHub using LLM
         # ------------------------------------------------------------------
-        (
-            languages,
-            ai_frameworks,
-            frontend_frameworks,
-            backend_frameworks,
-            cloud_providers,
-            databases,
-            data_engineering,
-            containers,
-            orchestration,
-            ci_cd,
-            monitoring,
-            security,
-            cdn,
-            api_technologies,
-            mobile_technologies,
-            web_servers,
-            core_platforms,
-            developer_platforms,
-            products,
-            innovation_focus,
-        ) = self._detect_technologies(combined_text, github_langs)
-
-        # ------------------------------------------------------------------
-        # 6) Build structured profiles
-        # ------------------------------------------------------------------
-        technology_profile: Dict[str, List[str]] = {
-            "languages": sorted(set(languages)),
-            "ai_frameworks": sorted(set(ai_frameworks)),
-            "cloud": sorted(set(cloud_providers)),
-            "containers": sorted(set(containers)),
-            "developer_platforms": sorted(set(developer_platforms)),
-            "products": sorted(set(products)),
-            "innovation_focus": sorted(set(innovation_focus)),
+        system_prompt = """You are an expert Technology Intelligence Analyst.
+Extract the technology stack of a company based on the provided text crawled from their website.
+Return a JSON object with two main keys: 'technology_profile' and 'technology_intelligence'.
+The 'technology_profile' should contain arrays of strings for: languages, ai_frameworks, cloud, containers, developer_platforms, products, innovation_focus.
+The 'technology_intelligence' should contain arrays of strings for: core_platforms, programming_languages, frontend_frameworks, backend_frameworks, ai_ml_frameworks, cloud_providers, databases, data_engineering, containerization, orchestration, ci_cd, monitoring, security, cdn, api_technologies, mobile_technologies, web_servers.
+If a category has no matches, return an empty array. Do not invent information."""
+        
+        # We truncate `combined_text` to avoid exceeding token limits.
+        max_chars = 25000
+        truncated_text = combined_text[:max_chars]
+        user_prompt = f"Company text snippet:\n{truncated_text}\n\nGitHub languages:\n{github_langs}\n\nExtract the technology stack in JSON format."
+        
+        technology_profile = {}
+        technology_intelligence = {}
+        
+        try:
+            llm_result = await ProviderRouter.generate_json(
+                agent_name="technology_agent",
+                system_prompt=system_prompt,
+                user_prompt=user_prompt
+            )
+            technology_profile = llm_result.get("technology_profile", {})
+            technology_intelligence = llm_result.get("technology_intelligence", {})
+        except Exception as e:
+            logger.warning(f"WebProvider LLM extraction failed: {e}. Falling back to empty profile.")
+            
+        # Ensure default shapes exist
+        default_profile = {
+            "languages": [], "ai_frameworks": [], "cloud": [], 
+            "containers": [], "developer_platforms": [], "products": [], "innovation_focus": []
         }
-
-        technology_intelligence: Dict[str, Any] = {
-            "core_platforms": sorted(set(core_platforms)),
-            "programming_languages": sorted(set(languages)),
-            "frontend_frameworks": sorted(set(frontend_frameworks)),
-            "backend_frameworks": sorted(set(backend_frameworks)),
-            "ai_ml_frameworks": sorted(set(ai_frameworks)),
-            "cloud_providers": sorted(set(cloud_providers)),
-            "databases": sorted(set(databases)),
-            "data_engineering": sorted(set(data_engineering)),
-            "containerization": sorted(set(containers)),
-            "orchestration": sorted(set(orchestration)),
-            "ci_cd": sorted(set(ci_cd)),
-            "monitoring": sorted(set(monitoring)),
-            "security": sorted(set(security)),
-            "cdn": sorted(set(cdn)),
-            "api_technologies": sorted(set(api_technologies)),
-            "mobile_technologies": sorted(set(mobile_technologies)),
-            "web_servers": sorted(set(web_servers)),
+        default_intelligence = {
+            "core_platforms": [], "programming_languages": [], "frontend_frameworks": [], 
+            "backend_frameworks": [], "ai_ml_frameworks": [], "cloud_providers": [], 
+            "databases": [], "data_engineering": [], "containerization": [], "orchestration": [], 
+            "ci_cd": [], "monitoring": [], "security": [], "cdn": [], "api_technologies": [], 
+            "mobile_technologies": [], "web_servers": []
         }
+        
+        # Merge fetched with defaults
+        for k in default_profile:
+            if k not in technology_profile or not isinstance(technology_profile[k], list):
+                technology_profile[k] = []
+                
+        for k in default_intelligence:
+            if k not in technology_intelligence or not isinstance(technology_intelligence[k], list):
+                technology_intelligence[k] = []
 
         # ------------------------------------------------------------------
         # 7) Emit ResearchEvidence
@@ -175,7 +169,7 @@ class WebProvider(BaseProvider):
                 entity=company_key,
                 attribute="technology_profile",
                 value=technology_profile,
-                source="web_technology_profile",
+                source="technology_profile",
                 source_type="mcp",
                 confidence=0.7,  # heuristic, because detection is keyword-based
             )
@@ -193,7 +187,7 @@ class WebProvider(BaseProvider):
                 entity=company_key,
                 attribute="technology_intelligence",
                 value=technology_intelligence,
-                source="web_technology_profile",
+                source="technology_profile",
                 source_type="mcp",
                 confidence=0.7,
             )
@@ -247,7 +241,7 @@ class WebProvider(BaseProvider):
         """
         langs: List[str] = []
         try:
-            async with httpx.AsyncClient(headers=BROWSER_HEADERS, timeout=20.0, follow_redirects=True) as client:
+            async with httpx.AsyncClient(headers=BROWSER_HEADERS, timeout=60.0, follow_redirects=True) as client:
                 r = await client.get(github_root)
                 if r.status_code != 200:
                     return []
@@ -273,271 +267,4 @@ class WebProvider(BaseProvider):
             logger.exception("WebProvider: error fetching GitHub languages for %s", github_root)
         return list(set(langs))
 
-    # ----------------------------------------------------------------------
-    # Technology detection
-    # ----------------------------------------------------------------------
 
-    def _detect_technologies(
-        self,
-        text: str,
-        github_langs: List[str],
-    ) -> Tuple[
-        List[str],  # languages
-        List[str],  # ai_frameworks
-        List[str],  # frontend_frameworks
-        List[str],  # backend_frameworks
-        List[str],  # cloud_providers
-        List[str],  # databases
-        List[str],  # data_engineering
-        List[str],  # containers
-        List[str],  # orchestration
-        List[str],  # ci_cd
-        List[str],  # monitoring
-        List[str],  # security
-        List[str],  # cdn
-        List[str],  # api_technologies
-        List[str],  # mobile_technologies
-        List[str],  # web_servers
-        List[str],  # core_platforms
-        List[str],  # developer_platforms
-        List[str],  # products
-        List[str],  # innovation_focus
-    ]:
-        # Seed lists
-        languages: List[str] = []
-        ai_frameworks: List[str] = []
-        frontend_frameworks: List[str] = []
-        backend_frameworks: List[str] = []
-        cloud_providers: List[str] = []
-        databases: List[str] = []
-        data_engineering: List[str] = []
-        containers: List[str] = []
-        orchestration: List[str] = []
-        ci_cd: List[str] = []
-        monitoring: List[str] = []
-        security: List[str] = []
-        cdn: List[str] = []
-        api_technologies: List[str] = []
-        mobile_technologies: List[str] = []
-        web_servers: List[str] = []
-        core_platforms: List[str] = []
-        developer_platforms: List[str] = []
-        products: List[str] = []
-        innovation_focus: List[str] = []
-
-        # Languages (from text + GitHub)
-        lang_map = {
-            "c++": "C++",
-            "cuda": "CUDA",
-            "python": "Python",
-            "rust": "Rust",
-            "java": "Java",
-            "javascript": "JavaScript",
-            "typescript": "TypeScript",
-            "go": "Go",
-            "c#": "C#",
-            "php": "PHP",
-        }
-        for raw, norm in lang_map.items():
-            if raw in text:
-                languages.append(norm)
-        for gl in github_langs:
-            if gl not in languages:
-                languages.append(gl)
-
-        # AI frameworks
-        ai_map = {
-            "tensorrt": "TensorRT",
-            "cudnn": "cuDNN",
-            "triton": "Triton",
-            "nemo": "NeMo",
-            "pytorch": "PyTorch",
-            "tensorflow": "TensorFlow",
-            "scikit-learn": "scikit-learn",
-            "sklearn": "scikit-learn",
-            "xgboost": "XGBoost",
-            "nim": "NIM",
-        }
-        for raw, norm in ai_map.items():
-            if raw in text:
-                ai_frameworks.append(norm)
-
-        # Cloud providers
-        cloud_map = {
-            "aws": "AWS",
-            "amazon web services": "AWS",
-            "azure": "Azure",
-            "google cloud": "Google Cloud",
-            "gcp": "Google Cloud",
-            "oci": "OCI",
-            "oracle cloud": "OCI",
-        }
-        for raw, norm in cloud_map.items():
-            if raw in text:
-                cloud_providers.append(norm)
-
-        # Containers / orchestration
-        if "docker" in text:
-            containers.append("Docker")
-        if "kubernetes" in text or "k8s" in text:
-            containers.append("Kubernetes")
-            orchestration.append("Kubernetes")
-
-        # Frontend frameworks
-        if "react" in text:
-            frontend_frameworks.append("React")
-        if "vue" in text:
-            frontend_frameworks.append("Vue")
-        if "angular" in text:
-            frontend_frameworks.append("Angular")
-        if "next.js" in text or "nextjs" in text:
-            frontend_frameworks.append("Next.js")
-
-        # Backend frameworks
-        if "django" in text:
-            backend_frameworks.append("Django")
-        if "flask" in text:
-            backend_frameworks.append("Flask")
-        if "fastapi" in text:
-            backend_frameworks.append("FastAPI")
-        if "spring boot" in text:
-            backend_frameworks.append("Spring Boot")
-        if "node.js" in text or "nodejs" in text:
-            backend_frameworks.append("Node.js")
-
-        # Databases
-        db_map = {
-            "mysql": "MySQL",
-            "postgresql": "PostgreSQL",
-            "postgres": "PostgreSQL",
-            "oracle": "Oracle",
-            "sql server": "SQL Server",
-            "mongodb": "MongoDB",
-            "redis": "Redis",
-        }
-        for raw, norm in db_map.items():
-            if raw in text:
-                databases.append(norm)
-
-        # Data engineering
-        if "kafka" in text:
-            data_engineering.append("Kafka")
-        if "spark" in text:
-            data_engineering.append("Spark")
-        if "airflow" in text:
-            data_engineering.append("Airflow")
-
-        # CI/CD
-        if "github actions" in text:
-            ci_cd.append("GitHub Actions")
-        if "jenkins" in text:
-            ci_cd.append("Jenkins")
-        if "gitlab ci" in text or "gitlab-ci" in text:
-            ci_cd.append("GitLab CI")
-        if "circleci" in text:
-            ci_cd.append("CircleCI")
-
-        # Monitoring
-        if "prometheus" in text:
-            monitoring.append("Prometheus")
-        if "grafana" in text:
-            monitoring.append("Grafana")
-        if "datadog" in text:
-            monitoring.append("Datadog")
-
-        # Security
-        if "vault" in text:
-            security.append("Vault")
-        if "snyk" in text:
-            security.append("Snyk")
-
-        # CDN
-        if "cloudflare" in text:
-            cdn.append("Cloudflare")
-        if "akamai" in text:
-            cdn.append("Akamai")
-
-        # API technologies
-        if "rest api" in text or "restful api" in text:
-            api_technologies.append("REST")
-        if "graphql" in text:
-            api_technologies.append("GraphQL")
-        if "grpc" in text:
-            api_technologies.append("gRPC")
-
-        # Mobile
-        if "android" in text:
-            mobile_technologies.append("Android")
-        if "ios" in text:
-            mobile_technologies.append("iOS")
-        if "flutter" in text:
-            mobile_technologies.append("Flutter")
-        if "react native" in text:
-            mobile_technologies.append("React Native")
-
-        # Web servers
-        if "nginx" in text:
-            web_servers.append("NGINX")
-        if "apache httpd" in text or "apache http server" in text:
-            web_servers.append("Apache HTTPD")
-        if "envoy" in text:
-            web_servers.append("Envoy")
-
-        # Core platforms / developer platforms / products / innovation focus
-        if "nvidia" in text and "gpu" in text:
-            core_platforms.append("NVIDIA GPU Platform")
-        if "nvidia ai enterprise" in text:
-            core_platforms.append("NVIDIA AI Enterprise")
-        if "nvidia developer" in text:
-            developer_platforms.append("NVIDIA Developer")
-        if "ngc" in text:
-            developer_platforms.append("NGC")
-        if "github" in text:
-            developer_platforms.append("GitHub")
-
-        # Products (based on your example)
-        product_map = {
-            "blackwell": "Blackwell",
-            "h100": "H100",
-            "dgx": "DGX",
-            "grace": "Grace",
-            "jetson": "Jetson",
-        }
-        for raw, norm in product_map.items():
-            if raw in text:
-                products.append(norm)
-
-        # Innovation focus
-        if "generative ai" in text or "gen ai" in text:
-            innovation_focus.append("Generative AI")
-        if "inference" in text:
-            innovation_focus.append("Inference")
-        if "digital twin" in text:
-            innovation_focus.append("Digital Twins")
-        if "robotics" in text:
-            innovation_focus.append("Robotics")
-        if "ai factory" in text or "ai factories" in text:
-            innovation_focus.append("AI Factories")
-
-        return (
-            languages,
-            ai_frameworks,
-            frontend_frameworks,
-            backend_frameworks,
-            cloud_providers,
-            databases,
-            data_engineering,
-            containers,
-            orchestration,
-            ci_cd,
-            monitoring,
-            security,
-            cdn,
-            api_technologies,
-            mobile_technologies,
-            web_servers,
-            core_platforms,
-            developer_platforms,
-            products,
-            innovation_focus,
-        )

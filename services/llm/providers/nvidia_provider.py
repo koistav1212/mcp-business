@@ -1,28 +1,28 @@
 import time
 import httpx
+import logging
 from services.llm.base_provider import BaseProvider
 from services.llm.request import LLMRequest
 from services.llm.response import LLMResponse
 
-class GithubModelsProvider(BaseProvider):
+logger = logging.getLogger("uvicorn.error")
+
+class NVIDIAProvider(BaseProvider):
     def __init__(self, api_key: str, timeout: float = 60.0):
         self.api_key = api_key
         self.timeout = timeout
-        self.provider_name = "github"
+        self.provider_name = "nvidia"
 
     async def generate(self, request: LLMRequest) -> LLMResponse:
         start_time = time.time()
         
-        # We append a JSON instruction since Azure AI Inference expects JSON when requested
-        system_prompt = request.system_prompt + "\n\nReturn ONLY valid JSON.\nNo markdown.\nNo explanations."
-        
         payload = {
             "model": request.model,
             "messages": [
-                {"role": "system", "content": system_prompt},
+                {"role": "system", "content": request.system_prompt},
                 {"role": "user", "content": request.user_prompt},
             ],
-            "temperature": request.temperature
+            "temperature": request.temperature if request.temperature is not None else 0.2,
         }
         
         if request.messages:
@@ -38,7 +38,7 @@ class GithubModelsProvider(BaseProvider):
         
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             response = await client.post(
-                "https://models.github.ai/inference/chat/completions",
+                "https://integrate.api.nvidia.com/v1/chat/completions",
                 headers=headers,
                 json=payload,
             )

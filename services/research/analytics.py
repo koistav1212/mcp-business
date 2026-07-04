@@ -58,6 +58,9 @@ class AnalyticsCalculator:
         op_income_hist = sec_data.get("operating_income_history", {})
         assets_hist = sec_data.get("assets_history", {})
         liabilities_hist = sec_data.get("liabilities_history", {})
+        fcf_hist = sec_data.get("free_cash_flow_history", {})
+        equity_hist = sec_data.get("equity_history", {})
+        interest_hist = sec_data.get("interest_expense_history", {})
         
         # 1. CAGR
         cagr = self.calculate_cagr(revenue_hist, [3, 5, 10])
@@ -90,21 +93,35 @@ class AnalyticsCalculator:
             if yf_de is not None:
                 debt_equity = round(yf_de / 100.0, 2)
                 
-        # 5. Operating Margin
-        operating_margin = {}
-        valid_rev = {int(k): v for k, v in revenue_hist.items() if v is not None and v != 0}
-        valid_op = {int(k): v for k, v in op_income_hist.items() if v is not None}
-        common_op_years = sorted(set(valid_rev.keys()).intersection(valid_op.keys()))
+        # Helper for ratio calculation
+        def calc_ratio_history(num_hist, den_hist, multiplier=1.0):
+            res = {}
+            v_num = {int(k): v for k, v in num_hist.items() if v is not None}
+            v_den = {int(k): v for k, v in den_hist.items() if v is not None and v != 0}
+            common = sorted(set(v_num.keys()).intersection(v_den.keys()))
+            for y in common:
+                res[str(y)] = round((v_num[y] / v_den[y]) * multiplier, 2)
+            return res
+
+        # 5. Margins and Ratios
+        operating_margin = calc_ratio_history(op_income_hist, revenue_hist, 100.0)
+        net_margin = calc_ratio_history(net_income_hist, revenue_hist, 100.0)
+        fcf_margin = calc_ratio_history(fcf_hist, revenue_hist, 100.0)
+        roa = calc_ratio_history(net_income_hist, assets_hist, 100.0)
+        roe = calc_ratio_history(net_income_hist, equity_hist, 100.0)
         
-        for y in common_op_years:
-            rev = valid_rev[y]
-            op_inc = valid_op[y]
-            operating_margin[str(y)] = round((op_inc / rev) * 100.0, 2)
+        # Interest coverage
+        interest_coverage = calc_ratio_history(op_income_hist, interest_hist, 1.0)
             
         return {
             "revenue_growth": rev_growth,
             "profit_growth": profit_growth,
             "cagr": cagr,
             "debt_equity": debt_equity,
-            "operating_margin": operating_margin
+            "operating_margin": operating_margin,
+            "net_margin": net_margin,
+            "fcf_margin": fcf_margin,
+            "roa": roa,
+            "roe": roe,
+            "interest_coverage": interest_coverage
         }

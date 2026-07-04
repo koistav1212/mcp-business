@@ -56,8 +56,6 @@ class NewsProvider(BaseProvider):
             if isinstance(res, list):
                 raw_articles.extend(res)
                 
-        ArtifactWriter.write_json("provider_outputs/news_raw.json", raw_articles)
-        
         if not raw_articles:
             return []
             
@@ -71,18 +69,26 @@ class NewsProvider(BaseProvider):
         # 5. Parsing & Extraction
         parser = ArticleParser()
         parsed_articles = parser.parse_all(html_articles)
-        ArtifactWriter.write_json("provider_outputs/news_parsed.json", parsed_articles)
         
-        if not parsed_articles:
-            return []
+        # Merge parsed content back into ranked_articles by URL or id
+        articles_enriched = []
+        parsed_by_url = {p.get("url"): p for p in parsed_articles if p.get("url")}
+        for base in ranked_articles:
+            url = base.get("url")
+            parsed = parsed_by_url.get(url, {})
+            merged = {**base, **parsed}  # parsed fields (full_text, entities) override base if present
+            articles_enriched.append(merged)
+
+        # If parsing totally fails, we still continue with base articles
+        if not articles_enriched:
+            articles_enriched = ranked_articles
             
         # 6. Classification & Entity Extraction
         classifier = BusinessSignalClassifier()
-        classified = classifier.process_all(parsed_articles)
+        classified = classifier.process_all(articles_enriched)
         
         extractor = EntityExtractor()
         extracted = extractor.process_all(classified)
-        ArtifactWriter.write_json("provider_outputs/news_classified.json", extracted)
         
         # 7. Semantic Ranking (Embeddings)
         ranker = SemanticRanker()
@@ -91,23 +97,38 @@ class NewsProvider(BaseProvider):
         # 8. Deduplication
         deduplicator = DuplicateDetector(threshold=0.92)
         deduped = deduplicator.deduplicate(embedded)
-        ArtifactWriter.write_json("provider_outputs/news_deduplicated.json", deduped)
         
         # 9. Event Clustering
         clusterer = EventClusterer(threshold=0.75)
         clustered = clusterer.cluster(deduped)
-        ArtifactWriter.write_json("provider_outputs/news_clustered.json", clustered)
         
         # 10. Timeline & Final Ranking
         timeline = TimelineBuilder().build(clustered)
-        
-        # We define importance = (source_score + semantic_score) / 2
+        SIGNAL_WEIGHTS = {
+            "earnings": 1.0,
+            "guidance": 0.9,
+            "m_and_a": 0.9,
+            "regulation": 0.85,
+            "product_launch": 0.8,
+            "macro": 0.7,
+            "general": 0.6,
+        }
+
         for art in timeline:
-            art["importance"] = (art.get("source_score", 0.5) + art.get("semantic_score", 0.5)) / 2.0
+            base_source = art.get("source_score", 0.5)
+            base_sem = art.get("semantic_score", 0.5)
+            signal_type = art.get("signal_type", "general")
             
-        final_ranked = sorted(timeline, key=lambda x: x["importance"], reverse=True)
-        top_articles = final_ranked[:25]
-        ArtifactWriter.write_json("provider_outputs/news_final.json", top_articles)
+            if isinstance(signal_type, list):
+                signal_w = max([SIGNAL_WEIGHTS.get(st, 0.6) for st in signal_type]) if signal_type else 0.6
+            else:
+                signal_w = SIGNAL_WEIGHTS.get(signal_type, 0.6)
+
+            # importance = base average * signal weight
+            art["importance"] = ((base_source + base_sem) / 2.0) * signal_w
+
+        final_ranked = sorted(timeline, key=lambda x: x.get("importance", 0.0), reverse=True)
+        top_articles = final_ranked[:100]  # top 100 instead of 25
         
         # Convert to ResearchEvidence
         evidence_list = []

@@ -147,7 +147,7 @@ ABSOLUTE RULES
 EXACT RESEARCHCONTEXT FIELD NAMES (use ONLY these as dotpath sources)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Top-level scalars:
-  entity.company_name | entity.ticker | entity.exchange | entity.confidence
+  entity.entity.name | entity.entity.ticker | entity.entity.exchange | entity.metadata.confidence
   confidence_score | generated_at
 
 Company profile (all fields carry SourcedValue with .value + .confidence):
@@ -469,9 +469,9 @@ class UIAgent:
 
         checks = {
             # Entity
-            "entity.company_name":              is_real((context_dict.get("entity") or {}).get("company_name")),
-            "entity.ticker":                    is_real((context_dict.get("entity") or {}).get("ticker")),
-            "entity.exchange":                  (context_dict.get("entity") or {}).get("exchange") not in (None, "UNKNOWN", "PRIVATE"),
+            "entity.company_name":              is_real(((context_dict.get("entity") or {}).get("entity") or {}).get("name")),
+            "entity.ticker":                    is_real(((context_dict.get("entity") or {}).get("entity") or {}).get("ticker")),
+            "entity.exchange":                  ((context_dict.get("entity") or {}).get("entity") or {}).get("exchange") not in (None, "UNKNOWN", "PRIVATE"),
             # Profile
             "profile.overview":                 is_real((context_dict.get("profile") or {}).get("overview")),
             "profile.headquarters":             is_real((context_dict.get("profile") or {}).get("headquarters")),
@@ -585,10 +585,10 @@ class UIAgent:
             "workspace_template": template,
             "research_available_fields": available,
             "entity_summary": {
-                "name": entity.get("company_name", profile.get("name", "Unknown")),
-                "ticker": entity.get("ticker"),
-                "exchange": entity.get("exchange", "PRIVATE"),
-                "is_public": entity.get("exchange") not in (None, "UNKNOWN", "PRIVATE"),
+                "name": entity.get("entity", {}).get("name", profile.get("name", "Unknown")),
+                "ticker": entity.get("entity", {}).get("ticker"),
+                "exchange": entity.get("entity", {}).get("exchange", "PRIVATE"),
+                "is_public": entity.get("entity", {}).get("exchange") not in (None, "UNKNOWN", "PRIVATE"),
                 "resolution_confidence": entity.get("confidence", 0.0),
             },
             "industry": industry_context.get("industry", "general"),

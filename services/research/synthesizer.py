@@ -46,7 +46,7 @@ class ResearchSynthesizer:
         raw_people_data = bundle.people_raw.get("raw_data", {}) if isinstance(bundle.people_raw, dict) else {}
 
         raw_data = {
-            "entity": entity.model_dump() if hasattr(entity, "model_dump") else str(entity),
+            "entity": entity.model_dump(exclude_none=True) if hasattr(entity, "model_dump") else str(entity),
             "company": raw_company_data,
             "web": raw_web_data,
             "news": raw_news_data,
@@ -232,14 +232,37 @@ class ResearchSynthesizer:
                 source_type=raw_news.get("source_type", "news_outlet")
             )
             for item in raw_news.get("news", []):
-                url = item["url"]
-                news_resolved[url] = NewsItem(
-                    title=item["title"],
-                    url=item["url"],
-                    date=item.get("date"),
-                    snippet=item["snippet"],
-                    type=item["type"]
-                )
+                # Handle Evidence mapped format from HostAgent
+                if isinstance(item, dict) and "value" in item and "source_ids" in item:
+                    news_val = item["value"]
+                    url = news_val.get("url")
+                    if url:
+                        news_resolved[url] = SourcedValue(
+                            value=NewsItem(
+                                title=news_val.get("title", ""),
+                                url=url,
+                                date=news_val.get("date"),
+                                snippet=news_val.get("snippet", ""),
+                                type=news_val.get("type", "general")
+                            ),
+                            source_ids=item.get("source_ids", []),
+                            confidence=item.get("confidence", 0.5)
+                        )
+                else:
+                    # Handle raw provider format
+                    url = item.get("url")
+                    if url:
+                        news_resolved[url] = SourcedValue(
+                            value=NewsItem(
+                                title=item.get("title", ""),
+                                url=url,
+                                date=item.get("date"),
+                                snippet=item.get("snippet", ""),
+                                type=item.get("type", "general")
+                            ),
+                            source_ids=["news_provider"],
+                            confidence=0.5
+                        )
 
         # 7. Hiring Signals
         hiring_signals = []
@@ -358,13 +381,30 @@ class ResearchSynthesizer:
         management_commentary = []
 
         from services.research.models import AnalyticsData
+        from services.research.analytics import AnalyticsCalculator
+        
+        calc = AnalyticsCalculator()
+        analytics_result = calc.calculate(sec_data=sec_data, yf_data=yf_data)
+        
+        analytics = AnalyticsData(
+            revenue_growth=analytics_result.get("revenue_growth", {}),
+            profit_growth=analytics_result.get("profit_growth", {}),
+            cagr=analytics_result.get("cagr", {}),
+            debt_equity=analytics_result.get("debt_equity"),
+            operating_margin=analytics_result.get("operating_margin", {}),
+            net_margin=analytics_result.get("net_margin", {}),
+            fcf_margin=analytics_result.get("fcf_margin", {}),
+            roa=analytics_result.get("roa", {}),
+            roe=analytics_result.get("roe", {}),
+            interest_coverage=analytics_result.get("interest_coverage", {})
+        )
         
         return ResearchContext(
             entity=entity,
             profile=profile,
             company_profile=profile,
             financials=financials,
-            analytics=AnalyticsData(),
+            analytics=analytics,
             news=list(news_resolved.values()),
             leadership=list(leadership_resolved.values()),
             competitors=list(competitors_resolved.values()),

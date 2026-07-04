@@ -4,7 +4,7 @@ from services.host.host_agent import HostAgent
 from services.research.models import ResearchContext, Source
 from services.research.providers.company_provider import CompanyProvider
 from services.research.providers.web_provider import WebProvider
-from services.research.providers.news_provider import NewsProvider
+from services.research.providers.news.news_provider import NewsProvider
 from services.research.providers.yfinance_provider import YFinanceProvider
 from services.research.providers.sec_edgar_provider import SECEdgarProvider
 from services.research.providers.people_provider import PeopleProvider
@@ -23,7 +23,8 @@ def test_provider_inheritance():
 @pytest.mark.asyncio
 async def test_orchestrator_zoho_success():
     orchestrator = HostAgent()
-    context = await orchestrator.run("Research Zoho")
+    result = await orchestrator.run("Research Zoho")
+    context = result.get("raw_research_context", result)
 
     assert isinstance(context, dict)
     
@@ -65,7 +66,7 @@ async def test_orchestrator_zoho_success():
 @pytest.mark.asyncio
 async def test_conflict_detection_and_resolution():
     from services.research.synthesizer import ResearchSynthesizer
-    from services.research.models import RawResearchBundle, EntityResolution
+    from services.research.models import RawResearchBundle, EntityResolution, EntityCore
     
     synthesizer = ResearchSynthesizer()
     
@@ -93,7 +94,7 @@ async def test_conflict_detection_and_resolution():
         people_raw={"leadership": []}
     )
     
-    entity = EntityResolution(company_name="Test Company", confidence=1.0)
+    entity = EntityResolution(entity=EntityCore(name="Test Company"), metadata={"confidence": 1.0})
     context = await synthesizer.synthesize(
         bundle=bundle,
         entity=entity,
@@ -110,7 +111,8 @@ async def test_conflict_detection_and_resolution():
 @pytest.mark.asyncio
 async def test_orchestrator_generic_fallback():
     orchestrator = HostAgent()
-    context = await orchestrator.run("AcmeCorp")
+    result = await orchestrator.run("AcmeCorp")
+    context = result.get("raw_research_context", result)
 
     profile = context.get("profile", {})
     assert profile.get("name") == "Acmecorp"
@@ -122,7 +124,8 @@ async def test_orchestrator_generic_fallback():
 @pytest.mark.asyncio
 async def test_real_data_provider_nvidia():
     orchestrator = HostAgent()
-    context = await orchestrator.run("Research Nvidia")
+    result = await orchestrator.run("Research Nvidia")
+    context = result.get("raw_research_context", result)
 
     assert isinstance(context, dict)
     
@@ -174,8 +177,8 @@ async def test_confidence_gate_rejection():
 @pytest.mark.asyncio
 async def test_dynamic_intent_filtering_financial_only():
     orchestrator = HostAgent()
-    # Ask explicitly for financial history only
-    context = await orchestrator.run("Get Zoho's financial history and stock valuation details only")
+    result = await orchestrator.run("Get Zoho's financial history and stock valuation details only")
+    context = result.get("raw_research_context", result)
     
     assert isinstance(context, dict)
     # Financials should exist

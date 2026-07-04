@@ -6,6 +6,7 @@ from services.research.providers.company_provider import CompanyProvider
 from services.research.providers.web_provider import WebProvider
 from services.research.providers.people_provider import PeopleProvider
 from services.research.providers.reddit_provider import RedditProvider
+from services.research.providers.global_markets_provider import GlobalMarketsProvider
 
 class ProviderExecutor:
     def __init__(self):
@@ -16,6 +17,7 @@ class ProviderExecutor:
         self.web_provider = WebProvider()
         self.people_provider = PeopleProvider()
         self.reddit_provider = RedditProvider()
+        self.global_markets_provider = GlobalMarketsProvider()
 
     async def execute(self, candidate, providers):
         provider_calls = {
@@ -26,6 +28,7 @@ class ProviderExecutor:
             "technology_provider": lambda: self.web_provider.fetch(candidate.company_name),
             "people_provider": lambda: self.people_provider.fetch(candidate.company_name),
             "social_provider": lambda: self.reddit_provider.fetch(candidate.company_name),
+            "global_markets": lambda: self.global_markets_provider.fetch(candidate.ticker),
         }
         
         selected = [name for name in providers if name in provider_calls]

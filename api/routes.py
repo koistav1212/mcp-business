@@ -183,13 +183,18 @@ Return your response in the following JSON format:
         content = result["choices"][0]["message"]["content"]
         return json.loads(content)
 
+def _unwrap(val: Any, default: Any = None) -> Any:
+    if isinstance(val, dict) and "value" in val:
+        return val["value"] or default
+    return val or default
+
 def generate_custom_report_content(context: dict, format: str, style: str, prompt_text: str) -> Any:
     profile = context.get("profile", {})
-    company_name = profile.get("name", "Unknown")
-    hq = profile.get("headquarters", "Unknown")
-    size = profile.get("employee_count", 0)
+    company_name = _unwrap(profile.get("name"), "Unknown")
+    hq = _unwrap(profile.get("headquarters"), "Unknown")
+    size = _unwrap(profile.get("employee_count"), 0)
     size_str = f"{size:,}" if size else "Unknown"
-    website = profile.get("website", "")
+    website = _unwrap(profile.get("website"), "")
     
     # 1. Parse prompt keywords to customize focus
     prompt_lower = (prompt_text or "").lower()
@@ -220,11 +225,11 @@ def generate_custom_report_content(context: dict, format: str, style: str, promp
     financials_text = "N/A"
     if financials:
         financials_text = (
-            f"Annual Revenue: {financials.get('revenue_annual')} | "
-            f"Funding Total: {financials.get('funding_total')} | "
-            f"Last Round: {financials.get('last_round')}"
+            f"Annual Revenue: {_unwrap(financials.get('revenue_annual'), 'N/A')} | "
+            f"Funding Total: {_unwrap(financials.get('funding_total'), 'N/A')} | "
+            f"Last Round: {_unwrap(financials.get('last_round'), 'N/A')}"
         )
-    competitors_list = [c.get("name") for c in context.get("competitors", [])]
+    competitors_list = [_unwrap(c).get("name", "Unknown") if isinstance(_unwrap(c), dict) else str(_unwrap(c)) for c in context.get("competitors", [])]
     competitors_str = ", ".join(competitors_list) if competitors_list else "industry peers"
     
     leaders_list = [f"{l.get('name')} ({l.get('role')})" for l in context.get("leadership", [])]
@@ -233,7 +238,8 @@ def generate_custom_report_content(context: dict, format: str, style: str, promp
     hiring_list = [f"{h.get('role_title')} in {h.get('department')} ({h.get('location')})" for h in context.get("hiring_signals", [])]
     hiring_str = "; ".join(hiring_list[:3]) if hiring_list else "talent expansion"
     
-    tech_stack = context.get("technology_stack", [])
+    tech_stack = [_unwrap(t) if isinstance(t, dict) else str(t) for t in context.get("technology_stack", [])]
+    tech_stack = [t.get("name", str(t)) if isinstance(t, dict) else t for t in tech_stack]
     tech_stack_str = ", ".join(tech_stack) if tech_stack else "modern tech stack"
     
     # Construct customizable sections

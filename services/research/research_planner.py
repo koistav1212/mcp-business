@@ -57,19 +57,24 @@ class ResearchDirectorAgent:
             except Exception as e:
                 logger.warning(f"ResearchDirectorAgent LLM planning failed: {e}. Using fallback.")
 
-        # Map task providers to actual orchestrator provider names
+        if not fallback_plan.get("required_sources"):
+            fallback_plan["required_sources"] = ["company", "news", "sec", "market", "technology", "social", "people"]
+
+        # Map task providers to actual orchestrator provider names in registry
         provider_map = {
             "company": "company_provider",
             "people": "people_provider",
-            "technology": "technology_provider",
-            "sec": "sec_provider",
-            "market": "market_provider",
+            "technology": "web_provider",
+            "sec": "sec_edgar",
+            "market": "yfinance",
             "news": "news_provider",
-            "social": "social_provider",
+            "social": "reddit_provider",
             # accept alternate names
-            "yfinance": "market_provider",
-            "reddit": "social_provider",
-            "web": "technology_provider"
+            "yfinance": "yfinance",
+            "reddit": "reddit_provider",
+            "web": "web_provider",
+            "social_intel": "reddit_provider",
+            "web_provider": "web_provider"
         }
         
         selected_sources = fallback_plan.get("required_sources", [])
@@ -91,8 +96,8 @@ class ResearchDirectorAgent:
             rationale["news_provider"] = "fallback recent developments"
             
         provider_order = [
-            "company_provider", "news_provider", "sec_provider", "market_provider",
-            "people_provider", "technology_provider", "social_provider",
+            "company_provider", "news_provider", "sec_edgar", "yfinance",
+            "people_provider", "web_provider", "reddit_provider",
         ]
         unique_providers = list(dict.fromkeys(providers))
 

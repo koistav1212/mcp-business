@@ -1,3 +1,4 @@
+import os
 import uuid
 from typing import Dict, List, Optional, Type
 from fastapi import FastAPI, HTTPException
@@ -52,6 +53,7 @@ app.add_middleware(
 app.include_router(workspace_router)
 
 # Serve generated PDFs and PPTs statically
+os.makedirs("artifacts", exist_ok=True)
 app.mount("/static", StaticFiles(directory="artifacts"), name="static")
 
 # Register default tools

@@ -73,11 +73,14 @@ class KnowledgeRouter:
             
             from services.knowledge.citation_manager import CitationManager
             attr_name = f"{provider_name}_data"
+            
+            safe_val = {"raw_data": raw_data if isinstance(raw_data, (dict, list)) else (raw_data.model_dump() if hasattr(raw_data, "model_dump") else str(raw_data))}
+            
             ev = ResearchEvidence(
                 id=CitationManager.generate_id(provider_name, canonical_entity, attr_name, "current"),
                 entity=canonical_entity,
                 attribute=attr_name,
-                value=raw_data,
+                value=safe_val,
                 source=provider_name,
                 source_type="mcp",
                 confidence=base_confidence

@@ -1,54 +1,116 @@
 {
   "planning": {
-    "plan_id": "plan_001",
-    "goal": "",
+    "plan_id": "fallback_001",
+    "goal": "Analyze Apple",
     "research_type": "company_deep_dive",
     "wave_count": 1,
-    "total_tasks": 8,
-    "required_providers": [
-      "sec_edgar",
-      "people_provider",
-      "news_provider",
-      "reddit_provider",
-      "web_provider",
-      "company_provider",
-      "yfinance"
-    ],
+    "total_tasks": 4,
+    "required_providers": [],
     "optional_providers": [],
     "max_execution_seconds": 90.0,
     "analysis_depth": "standard"
   },
-  "target_company": "Reliance",
+  "target_company": "Apple Inc.",
   "final_context": {
     "entity": {
-      "company_name": "Reliance",
-      "ticker": "RIGD",
-      "cik": "",
-      "exchange": "NSE",
-      "website": "https://www.ril.com/",
-      "confidence": 1.0
+      "entity": {
+        "name": "Apple Inc.",
+        "legal_name": null,
+        "parent_company": null,
+        "ultimate_parent": null,
+        "ticker": "AAPL",
+        "exchange": "NASDAQ",
+        "cik": "0000320193",
+        "country": null,
+        "headquarters": {
+          "city": "Cupertino",
+          "state": "California",
+          "country": "US"
+        },
+        "industry": null,
+        "subindustry": null,
+        "founded": null,
+        "website": "aapl.com",
+        "canonical_domain": "aapl.com",
+        "brand_names": [],
+        "aliases": []
+      },
+      "official_pages": {
+        "homepage": null,
+        "about": null,
+        "who_we_are": null,
+        "consumer": null,
+        "business": null,
+        "careers": "https://www.apple.com/careers/us/",
+        "contact": "https://support.apple.com/?cid=gn-ols-home-hp-tab",
+        "support": null,
+        "faq": null,
+        "selfcare": null,
+        "press": null,
+        "newsroom": null,
+        "investor_relations": null,
+        "sustainability": null,
+        "privacy_policy": null,
+        "terms": null,
+        "developer": null,
+        "api_docs": null,
+        "documentation": null,
+        "blog": null,
+        "status_page": null,
+        "partners": null,
+        "channel_partners": null,
+        "downloads": null
+      },
+      "products": [],
+      "services": [],
+      "solutions": null,
+      "social_profiles": null,
+      "mobile_apps": [],
+      "subsidiaries_or_brands": [],
+      "developer_resources": null,
+      "contact": {
+        "support_url": "https://www.apple.com/contact/",
+        "sales_url": null,
+        "careers_url": null
+      },
+      "metadata": {
+        "confidence": 1.0
+      }
     },
     "profile": {
-      "name": "Reliance, Inc.",
-      "overview": "Reliance may refer to:",
+      "name": "Apple Inc.",
+      "overview": "Apple Inc. is an American multinational technology company headquartered in Cupertino, California, in Silicon Valley, and known for consumer electronics, software and online services. Founded in 1976 as Apple Computer Company by Steve Jobs, Steve Wozniak and Ronald Wayne, the company was incorporated by Jobs and Wozniak as Apple Computer, Inc. the following year. Its current name was adopted in 2007 as the company expanded its focus from computers to consumer electronics. Apple is one of the Big Tech companies. Apple along with Alphabet, Amazon, Meta, and Microsoft are referred to as the Big Five.",
       "headquarters": {
-        "value": "Phoenix, AZ, United States",
-        "source_ids": [],
-        "confidence": 0.0
+        "value": "Cupertino, California, US",
+        "source_ids": [
+          "company_profile_apple_inc_headquarters_2026_07_04_9b30f7"
+        ],
+        "confidence": 0.88
       },
       "employee_count": {
-        "value": 15700,
-        "source_ids": [],
-        "confidence": 0.0
+        "value": 166000,
+        "source_ids": [
+          "company_profile_apple_inc_employee_count_2026_07_04_7d46f8"
+        ],
+        "confidence": 0.82
       },
-      "website": "https://reliance.com",
-      "founders": []
+      "website": {
+        "value": "https://www.apple.com/",
+        "source_ids": [
+          "company_profile_apple_inc_website_2026_07_04_4b8af7"
+        ],
+        "confidence": 0.88
+      },
+      "founders": [
+        "Steve Jobs",
+        "Steve Wozniak",
+        "Ronald Wayne"
+      ]
     },
     "company_profile": null,
     "sources": [],
     "confidence_score": 0.0,
-    "generated_at": "2026-06-28 10:20:59.029564",
-    "raw_data": {},
+    "generated_at": "2026-07-04 13:03:54.588971",
     "pdf_url": null,
     "ppt_url": null,
     "intent": null,
@@ -57,484 +119,1100 @@
     "evidence_graph": {
       "nodes": [
         {
-          "id": "github_reliance_github_repo_count_2026_06_28_df1e12",
-          "fact": "1",
+          "id": "yfinance_aapl_market_cap_2026_07_04_004a5c",
+          "fact": "4532958920704",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.95,
+          "category": "market_cap",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "social_intel_reliance_social_market_sentiment_2026_06_28_41ba13",
-          "fact": "{'bullish': 100.0, 'bearish': 0.0, 'neutral': 0.0, 'confidence': 0.8}",
+          "id": "yfinance_aapl_pe_ratio_2026_07_04_5f7925",
+          "fact": "37.319225",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.95,
+          "category": "pe_ratio",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "social_intel_reliance_social_summary_2026_06_28_83ed43",
-          "fact": "{'market_sentiment': 'bullish', 'overall_score': 1.0, 'discussion_volume': 40, 'executive_activity':",
+          "id": "yfinance_aapl_forward_pe_2026_07_04_0db9a4",
+          "fact": "32.119114",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "forward_pe",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "social_intel_reliance_social_trending_topics_2026_06_28_dd336b",
-          "fact": "[{'topic': 'over', 'mentions': 5, 'growth': '+0%', 'sentiment': 'Mixed'}, {'topic': 'self', 'mention",
+          "id": "yfinance_aapl_ps_ratio_2026_07_04_818e83",
+          "fact": "10.041065",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "ps_ratio",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "social_intel_reliance_social_engagement_2026_06_28_9c29cc",
-          "fact": "{'reddit': {'posts': 0, 'upvotes': 0, 'comments': 0}, 'stocktwits': {'messages': 0, 'likes': 0}, 'ha",
+          "id": "yfinance_aapl_pb_ratio_2026_07_04_a6437a",
+          "fact": "42.511017",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "pb_ratio",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "social_intel_reliance_social_timeline_events_2026_06_28_9085cd",
-          "fact": "[{'date': '2008-04-24', 'event': 'Brazil Oil Finds May End Reliance on Middle East', 'sources': ['Ha",
+          "id": "yfinance_aapl_peg_ratio_2026_07_04_38bd50",
+          "fact": "2.49",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "peg_ratio",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "social_intel_reliance_social_source_credibility_2026_06_28_18e2ee",
-          "fact": "{'reddit': 0.72, 'stocktwits': 0.81, 'hackernews': 0.94}",
+          "id": "yfinance_aapl_ev_ebitda_2026_07_04_1b4334",
+          "fact": "28.437",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "ev_ebitda",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "social_intel_reliance_social_discussion_urls_2026_06_28_7b1580",
-          "fact": "['https://techcrunch.com/2026/04/10/france-to-ditch-windows-for-linux-to-reduce-reliance-on-us-tech/",
+          "id": "yfinance_aapl_ev_revenue_2026_07_04_db50da",
+          "fact": "10.077",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "ev_revenue",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "social_intel_reliance_social_customer_pain_points_2026_06_28_89835d",
-          "fact": "[{'theme': 'General issues', 'frequency': 2, 'severity': 'Low'}]",
+          "id": "yfinance_aapl_current_price_2026_07_04_31a27f",
+          "fact": "308.63",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.95,
+          "category": "current_price",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "social_intel_reliance_social_intelligence_payload_2026_06_28_bac92f",
-          "fact": "{\"entity\": \"Reliance\", \"ticker\": null, \"summary\": {\"market_sentiment\": \"bullish\", \"overall_score\": 1",
+          "id": "yfinance_aapl_fifty_two_week_high_2026_07_04_2a57e2",
+          "fact": "317.4",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "fifty_two_week_high",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "technology_profile_reliance_technology_profile_current_d66035",
-          "fact": "{'languages': ['Go', 'Rust'], 'ai_frameworks': [], 'cloud': [], 'containers': [], 'developer_platfor",
+          "id": "yfinance_aapl_fifty_two_week_low_2026_07_04_4fbdfe",
+          "fact": "201.5",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "fifty_two_week_low",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "technology_intelligence_reliance_technology_intelligence_current_0efe71",
-          "fact": "{'core_platforms': [], 'programming_languages': ['Go', 'Rust'], 'frontend_frameworks': [], 'backend_",
+          "id": "yfinance_aapl_fifty_day_average_2026_07_04_040ac0",
+          "fact": "293.523",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "fifty_day_average",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "company_profile_reliance_name_2026_06_28_44e2c7",
-          "fact": "Reliance, Inc.",
+          "id": "yfinance_aapl_two_hundred_day_average_2026_07_04_7c10f6",
+          "fact": "270.69144",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "two_hundred_day_average",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "company_profile_reliance_overview_2026_06_28_7e8cb6",
-          "fact": "Reliance may refer to:",
+          "id": "yfinance_aapl_beta_2026_07_04_9fd0bb",
+          "fact": "1.097",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "beta",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "company_profile_reliance_headquarters_2026_06_28_5e2ed2",
-          "fact": "Phoenix, AZ, United States",
+          "id": "yfinance_aapl_dividend_yield_2026_07_04_49e835",
+          "fact": "0.35",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "dividend_yield",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "company_profile_reliance_website_2026_06_28_7a6c23",
-          "fact": "https://reliance.com",
+          "id": "yfinance_aapl_earnings_per_share_2026_07_04_c22da3",
+          "fact": "8.27",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "earnings_per_share",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "company_profile_reliance_employee_count_2026_06_28_9f8cf8",
-          "fact": "15700",
+          "id": "yfinance_aapl_forward_eps_2026_07_04_990596",
+          "fact": "9.60892",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "forward_eps",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "company_profile_reliance_leadership_2026_06_28_9524a8",
-          "fact": "[{'name': 'Ms. Karla R. Lewis CPA', 'role': 'President, CEO & Director'}, {'name': 'Mr. Arthur  Ajem",
+          "id": "yfinance_aapl_book_value_per_share_2026_07_04_1d791a",
+          "fact": "7.26",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "book_value_per_share",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "yfinance_reliance_industry_2026_06_28_145734",
-          "fact": "Steel",
+          "id": "yfinance_aapl_analyst_target_price_2026_07_04_92c9f6",
+          "fact": "315.09048",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "analyst_target_price",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "yfinance_reliance_sector_2026_06_28_f0cce2",
-          "fact": "Basic Materials",
+          "id": "yfinance_aapl_analyst_target_high_2026_07_04_deb817",
+          "fact": "400.0",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "analyst_target_high",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "yfinance_reliance_ticker_2026_06_28_2c68e5",
-          "fact": "RS",
+          "id": "yfinance_aapl_analyst_target_low_2026_07_04_950116",
+          "fact": "215.0",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "analyst_target_low",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "github_reliance_github_repo_count_2026_06_28_a15abe",
-          "fact": "1",
+          "id": "yfinance_aapl_analyst_recommendation_2026_07_04_299308",
+          "fact": "buy",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "analyst_recommendation",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "company_profile_reliance_name_2026_06_28_476a17",
-          "fact": "Reliance, Inc.",
+          "id": "yfinance_aapl_analyst_count_2026_07_04_aeb3e0",
+          "fact": "42",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "analyst_count",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "company_profile_reliance_overview_2026_06_28_23c77f",
-          "fact": "Reliance may refer to:",
+          "id": "yfinance_aapl_analyst_strong_buy_2026_07_04_cd5829",
+          "fact": "2.02128",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "analyst_strong_buy",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "company_profile_reliance_headquarters_2026_06_28_d2dfec",
-          "fact": "Phoenix, AZ, United States",
+          "id": "yfinance_aapl_institutional_ownership_pct_2026_07_04_d04514",
+          "fact": "0.65779",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "institutional_ownership_pct",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "company_profile_reliance_website_2026_06_28_100ee2",
-          "fact": "https://reliance.com",
+          "id": "yfinance_aapl_insider_ownership_pct_2026_07_04_0779a6",
+          "fact": "0.01631",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "insider_ownership_pct",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "company_profile_reliance_employee_count_2026_06_28_9969ad",
-          "fact": "15700",
+          "id": "yfinance_aapl_short_interest_pct_2026_07_04_7c80c8",
+          "fact": "0.0098",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "short_interest_pct",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "company_profile_reliance_leadership_2026_06_28_ded2d0",
-          "fact": "[{'name': 'Ms. Karla R. Lewis CPA', 'role': 'President, CEO & Director'}, {'name': 'Mr. Arthur  Ajem",
+          "id": "yfinance_aapl_shares_short_2026_07_04_3eeedd",
+          "fact": "144248476",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "shares_short",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "yfinance_reliance_industry_2026_06_28_0db68d",
-          "fact": "Steel",
+          "id": "yfinance_aapl_revenue_ttm_2026_07_04_05d1c3",
+          "fact": "451442016256",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "revenue_ttm",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "yfinance_reliance_sector_2026_06_28_6147fb",
-          "fact": "Basic Materials",
+          "id": "yfinance_aapl_net_income_ttm_2026_07_04_78f1a4",
+          "fact": "122575003648",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "net_income_ttm",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "yfinance_reliance_ticker_2026_06_28_9932cc",
-          "fact": "RS",
+          "id": "yfinance_aapl_ebitda_ttm_2026_07_04_359811",
+          "fact": "159975997440",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "ebitda_ttm",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "social_intel_reliance_social_market_sentiment_2026_06_28_36e270",
-          "fact": "{'bullish': 100.0, 'bearish': 0.0, 'neutral': 0.0, 'confidence': 0.8}",
+          "id": "yfinance_aapl_free_cash_flow_ttm_2026_07_04_6649b3",
+          "fact": "101090746368",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "free_cash_flow_ttm",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "social_intel_reliance_social_summary_2026_06_28_eaaf09",
-          "fact": "{'market_sentiment': 'bullish', 'overall_score': 1.0, 'discussion_volume': 40, 'executive_activity':",
+          "id": "yfinance_aapl_total_cash_2026_07_04_19cbdc",
+          "fact": "68507000832",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "total_cash",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "social_intel_reliance_social_trending_topics_2026_06_28_9b7378",
-          "fact": "[{'topic': 'over', 'mentions': 5, 'growth': '+0%', 'sentiment': 'Mixed'}, {'topic': 'self', 'mention",
+          "id": "yfinance_aapl_total_debt_2026_07_04_4ba340",
+          "fact": "84710998016",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "total_debt",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "social_intel_reliance_social_engagement_2026_06_28_31c0b2",
-          "fact": "{'reddit': {'posts': 0, 'upvotes': 0, 'comments': 0}, 'stocktwits': {'messages': 0, 'likes': 0}, 'ha",
+          "id": "yfinance_aapl_debt_to_equity_2026_07_04_ceb0cc",
+          "fact": "79.548",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "debt_to_equity",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "social_intel_reliance_social_timeline_events_2026_06_28_17201d",
-          "fact": "[{'date': '2008-04-24', 'event': 'Brazil Oil Finds May End Reliance on Middle East', 'sources': ['Ha",
+          "id": "yfinance_aapl_return_on_equity_2026_07_04_e8afcd",
+          "fact": "1.4147099",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "return_on_equity",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "social_intel_reliance_social_source_credibility_2026_06_28_29f174",
-          "fact": "{'reddit': 0.72, 'stocktwits': 0.81, 'hackernews': 0.94}",
+          "id": "yfinance_aapl_return_on_assets_2026_07_04_0a1994",
+          "fact": "0.26229",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "return_on_assets",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "social_intel_reliance_social_discussion_urls_2026_06_28_c89b4c",
-          "fact": "['https://techcrunch.com/2026/04/10/france-to-ditch-windows-for-linux-to-reduce-reliance-on-us-tech/",
+          "id": "yfinance_aapl_profit_margin_2026_07_04_43353d",
+          "fact": "0.27152002",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "profit_margin",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "social_intel_reliance_social_customer_pain_points_2026_06_28_874c9a",
-          "fact": "[{'theme': 'General issues', 'frequency': 2, 'severity': 'Low'}]",
+          "id": "yfinance_aapl_operating_margin_ttm_2026_07_04_026a93",
+          "fact": "0.32275",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "operating_margin_ttm",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "social_intel_reliance_social_intelligence_payload_2026_06_28_b3eb44",
-          "fact": "{\"entity\": \"Reliance\", \"ticker\": null, \"summary\": {\"market_sentiment\": \"bullish\", \"overall_score\": 1",
+          "id": "yfinance_aapl_gross_margin_2026_07_04_3a10ea",
+          "fact": "0.47862",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "gross_margin",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "technology_profile_reliance_technology_profile_current_3c33ae",
-          "fact": "{'languages': ['Rust'], 'ai_frameworks': [], 'cloud': [], 'containers': [], 'developer_platforms': [",
+          "id": "yfinance_aapl_sector_2026_07_04_82edcd",
+          "fact": "Technology",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "sector",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "technology_intelligence_reliance_technology_intelligence_current_af1600",
-          "fact": "{'core_platforms': [], 'programming_languages': ['Rust'], 'frontend_frameworks': [], 'backend_framew",
+          "id": "yfinance_aapl_industry_2026_07_04_d2eb45",
+          "fact": "Consumer Electronics",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "industry",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "technology_profile_reliance_technology_profile_current_823877",
-          "fact": "{'languages': ['Go', 'Rust'], 'ai_frameworks': [], 'cloud': [], 'containers': [], 'developer_platfor",
+          "id": "yfinance_aapl_full_time_employees_2026_07_04_3f1588",
+          "fact": "166000",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "full_time_employees",
           "entity": null,
           "value": null,
           "related_facts": [],
           "status": "verified"
         },
         {
-          "id": "technology_intelligence_reliance_technology_intelligence_current_7d2082",
-          "fact": "{'core_platforms': [], 'programming_languages': ['Go', 'Rust'], 'frontend_frameworks': [], 'backend_",
+          "id": "yfinance_aapl_long_business_summary_2026_07_04_a173dc",
+          "fact": "Apple Inc. designs, manufactures, and markets smartphones, personal computers, tablets, wearables, a",
           "source_ids": [],
-          "confidence": 0.0,
-          "category": "general",
+          "confidence": 0.88,
+          "category": "long_business_summary",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "yfinance_aapl_country_2026_07_04_c27927",
+          "fact": "United States",
+          "source_ids": [],
+          "confidence": 0.88,
+          "category": "country",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "yfinance_aapl_city_2026_07_04_3cfe3a",
+          "fact": "Cupertino",
+          "source_ids": [],
+          "confidence": 0.88,
+          "category": "city",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "yfinance_aapl_exchange_2026_07_04_964ba4",
+          "fact": "NMS",
+          "source_ids": [],
+          "confidence": 0.88,
+          "category": "exchange",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "yfinance_aapl_analyst_recommendations_history_2026_07_04_d9ac47",
+          "fact": "[{'period': '0m', 'strongBuy': 6, 'buy': 22, 'hold': 16, 'sell': 1, 'strongSell': 2}, {'period': '-1",
+          "source_ids": [],
+          "confidence": 0.85,
+          "category": "analyst_recommendations_history",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "yfinance_aapl_institutional_holders_2026_07_04_d46f04",
+          "fact": "[{'Date Reported': Timestamp('2026-03-31 00:00:00'), 'Holder': 'Blackrock Inc.', 'pctHeld': 0.0779, ",
+          "source_ids": [],
+          "confidence": 0.85,
+          "category": "institutional_holders",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "company_profile_apple_inc_name_2026_07_04_e03b0f",
+          "fact": "Apple Inc.",
+          "source_ids": [],
+          "confidence": 0.95,
+          "category": "name",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "company_profile_apple_inc_overview_2026_07_04_be7629",
+          "fact": "Apple Inc. is an American multinational technology company headquartered in Cupertino, California, i",
+          "source_ids": [],
+          "confidence": 0.88,
+          "category": "overview",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "company_profile_apple_inc_headquarters_2026_07_04_9b30f7",
+          "fact": "Cupertino, California, US",
+          "source_ids": [],
+          "confidence": 0.88,
+          "category": "headquarters",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "company_profile_apple_inc_website_2026_07_04_4b8af7",
+          "fact": "https://www.apple.com/",
+          "source_ids": [],
+          "confidence": 0.88,
+          "category": "website",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "company_profile_apple_inc_founders_2026_07_04_0bde99",
+          "fact": "['Steve Jobs', 'Steve Wozniak', 'Ronald Wayne']",
+          "source_ids": [],
+          "confidence": 0.85,
+          "category": "founders",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "company_profile_apple_inc_employee_count_2026_07_04_7d46f8",
+          "fact": "166000",
+          "source_ids": [],
+          "confidence": 0.82,
+          "category": "employee_count",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "company_profile_apple_inc_leadership_2026_07_04_15ff05",
+          "fact": "[{'name': 'Arthur Levinson', 'role': 'chairman'}, {'name': 'Tim Cook (Chief executive officer', 'rol",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "leadership",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "yfinance_apple_inc_industry_2026_07_04_0ea2db",
+          "fact": "Consumer Electronics",
+          "source_ids": [],
+          "confidence": 0.85,
+          "category": "industry",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "yfinance_apple_inc_sector_2026_07_04_3e6a7c",
+          "fact": "Technology",
+          "source_ids": [],
+          "confidence": 0.85,
+          "category": "sector",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "yfinance_apple_inc_ticker_2026_07_04_c9e3e6",
+          "fact": "AAPL",
+          "source_ids": [],
+          "confidence": 0.95,
+          "category": "ticker",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "web_crawler_apple_inc_official_pages_2026_07_04_08959e",
+          "fact": "{'investors': 'https://www.apple.com/airpods/', 'contact': 'https://support.apple.com/?cid=gn-ols-ho",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "official_pages",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "web_crawler_apple_inc_contact_2026_07_04_f65240",
+          "fact": "https://www.apple.com/contact/",
+          "source_ids": [],
+          "confidence": 0.75,
+          "category": "contact",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_0_2026_07_04_584255",
+          "fact": "{'headline': 'Apple (AAPL) Stock May Be Rich On Cash Flow Yet Soft On Earnings - simplywall.st', 'su",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_1_2026_07_04_ac785c",
+          "fact": "{'headline': 'Is Apple Stock (AAPL) a Buy Ahead of Q3 Earnings Report on July 30? - TipRanks', 'summ",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_2_2026_07_04_223b3b",
+          "fact": "{'headline': 'Reflecting On Consumer Discretionary Stocks\u2019 Q1 Earnings: Apple (NASDAQ:AAPL) - Yahoo ",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_3_2026_07_04_eb41a2",
+          "fact": "{'headline': '1 Profitable Stock on Our Watchlist and 2 We Question - StockStory', 'summary': 'Googl",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_4_2026_07_04_7d272d",
+          "fact": "{'headline': 'AAPL Stock Gains \u2014 Apple Reportedly Eyes Foldable iPhone, Camera-Equipped AirPods Laun",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_5_2026_07_04_29dfe6",
+          "fact": "{'headline': 'Apple (AAPL) Set to Launch New iPad Pro and MacBook Pro Models i - GuruFocus', 'summar",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_6_2026_07_04_fcf6c9",
+          "fact": "{'headline': 'Apple Inc. (AAPL): One of the Promising Stocks to Buy According to AI - Yahoo Finance'",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_7_2026_07_04_ecbecc",
+          "fact": "{'headline': 'Apple (AAPL) Leads Tech Surge Amid Broader Market Divergence - GuruFocus', 'summary': ",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_8_2026_07_04_2b4311",
+          "fact": "{'headline': 'Why Apple (AAPL) Stock Is Trading Up Today - Yahoo Finance', 'summary': 'Google News..",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_9_2026_07_04_11ceb7",
+          "fact": "{'headline': 'Apple Stock (AAPL) Opinions on Recent Price Hikes and Analyst Views - Quiver Quantitat",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_10_2026_07_04_8f82f8",
+          "fact": "{'headline': 'Why Apple (AAPL) Shares Are Sliding Today - Yahoo Finance', 'summary': 'Google News...",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_11_2026_07_04_6bf570",
+          "fact": "{'headline': 'Apple (NASDAQ: AAPL) Stock Price Surges On Foldable iPhone Plans And Chip Sourcing Pus",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_12_2026_07_04_043cfd",
+          "fact": "{'headline': 'Why Apple (NASDAQ: AAPL) Hiked Prices Across Hardware Lineup As iPhone Decision Looms ",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_13_2026_07_04_c77fb8",
+          "fact": "{'headline': 'Is Apple (AAPL) a Buy as Wall Street Analysts Look Optimistic? - Yahoo Finance', 'summ",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_14_2026_07_04_342e0d",
+          "fact": "{'headline': 'Investors Heavily Search Apple Inc. (AAPL): Here is What You Need to Know - Yahoo Fina",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_15_2026_07_04_5008ec",
+          "fact": "{'headline': 'Why Apple (AAPL) Stock Is Up Today - Quiver Quantitative', 'summary': 'Google News...'",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_16_2026_07_04_1359d0",
+          "fact": "{'headline': 'Is Apple Inc. (AAPL) A Good Stock To Buy Now? - Yahoo Finance', 'summary': 'Google New",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_17_2026_07_04_92f9e1",
+          "fact": "{'headline': 'Apple (NASDAQ:AAPL) Shares Up 2.7% - Still a Buy? - MarketBeat', 'summary': 'Google Ne",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_18_2026_07_04_47ff82",
+          "fact": "{'headline': 'Apple Inc. (AAPL) Faces 6% Drop Amid Price Hikes and Mixed Analy - GuruFocus', 'summar",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_19_2026_07_04_26369b",
+          "fact": "{'headline': 'Apple Inc. (AAPL): A Top Stock Pick by Graham Stephan? - Yahoo Finance', 'summary': 'G",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_20_2026_07_04_9b7bc5",
+          "fact": "{'headline': 'Is Apple (AAPL) One of the Best Reddit Stocks to Buy According to Billionaires? - Yaho",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_21_2026_07_04_8808cd",
+          "fact": "{'headline': 'Apple (AAPL) Stock After 129% Five-Year Rally Is There Still Value Here - Yahoo Financ",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_22_2026_07_04_331bc6",
+          "fact": "{'headline': 'Apple (NASDAQ:AAPL) Trading Up 1.7% - Should You Buy? - MarketBeat', 'summary': 'Googl",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_23_2026_07_04_136c43",
+          "fact": "{'headline': 'Apple stock in focus as five-iPhone blitz tests pricey AAPL valuation - TradingView', ",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_24_2026_07_04_c6c9b8",
+          "fact": "{'headline': 'Apple Inc. (AAPL) Is A Top Stock In Ken Griffin\u2019s Portfolio - Yahoo Finance', 'summary",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_25_2026_07_04_011ec1",
+          "fact": "{'headline': 'Wall Street\u2019s Top Billionaires Are Changing Their Mind About Apple (AAPL) - Yahoo Fina",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_26_2026_07_04_72a2be",
+          "fact": "{'headline': 'Apple Inc. $AAPL Shares Purchased by Brian Low Financial Group LLC - MarketBeat', 'sum",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_27_2026_07_04_4bd5b5",
+          "fact": "{'headline': \"Here's Why Apple (AAPL) Gained But Lagged the Market Today - Yahoo Finance\", 'summary'",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_28_2026_07_04_e8f20d",
+          "fact": "{'headline': 'Apple\u2019s (AAPL) AI Strategy Reset Gains Wall Street Support Amid Cybersecurity Probe - ",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_29_2026_07_04_454fcb",
+          "fact": "{'headline': 'How Apple\u2019s AI-Driven Memory Costs and Pricing Shifts Will Impact Apple (AAPL) Investo",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_30_2026_07_04_fdbe7d",
+          "fact": "{'headline': 'AAPL Stock Rises Overnight: After Price Hikes, Apple Reportedly Seeks US Approval To B",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_31_2026_07_04_be756c",
+          "fact": "{'headline': 'Apple (AAPL) Sees Increased Consumer Interest in iPhone Purchases - GuruFocus', 'summa",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_32_2026_07_04_31e207",
+          "fact": "{'headline': 'Apple (AAPL) Stock Trades Down, Here Is Why - Yahoo Finance', 'summary': 'Google News.",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_33_2026_07_04_18cbe3",
+          "fact": "{'headline': 'Apple Tests Pricing Power As Component Costs Quadruple: Where Is AAPL Stock Headed? - ",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_34_2026_07_04_c2c1bd",
+          "fact": "{'headline': 'Apple (AAPL) Is A Top Stock In Billionaire Ken Fisher\u2019s Portfolio - Yahoo Finance', 's",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_35_2026_07_04_c009e4",
+          "fact": "{'headline': \"Apple Inc (AAPL): Our Calculation of Intrinsic Value - The Acquirer's Multiple\", 'summ",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_36_2026_07_04_1ac4ab",
+          "fact": "{'headline': 'Apple Inc. (AAPL) Is A Top Warren Buffett Stock Pick - Yahoo Finance', 'summary': 'Goo",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_37_2026_07_04_b46676",
+          "fact": "{'headline': 'Apple Inc. $AAPL Shares Sold by Blue Trust Inc. - MarketBeat', 'summary': 'Google News",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
+          "entity": null,
+          "value": null,
+          "related_facts": [],
+          "status": "verified"
+        },
+        {
+          "id": "news_intelligence_aapl_news_event_38_2026_07_04_e5029b",
+          "fact": "{'headline': 'Apple (AAPL) Sees a More Significant Dip Than Broader Market: Some Facts to Know - Yah",
+          "source_ids": [],
+          "confidence": 0.8,
+          "category": "news_intelligence",
           "entity": null,
           "value": null,
           "related_facts": [],
@@ -555,58 +1233,1601 @@
     "management_commentary": [],
     "leadership": [
       {
-        "name": "Ms. Karla R. Lewis CPA",
-        "role": "President, CEO & Director",
-        "linkedin_url": null
+        "value": {
+          "name": "Arthur Levinson",
+          "role": "chairman"
+        },
+        "source_ids": [
+          "company_profile_apple_inc_leadership_2026_07_04_15ff05"
+        ],
+        "confidence": 0.8
       },
       {
-        "name": "Mr. Arthur  Ajemyan",
-        "role": "CFO & Senior VP",
-        "linkedin_url": null
+        "value": {
+          "name": "Tim Cook (Chief executive officer",
+          "role": "Executive"
+        },
+        "source_ids": [
+          "company_profile_apple_inc_leadership_2026_07_04_15ff05"
+        ],
+        "confidence": 0.8
       },
       {
-        "name": "Mr. Stephen P. Koch",
-        "role": "Executive VP & COO",
-        "linkedin_url": null
+        "value": {
+          "name": "CEO)",
+          "role": "Executive"
+        },
+        "source_ids": [
+          "company_profile_apple_inc_leadership_2026_07_04_15ff05"
+        ],
+        "confidence": 0.8
       },
       {
-        "name": "Mr. William A. Smith II",
-        "role": "Senior VP, General Counsel & Corporate Secretary",
-        "linkedin_url": null
+        "value": {
+          "name": "John Ternus (CEO-designate",
+          "role": "Executive"
+        },
+        "source_ids": [
+          "company_profile_apple_inc_leadership_2026_07_04_15ff05"
+        ],
+        "confidence": 0.8
       },
       {
-        "name": "Mr. Scott W. Ramsbottom",
-        "role": "VP & Chief Information Officer",
-        "linkedin_url": null
+        "value": {
+          "name": "starting September 2026)",
+          "role": "Executive"
+        },
+        "source_ids": [
+          "company_profile_apple_inc_leadership_2026_07_04_15ff05"
+        ],
+        "confidence": 0.8
       },
       {
-        "name": "Ms. Vandy C. Lupton",
-        "role": "Vice President of Health & Human Resources",
-        "linkedin_url": null
+        "value": {
+          "name": "Sabih Khan (Chief operating officer",
+          "role": "Executive"
+        },
+        "source_ids": [
+          "company_profile_apple_inc_leadership_2026_07_04_15ff05"
+        ],
+        "confidence": 0.8
       },
       {
-        "name": "Ms. Brenda S. Miyamoto CMT",
-        "role": "Senior Vice President of Strategic Planning & Programs",
-        "linkedin_url": null
+        "value": {
+          "name": "COO)",
+          "role": "Executive"
+        },
+        "source_ids": [
+          "company_profile_apple_inc_leadership_2026_07_04_15ff05"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "name": "Kevan Parekh (Chief financial officer",
+          "role": "Executive"
+        },
+        "source_ids": [
+          "company_profile_apple_inc_leadership_2026_07_04_15ff05"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "name": "CFO)",
+          "role": "Executive"
+        },
+        "source_ids": [
+          "company_profile_apple_inc_leadership_2026_07_04_15ff05"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "name": "Craig Federighi",
+          "role": "SVP of software engineering"
+        },
+        "source_ids": [
+          "company_profile_apple_inc_leadership_2026_07_04_15ff05"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "name": "Mr. Timothy D. Cook",
+          "role": "CEO & Director"
+        },
+        "source_ids": [
+          "company_profile_apple_inc_leadership_2026_07_04_15ff05"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "name": "Mr. Kevan  Parekh",
+          "role": "Senior VP & CFO"
+        },
+        "source_ids": [
+          "company_profile_apple_inc_leadership_2026_07_04_15ff05"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "name": "Mr. Sabih  Khan",
+          "role": "Senior VP & Chief Operating Officer"
+        },
+        "source_ids": [
+          "company_profile_apple_inc_leadership_2026_07_04_15ff05"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "name": "Ms. Deirdre  O'Brien",
+          "role": "Senior Vice President of Retail & People"
+        },
+        "source_ids": [
+          "company_profile_apple_inc_leadership_2026_07_04_15ff05"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "name": "Ms. Katherine L. Adams",
+          "role": "Senior VP of Government Affairs & Secretary"
+        },
+        "source_ids": [
+          "company_profile_apple_inc_leadership_2026_07_04_15ff05"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "name": "Mr. Ben  Borders",
+          "role": "Principal Accounting Officer"
+        },
+        "source_ids": [
+          "company_profile_apple_inc_leadership_2026_07_04_15ff05"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "name": "Suhasini  Chandramouli",
+          "role": "Director of Investor Relations"
+        },
+        "source_ids": [
+          "company_profile_apple_inc_leadership_2026_07_04_15ff05"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "name": "Ms. Jennifer G. Newstead J.D.",
+          "role": "Senior VP & General Counsel"
+        },
+        "source_ids": [
+          "company_profile_apple_inc_leadership_2026_07_04_15ff05"
+        ],
+        "confidence": 0.8
       }
     ],
     "hiring_signals": [],
-    "news": [],
+    "news": [
+      {
+        "value": {
+          "title": "Apple (AAPL) Stock May Be Rich On Cash Flow Yet Soft On Earnings - simplywall.st",
+          "url": "https://news.google.com/rss/articles/CBMiwgFBVV95cUxOU1NxTDZrd1BIM3JSQWJNMG53MjFaX25hOWFmdk56WWYwZTJGbzNzVkVDaTljTXJZVTU1VHdRM0pCSEFyTlRfbUpNVmVVM3g3NGF6dTVGV0YtbW5NY1hLZWNibEpCWGhwdFAybDYxWGZNcUR6RmMtekIxSm9JRVNOU1NuV0dLMjhlbmpteWNoZWNrMEhBQTB6clpjOFZNM2xLcnFJY2VRcDlGY2dsSWJmc2hJY0JfTVVqejM4bGllc0Q0d9IBwgFBVV95cUxOU1NxTDZrd1BIM3JSQWJNMG53MjFaX25hOWFmdk56WWYwZTJGbzNzVkVDaTljTXJZVTU1VHdRM0pCSEFyTlRfbUpNVmVVM3g3NGF6dTVGV0YtbW5NY1hLZWNibEpCWGhwdFAybDYxWGZNcUR6RmMtekIxSm9JRVNOU1NuV0dLMjhlbmpteWNoZWNrMEhBQTB6clpjOFZNM2xLcnFJY2VRcDlGY2dsSWJmc2hJY0JfTVVqejM4bGllc0Q0dw?oc=5",
+          "date": "2026-07-03T20:46:56+00:00",
+          "snippet": "Google News...",
+          "type": [
+            "earnings"
+          ]
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_0_2026_07_04_584255"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Is Apple Stock (AAPL) a Buy Ahead of Q3 Earnings Report on July 30? - TipRanks",
+          "url": "https://news.google.com/rss/articles/CBMimgFBVV95cUxQMG5CWXJndFJUcjI0bTQxQ2hYZGFJQkJQNVNtWUM5WWV0dmI0aWJzMmMyZW1qN0w2VnI1UXRZUkl6cVBiQ2Frakt5SVJ5UWhGODFYYnR0UGpQOGQ1akRBWFNCeGN2blphZFlnWTk0bGpTOUd0WEJKZEo0TXpOelE1R3NzcGc1S2F3aVpSRjRPT3didXpTODVuYUJB?oc=5",
+          "date": "2026-07-03T01:03:03+00:00",
+          "snippet": "Google News...",
+          "type": [
+            "earnings"
+          ]
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_1_2026_07_04_ac785c"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Reflecting On Consumer Discretionary Stocks\u2019 Q1 Earnings: Apple (NASDAQ:AAPL) - Yahoo Finance",
+          "url": "https://news.google.com/rss/articles/CBMirAFBVV95cUxOU3FERGlWa3A1UFUtWjBnSVlJYnRTOGoxbjRFSktJUmxzMy1UWVhxQ3hENk15bWZrdF9CcGpVMUdJVzEzNUxKWnRvOUM1cFd4dkN3eVh6RExJZVBHZWVHdWJlcFlwcEU5WTRlNGt3a2ZQNXVGMHVFUUo2bXNial9xc21LYmFhbWtMU3ZIbTJNQTJBOFpwWmd0YzhoZWJLQUllOUhLMnZSUlM1b0tV?oc=5",
+          "date": "2026-07-01T16:33:00+00:00",
+          "snippet": "Google News...",
+          "type": [
+            "earnings"
+          ]
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_2_2026_07_04_223b3b"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "1 Profitable Stock on Our Watchlist and 2 We Question - StockStory",
+          "url": "https://news.google.com/rss/articles/CBMitgFBVV95cUxQZGtLY3pfWDA0NVVfRnQ4WE1LbGJxM2NrcWJiUjhENXZoVHFZM00tQ1pUc1dHY3V5Szhad1o0YXl5SUZFcG1UUkJBQ3hVNkxBVG5HZzZPWTZqc0RMSEdpLUpoTDgxOXR4bTNEYzJWVWtKSWg1SWNCdFdfaGE3TXR6TURMbHFWUTlkTHRQUnFmSU1PU0hOakFTWGdmU3JOMUtZU19DWndnQ0ZMSVNzMVdVT0I4UHRSdw?oc=5",
+          "date": "2026-07-02T09:11:45+00:00",
+          "snippet": "Google News...",
+          "type": [
+            "earnings"
+          ]
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_3_2026_07_04_eb41a2"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "AAPL Stock Gains \u2014 Apple Reportedly Eyes Foldable iPhone, Camera-Equipped AirPods Launches In 2027 - Stocktwits",
+          "url": "https://news.google.com/rss/articles/CBMi1AFBVV95cUxQWGtNOTlQelFyMkJVelNVejNjQWQ5ME9lTHlkd2dJWnExazNscTRiSWVhWG1KTlVXOXBpSnEyeWZpNmdldHQxV2lwcU1OZ29HNVI4Z2pHbTFOclRzdHROSEhqMFBjekZwRU84TzF6UE0yN0NyanA2UnpoM29rakxkUXlPVEpLcHFMdTd2Rll3T0NjdElvc0xJeDVtZnBUSE9BTGdXWW9YendCMjRvdkZySkNQRDBDU2R3cUNhM0pXbHhZMkJpOUNaclZMT2M4UzhGUThEWQ?oc=5",
+          "date": "2026-07-03T08:29:57+00:00",
+          "snippet": "Google News...",
+          "type": [
+            "product_launch"
+          ]
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_4_2026_07_04_7d272d"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (AAPL) Set to Launch New iPad Pro and MacBook Pro Models i - GuruFocus",
+          "url": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxOS3ZaREVoRFM1SmdLbmJlVFpCX2JIZm9kR2JENFdFR2o4Z3ZoMVFBY3dHUXVWSjhKVTQ4OHE1MTA1eDRWY2lKTU9nVGVzTGxuNmVRbWRwNkhSeVFjY3RDVHdkRFQySUNaLVNHSjl6YllyT3RYRzExWnNLY1hUaElrSkUzeVk0Y29PSjFfbGhRQ05kbnJKUDluSE15dXlvNGE5eGxJVU43OWNFREU?oc=5",
+          "date": "2026-07-02T14:14:16+00:00",
+          "snippet": "Google News...",
+          "type": [
+            "product_launch"
+          ]
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_5_2026_07_04_29dfe6"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple Inc. (AAPL): One of the Promising Stocks to Buy According to AI - Yahoo Finance",
+          "url": "https://news.google.com/rss/articles/CBMimAFBVV95cUxQX25yc3JIcjN5S0lGVkVrMjZuUHotMzc5TW1yMk1XS1lmMnZua2ZtaUw2cERIMjVhVW1fdHZoUkg5aHlBUEtiSklORW1Yc2NWV3Zhd3lia3hHcUVvRFNHMVAtSWhMNmp4YVZlZWhUNTk1QU5udDJReG90Tl83alk2NTRNUVJyamxMblBqc28wTzdGQmhJVUt0NA?oc=5",
+          "date": "2026-06-01T07:00:00+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_6_2026_07_04_fcf6c9"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (AAPL) Leads Tech Surge Amid Broader Market Divergence - GuruFocus",
+          "url": "https://news.google.com/rss/articles/CBMingFBVV95cUxQc19nN0M1dUtrUnZBTGJkZUlIZEU0OWV4OUpJLTBnQnFmSGVKRUtGQld0MEJZS3NUakRrdi1WSS1NNFl2VGNsMjJULWlHeHhlNVlMYXdlOGkwS3J5TUtCcDdWNWZ0OWhHMjhkbThMM2ZGbnJOdklRd3VhcVVMclVGZkpYYVRzVm9jLW16RlNuSUVIUERWR1l5bHE3MzdDQQ?oc=5",
+          "date": "2026-06-30T21:05:51+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_7_2026_07_04_ecbecc"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Why Apple (AAPL) Stock Is Trading Up Today - Yahoo Finance",
+          "url": "https://news.google.com/rss/articles/CBMimAFBVV95cUxNSkNNQlAwRHNIekY2QV9uSm9Qd1ZGNFFBbks0V3dYN2txQ1dZcm10V2JOdF93a1puZmN2Rk9sS3lja2oyVV9KS3R4WkptZk9ySmFtRThiZDh2N1luU1pDM1BSSlotY1o4Qk1xUnY2MHN6Z01kQVp6c2l3dkM2d3oyN1o4cWJmdmhNdW0tM25tMUc2S29kQURTeg?oc=5",
+          "date": "2026-07-02T23:16:24+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_8_2026_07_04_2b4311"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple Stock (AAPL) Opinions on Recent Price Hikes and Analyst Views - Quiver Quantitative",
+          "url": "https://news.google.com/rss/articles/CBMipwFBVV95cUxQRkRqY3R2U2dTLU5USzg2LUZ4QkZwb3h0cDc1a1NJR1BvNnQ0RHpiLTRQTExUbDYxTlRyYV9MZ3J5SEduQkdTUjRlbm1nRDJIVnZ3TXBFNHUzQ28tek9SeDdadlRDQUwxT0tDUnF4LW11OThONDdMTFVnZ1ltcm5zUmRnQ0YtQTh0cV9rWkJDSU9ycmU3LXZZcDc2a2M2bURwSzQxX2ZCZw?oc=5",
+          "date": "2026-07-03T14:19:00+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_9_2026_07_04_11ceb7"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Why Apple (AAPL) Shares Are Sliding Today - Yahoo Finance",
+          "url": "https://news.google.com/rss/articles/CBMimgFBVV95cUxObjlIZ3RBWG1HWnJhQnBZTjkzb2l3Ml9tVmhwZFlwejkydzhMeHp3SUR3eTE2dmpKRDBZZExoOVBFWmF6M3NaUW5RS1pnRmF0dmI0ckgteDFOMVhGTVBObHQ5STQ1T1BDa0l4OFlxVHR0b1Fyc0dTMGhCaFdzWjRFUWxhRURhQmlQeEJwU3R0RHFkREdLejl5WFF3?oc=5",
+          "date": "2026-06-09T07:00:00+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_10_2026_07_04_8f82f8"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (NASDAQ: AAPL) Stock Price Surges On Foldable iPhone Plans And Chip Sourcing Push - foreignpolicyjournal.com",
+          "url": "https://news.google.com/rss/articles/CBMizgFBVV95cUxQck1wRFpPSDRSRGNyNUxzSUVvOUJFUms2MVpjOUFwT3BydFVmOVBuYloxWkI2Z3RiZHRGd0dKSVl5OGc4QkZpQlFheVJROU1ZcGlYOWY2Nm1OVEhoV2lDdUdKdEpwX09kREpDby12dVJianJubkFneG5CUDhsazkweHFYbllVbVNEX1BYWFdTTWJRWW45ak5URDNfcGo2LUFmeHU1UWx2SGxfeEplVDF3dDJWamVxME1mbE5ydXZ6MmFVZ092eW51TVdOMzdYQQ?oc=5",
+          "date": "2026-07-03T16:57:00+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_11_2026_07_04_6bf570"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Why Apple (NASDAQ: AAPL) Hiked Prices Across Hardware Lineup As iPhone Decision Looms - foreignpolicyjournal.com",
+          "url": "https://news.google.com/rss/articles/CBMiywFBVV95cUxOLUI5R05XZlV0UFU3NzV0OFhhOUQzMnRxb0VacHhhWkcyMHVGd05oTFp0X255aDhQMWd0T2JYTlRnRmxTWVEwd1o5U0FENHJMaWZWSVhoLURYUlVtcldOalhXckxna0JwWnJ5ZUZkemJWSnVJYnFvb3A3M1gwT2F5X2syWjFySUJObHN3RmU3MmFTR1BIZGVYMFF0dnl0bDRfWm5zRVZ1aFd4dDFWYTlIa2pHZHVSWVd6UkJETE9udGxzYkVqN2pSUTgxbw?oc=5",
+          "date": "2026-06-29T21:02:00+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_12_2026_07_04_043cfd"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Is Apple (AAPL) a Buy as Wall Street Analysts Look Optimistic? - Yahoo Finance",
+          "url": "https://news.google.com/rss/articles/CBMilgFBVV95cUxNQW9GcW5BQjVHYkgyZWRabzNtMWpXWjM2akd6cVgxeVcxeTRfLWRTTUlwamtyMjJDREFnNF9fTTNtaWIzSklLZHQ5X2NBVklZckdIa3BEMFMtR3Fqa3lXejVaWWFmN2FpLW1KRUJ2QU1QNXMzTzJ0QW53SVRuelhOVGZocGx2M3dnbDc3SmI5V2VITlNmVkE?oc=5",
+          "date": "2026-06-15T07:00:00+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_13_2026_07_04_c77fb8"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Investors Heavily Search Apple Inc. (AAPL): Here is What You Need to Know - Yahoo Finance",
+          "url": "https://news.google.com/rss/articles/CBMioAFBVV95cUxQVHZNMmtRZm00elNyNXNPcl9kU1lmM3ZNWS1jSzQ2NTAtSVVsMnpxQk01cVRvV2hPSVhiaWs2SUtRVTI0RWZWUGhlNHh0VEtIMVhSM2thOFVsLVVRZi0xekhBRHdFVjBWY1BvTDNGV1ljaUs0SG9nZWY2RU9xWlZmREpoTFUyTnQ2ai0tVHV3RUp4VUlaZDhNWjVVd2FQb0p3?oc=5",
+          "date": "2026-07-03T13:00:02+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_14_2026_07_04_342e0d"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Why Apple (AAPL) Stock Is Up Today - Quiver Quantitative",
+          "url": "https://news.google.com/rss/articles/CBMie0FVX3lxTE9lLWcwTWZpUmVLbmVSMjZ0V1BYM0hsdGVMLURjMnkwbWRzVWtuTzVsQVFEWG5aS014X1RVS3BzWFZ3QXEyLWF5alI0MVNsZ2tqUmRtRl9VVDdwTHpHVEttVHVBSGhIcXNVUWRNelhhOVhBQmlxdnRGZ1lWVQ?oc=5",
+          "date": "2026-07-02T15:56:00+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_15_2026_07_04_5008ec"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Is Apple Inc. (AAPL) A Good Stock To Buy Now? - Yahoo Finance",
+          "url": "https://news.google.com/rss/articles/CBMilAFBVV95cUxOb2V6Rng4azBaN2FOaVpfRVNVZEhjbDQ5QWcxRFZVMWV2aFV5aHMwRkRwbnI4SXU1enFFZlFsb2NPd1lVTW10dGxMZ2stWHFjdW82aE1VZS13RENKdV9hTHJVUmxIUTZZUklDRVlldzFwYkRUV2tzU2hnSDFncmdZSVJjdFZnM0ctV19YRTYwWEExc0RK?oc=5",
+          "date": "2026-06-08T07:00:00+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_16_2026_07_04_1359d0"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (NASDAQ:AAPL) Shares Up 2.7% - Still a Buy? - MarketBeat",
+          "url": "https://news.google.com/rss/articles/CBMimwFBVV95cUxPSlNRSFE1N0V0T3ZSODJFOHB0aWtfcFB0Q2xENk1aX0xwQnpjV0JyVWFUSzZJampwX1Y0Y1ZoNDh5Vlo3SzFTSnVSYkc3dGRDTWJUOENHNGdRdFRDUWg1YWNmX242VUtzbl81M3ZEdDA0b3p1c3cxQ3ZmOWZmQVFycVllWFZVc3VoTkhvQlNNUXRmZnVpaHBaSFpmWQ?oc=5",
+          "date": "2026-06-30T21:29:17+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_17_2026_07_04_92f9e1"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple Inc. (AAPL) Faces 6% Drop Amid Price Hikes and Mixed Analy - GuruFocus",
+          "url": "https://news.google.com/rss/articles/CBMisAFBVV95cUxNX1Y5MFZkUlpCdlFNOE5iUG5rV0pJNDBzTjNkbnREVUppaFBnLWxwMWswbF9sUU9pZG9YZU83YVFXaUZKaHdBM3h5WTFRMUN4dHRnZGVoZkxEUmlzUUNGcmhpT0kzU0p1VDZmVUlFLWZscGZEaDd5dHhQN0tnNjVEekl0cG9OX0owdFFERXNSZkZRWFJIb0JMTndhT1BDakxwMTlIVXh3SkVKV2p5NmkzZg?oc=5",
+          "date": "2026-06-30T16:03:19+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_18_2026_07_04_47ff82"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple Inc. (AAPL): A Top Stock Pick by Graham Stephan? - Yahoo Finance",
+          "url": "https://news.google.com/rss/articles/CBMikwFBVV95cUxOcWlWdFFlSEVYU21aMGNqemJaNU0zMlJzWlJQM0NTRGZqbGxITlI5M3VUbnh5VEZseU1SN3hxQ1N3Y0poWlIxNlVqOHRLdVhxOEJoQzZsczVsM1JDWTdCQXd4Mkw5TFZ0TDBtNTJQVFVuckxRNzlwQlpRSTRZS1Vnbl9mR3JNNmViellEamdKY1RlNmM?oc=5",
+          "date": "2026-05-20T07:00:00+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_19_2026_07_04_26369b"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Is Apple (AAPL) One of the Best Reddit Stocks to Buy According to Billionaires? - Yahoo Finance",
+          "url": "https://news.google.com/rss/articles/CBMilgFBVV95cUxQMXF1QlFMNUFQZ3M3Zm5XeVRBNjNRRGdYaWhUNVdtcDJ4WFpnQWhUUG52MzcwY1BCNldBYnZoVHd6NTFrY3Q5Z2FaRGpHRHJrbzNqQXY2bDhkTmdMREhGWm1wdTY3WG1fdkswLXZnT19HVTRXb1FLeFhuVktMZUZXNzJBdExxYkt1cnJ3LURPbDdIVzhRV3c?oc=5",
+          "date": "2026-05-28T07:00:00+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_20_2026_07_04_9b7bc5"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (AAPL) Stock After 129% Five-Year Rally Is There Still Value Here - Yahoo Finance",
+          "url": "https://news.google.com/rss/articles/CBMilAFBVV95cUxQZ191ZElOWmxQZmx3VU9rVHFCUkx4YlBhOGxHdmNOaFg2Z3pwcjI2R1RjbEpMSkdlcVViZmZmN0RkdWlOZG1KaFhKMzBJY3RKT3ZLYTgxRG10dTlaQnBiMk9Gbzh0LXItVmlZUkRtUUlldU1nUGJNbW1rRzR5SWd2SFRrUVQwU2YtU0hYLXhZelRuQm1G?oc=5",
+          "date": "2026-06-17T07:00:00+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_21_2026_07_04_8808cd"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (NASDAQ:AAPL) Trading Up 1.7% - Should You Buy? - MarketBeat",
+          "url": "https://news.google.com/rss/articles/CBMioAFBVV95cUxOVG1rWHVOeXAySmJDYklKbDdVbGJPbXhFV1RkSTQ3akwzc3VFQW1Td25fLVY0SjJqTUM2SFNPX295WEl3S0V2cFlIMzJFMUZiNVVEZUhWVzFkbjFrNzNPQUpVR2szVmEyc3dUczExYkJyZ0s0RUVtUU9oeWtjVXV3RlZZU3hTU0llQTZDcVRjT3RFMC1SUU5KZlhGRGxLYm5N?oc=5",
+          "date": "2026-07-01T21:39:44+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_22_2026_07_04_331bc6"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple stock in focus as five-iPhone blitz tests pricey AAPL valuation - TradingView",
+          "url": "https://news.google.com/rss/articles/CBMixAFBVV95cUxQOWJnRkdMNmo1dW93QjFyX2wtUEJFNWNSdFFfZk92QnlzZC12UW5LVXg1WDI0YmxadEltQTMwUDZtNlpzT0JmU2RtMmktOHRkLUhCaE5oeDFXQWtPcl9YNjNac0VWdEhUSnFkNnhNSEFVa3FVbnpWVWRralBscHRxNVZxY0VhTG1DTFVpVDdFcFFVeWVRVmk2TG53cUt5OTdIY1M3TFp2TzFDVExxN3lQQVVnXzVIQmtwYUROQmpKUlAtcTRZ?oc=5",
+          "date": "2026-07-02T08:39:48+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_23_2026_07_04_136c43"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple Inc. (AAPL) Is A Top Stock In Ken Griffin\u2019s Portfolio - Yahoo Finance",
+          "url": "https://news.google.com/rss/articles/CBMikwFBVV95cUxON3N3cmh4eF94TWwzRlFPZmZDaXFJSkZFSVlNUExWTTNFOVBaRlNlUlRVSk5pV3VqTjcxYlZqU2Q2THo5OGs0eE1fMElMN0NodHdQQ2tMSUV4TmwtdW12NDFBNzlud3lad0Z0UnFmem45SFExNm9udTJmeUNqMk4xcl9GcE9lNkpZeG90NUZ1RXQ2a2s?oc=5",
+          "date": "2026-06-11T07:00:00+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_24_2026_07_04_c6c9b8"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Wall Street\u2019s Top Billionaires Are Changing Their Mind About Apple (AAPL) - Yahoo Finance",
+          "url": "https://news.google.com/rss/articles/CBMipAFBVV95cUxQZnNHaGZrcTJ3YThZLTZmZ2V3UlRvSWVhWGN6Rk01T20wUF9Da1V6TnVPdnJ3czJqYVZPbVNYUTVJWThBeGMzc0tIVHZ1X1M5QmN5UmFTSnhrcktIcVR6TEtXRlhMeVRCOTJwZ0lqcUh1RmlQYXN0RDRCVU9EaUFqSlVIRVI4N0gwcEhiQi00RDZWaG1BaUloVXVnLWtRMEdIcG1MZw?oc=5",
+          "date": "2026-06-13T07:00:00+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_25_2026_07_04_011ec1"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple Inc. $AAPL Shares Purchased by Brian Low Financial Group LLC - MarketBeat",
+          "url": "https://news.google.com/rss/articles/CBMiwwFBVV95cUxOa0RKWHFjaUZrdTZXc1RCOVktWldhOGhqamU1R0lIekZXeVJCeHhvVHVwOGpoRkZlQ2lZbmcyNjRFdUo4b0d6azRPbXBHakhtajRPYks0amZ2ZzVRZU1SME9PaEpEVHJHcGxTVzZDN096d3lEbDRqOFhpZ3dqY0xZcjZBQndnMkdsQTM4amo5Rk9QcnZ4YVNlYmVxOGptc1V3QnkwcE9VdGJyZlF3VHk5NUt1TG9wUmM1OGNGYW1NckM0T2s?oc=5",
+          "date": "2026-07-01T07:17:46+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_26_2026_07_04_72a2be"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Here's Why Apple (AAPL) Gained But Lagged the Market Today - Yahoo Finance",
+          "url": "https://news.google.com/rss/articles/CBMilwFBVV95cUxPUkl2NFZ3emV6ajRwVnBURFhmcVlCNDFuLU1IVWNGeHR0ZndKUS1FNlR5NDFtcmdXQWpRaE44NGNrN2U3OHBfWjNXWmRfS054T0Q1WUhVU2p3X0llOWxnWHBsUTd0SkpvR3ZQdlVkNURCSnNBX2xTbm5Wa3RjTDIzVE51YjNjWl80aGRQYjRzUjFfNWVNUmtn?oc=5",
+          "date": "2026-06-11T07:00:00+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_27_2026_07_04_4bd5b5"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple\u2019s (AAPL) AI Strategy Reset Gains Wall Street Support Amid Cybersecurity Probe - Yahoo Finance",
+          "url": "https://news.google.com/rss/articles/CBMilwFBVV95cUxOMlEwako3T0p0bkNFa2ZUOGo1NkJ0VEhiMXluOV9CSFNOWkNncDAtekNvX1ZyTHhPMnB4VVkxdmloUVA4d3NlYWd6SmlONS1nWW1CaGVLZ1BwWmlmM053bE1abUJPYjFhOHhPZWNyYVg5Y19qVFJWYU1ET1JkYWhqcGw1b0pCU0twTXB3OXBEUF8zdl93NmZj?oc=5",
+          "date": "2026-06-29T11:53:26+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_28_2026_07_04_e8f20d"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "How Apple\u2019s AI-Driven Memory Costs and Pricing Shifts Will Impact Apple (AAPL) Investors - Yahoo Finance",
+          "url": "https://news.google.com/rss/articles/CBMimAFBVV95cUxPQTdjclRUSnB5RjNHWktXMmdyWmJ1N3FoUVNxVFpSR2dHRm40WE9mN2YxRDN5V0pCeThpSWx2Zmh4MFRJeVJ3QWo4SGhRNDY0S2wyNVFLMElOdi1SSWV4RlZOOUF0ZHlyd2pVUmtUc0JNZnFraGhPM3VIYVNwMUJRdm1jT0NXTzZRRDZkWEVodmpLMkE4LWZaUQ?oc=5",
+          "date": "2026-07-02T17:09:22+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_29_2026_07_04_454fcb"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "AAPL Stock Rises Overnight: After Price Hikes, Apple Reportedly Seeks US Approval To Buy Chinese Memory Chips - TradingView",
+          "url": "https://news.google.com/rss/articles/CBMi-wFBVV95cUxNWUxCTjdIQVNsZzZsdTlYVHUtZHRsbEpIdmR2eVFuVmtrejJKLXU4YlZFREpnakNESFZPcXhRdFhpX1ctRjJSTTVRaGlVd3ZlSUUwTFFTUnFSLU05ZlhjaHpYQ1NURnN4cWxyU2x6UE9TZzJHTlFiU0VUT0picEJVdXNyT2p0ekJCU1Uwb3hUWEVwMXlaSHljWkNub2o2MVpLTEh0ZkRDTzllNU4zLWJVaTMwQm1NZzFaQU05bTM2U2hDc19wbkxFdEVFd3RrWEp3WGUzb0ZrcjMyLWZTa3NKN3dVYkdaQWt5dF9MQ0g3SWF4czhtYkdneWtyRQ?oc=5",
+          "date": "2026-06-29T04:58:00+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_30_2026_07_04_fdbe7d"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (AAPL) Sees Increased Consumer Interest in iPhone Purchases - GuruFocus",
+          "url": "https://news.google.com/rss/articles/CBMipAFBVV95cUxNMVVTUnVHZS1QQmdxTndLNldRVXJ4dURXTWRKQ0dzT2tBMFByTW95a1p5UHpHVE9BNHlhSXVQVHJ2UWtsQUd4anlFd0RjVGNHYU56ZHZmODhLWWh3YXFLMlFSNi1YWXhsVVJ5Z1pNVVhKeXgwa3dfRWV0UWE1cHlNdG82eVVMQzE4akNMZ0pUcUk0blhrZUpMWE5aSjZFRnM2UERYbA?oc=5",
+          "date": "2026-07-01T17:23:30+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_31_2026_07_04_be756c"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (AAPL) Stock Trades Down, Here Is Why - Yahoo Finance",
+          "url": "https://news.google.com/rss/articles/CBMimAFBVV95cUxPcEt6LWdTaFF5cVhXWlpOWmYxdXR1Y1FOeXdpc3ZvZ3JYaG9UOGVKOHhZR29hTmY2ejNNSGlVUUYzeEZYZlptNGtoaVRzdE5aTnlqVVY4ZkFqdWVNRWpsck96MmhUTExpU2JxN013SWZERER2MWkwMldSVTNWUDBaTGFiOXZxZ1JYSmhBQXZjYVA4Q3h4ZXJVeA?oc=5",
+          "date": "2026-06-25T07:00:00+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_32_2026_07_04_31e207"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple Tests Pricing Power As Component Costs Quadruple: Where Is AAPL Stock Headed? - Apple (NASDAQ:AAPL) - Benzinga",
+          "url": "https://news.google.com/rss/articles/CBMi2gFBVV95cUxQX2hWVjhiS2NOOXlLQVNMQzFuWU1wS0VoeUFEQXRJTXlWd1pBcXVKU2d3NGNRV0NKQTIyTlBMemZpemZvbnlNNWN3Y2xqdmVVZ0UxVjRhcGxlbEVVekxSVG1McDl4UkNpNFM0ZVVMX2JxVG5yUWdKMWhrMVdlX0JtLWIzTUwwdnhFMWllY2Z4ME1jcmVhcDdxRHR3VENFMGxrdC1BeFBfbFFrZEhtc3UwMTJkVUZqUnJ1Y0ljNWdwVTI1VXNRYlhWNUJBc2xtMmQ3UFRsTk5iNk9oUQ?oc=5",
+          "date": "2026-06-29T13:51:30+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_33_2026_07_04_18cbe3"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (AAPL) Is A Top Stock In Billionaire Ken Fisher\u2019s Portfolio - Yahoo Finance",
+          "url": "https://news.google.com/rss/articles/CBMingFBVV95cUxPLXpCMlhJMDRZTlA0c0ZoV0tOaHcycTJDUkl3aE0wZFVwdkxlRWRxcE5ValptdDlhc1c0b1REYk1xVllhUlB2QWdBc1BaT2gzUjJrZWVsSUlHSmVBSkxkQTZnQVNDa2w5TjBid3lsd1ZxSEdMZWprSjFIZTN1QVhBSlpOVGZrcXBrX2hxcTc0NDE1U0w5OWluNHpRQVFEdw?oc=5",
+          "date": "2026-06-08T07:00:00+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_34_2026_07_04_c2c1bd"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple Inc (AAPL): Our Calculation of Intrinsic Value - The Acquirer's Multiple",
+          "url": "https://news.google.com/rss/articles/CBMilAFBVV95cUxNZjdSWGpoR3owTDFmOGhZbjI5c3BxRnVmaXdCWHo0bzQ2OVJfVEdBc3ZRNjdwQWtFMVltNHhqbVJacVRLUFFwZVN4MmswUG8zbDMtbU1xY3ZUQm9ERWlHcVRNTUY1QzJRNHZSNENpSWJ6Vld1Q1ZkdXNvVlJrSnZwZWFLeU9nck9BTlRCSWhZbERlVS1F?oc=5",
+          "date": "2026-06-11T07:00:00+00:00",
+          "snippet": "Google News...",
+          "type": [
+            "acquisition"
+          ]
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_35_2026_07_04_c009e4"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple Inc. (AAPL) Is A Top Warren Buffett Stock Pick - Yahoo Finance",
+          "url": "https://news.google.com/rss/articles/CBMilAFBVV95cUxQUGwzSDg2MDBEWEl6Y1IwQ09IVnAxSFA5MmliTmJWZFFVbU04SERoYmZUbXRSTWxzWXJrUlY0dHIzN3FVWTdIOVg5YkxhMVhNNm5uQ3JHSHhGR0VoelpfMkpvQ0ZfXzJiWm5lS1ZPT0RLV1pFSjBGckdSSHpRTFVtZFBXM2V4Qm5LNTU1OG95Q1R3MFBi?oc=5",
+          "date": "2026-06-30T17:29:02+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_36_2026_07_04_1ac4ab"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple Inc. $AAPL Shares Sold by Blue Trust Inc. - MarketBeat",
+          "url": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxNSkI0em8ydF9wbFJXRG5nU2hiUXMwd0VCVlhXRDBwYUxqZDI4NmlsN0dWTkdvWGZ5YUNDSjAtbmpseXh5V3lwLVJNUlZ1X3ZRSllrZ3dpUGJfM09fcmdNWVM2eS0wM0FQc3VoRkJLT1IxeFItbEVyX1VvWlJtTlhxc0o5TDNTMkhyeEVxekMyY0ZZNkVQdVpYSDZXeTFTdUVIM3YtYUd6VFo?oc=5",
+          "date": "2026-07-01T07:17:46+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_37_2026_07_04_b46676"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (AAPL) Sees a More Significant Dip Than Broader Market: Some Facts to Know - Yahoo Finance",
+          "url": "https://news.google.com/rss/articles/CBMingFBVV95cUxNWUlBR0NlNUNDNzlPMHFhZkhNLXE2SlN1WFBxUHN2ZFhaQlhSMDhzX0xYRW9sZUg3S0U4QzduSTRocG9mME91bFVRYVRLXzFqMjNuVUl6UGV1bEw1U2RCVl8wczhIVEtQOUo5M016cG9pMmpyazBQbUs3Q0hqdFBIeDdTc3JZOWZUUlhpdDNUN0RaUW1NN0JlaTJuUnU5dw?oc=5",
+          "date": "2026-06-25T07:00:00+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_38_2026_07_04_e5029b"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple Plans Major Hardware Updates for 2027 (AAPL) - GuruFocus",
+          "url": "https://news.google.com/rss/articles/CBMikAFBVV95cUxPZ294V21tdEh6THJlSnRoSTVqWHJCMjF5NkM0RTJTZXhNcnVnSWxFT2l2QzhYZ19JNDJHQktKMm5TNUJPT0dsejg5VlV3SjNtYWNSbmdBOU9lbG1pNkJaMzZVY3g3V1ZxXzFXYzcwR3gwRndaSjJ3T3VVT213ZWd5a01kQ0tuWkxyaFNxbmZWXzI?oc=5",
+          "date": "2026-07-01T23:13:18+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_39_2026_07_04_479fb9"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "AAPL Stock Slides Over 6% On Mac And iPad Price Hikes \u2014 Why Gene Munster Calls It An \u2018Overreaction\u2019 - Stocktwits",
+          "url": "https://news.google.com/rss/articles/CBMi4gFBVV95cUxPVXJzZUg1MmRVUlpTZ1NHY1RFLW9fRVB1dG8zdXY5MW5MY2ttWnp3cDFzQkZvSTNlNDQyQkM2WXRxY0JRbWJKOG12cVduc0RmVm9MSHRTU2Q1NldVUnVCMG5TR05IOE1zMFRMVFN4THBoSHh2Y0oxT1JsRGhzMzNfZVAxR2JPcndtY0phY0pCMkpwNGtwbjB1SGp3ZmI0MjZHNXZmOXBmRGtmVmgtZ05TUjFkbFAtdDlHc085R3pJRlc2ZXlaY0o0c203SUVLdWRkMHRJVWUwWk5yVE1jbnIyRVln?oc=5",
+          "date": "2026-07-02T03:31:25+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_40_2026_07_04_7ec233"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Jim Cramer\u2019s Latest Thought on Apple Inc. (AAPL) - Yahoo Finance",
+          "url": "https://news.google.com/rss/articles/CBMimAFBVV95cUxNZ1RMM2loTkNsaVYtdllGcWdNWkI5VkhJbzFtSmxWM0F0bndxX2JIaEwwd1RPcy1OUzdkd1ZpalhXOHZVWFh5Tlh2ek5qSFduZjFJT2E0a3VSN05IZ2UyeHZ5cVM4UzZmVDE0cGRMbzg1a1lNakhqMGxXY1QxUlgycldGd2Y1MXFzejdkZldZY0c3TWpnYUVTTg?oc=5",
+          "date": "2026-07-03T17:47:40+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_41_2026_07_04_6976ca"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple Just Acquired the Team Behind the Play App. What That Means for AAPL Stock. - Barchart.com",
+          "url": "https://news.google.com/rss/articles/CBMiwAFBVV95cUxPelJMMlFMbUJuY1RjREQ2Tk9KUTZzV3lfbFNEOWgtN2JOM0ZUOUJzVG52TXVIVjZRVlMtR0hQaXVsN0Y3Q0JjSER2SlJyZ0dCcllocUZVQ1BvTUlDYlBqZExYYWFNMUlzWWw3ZFR1ajYyX1paekJSVzFPQ3RVSUhreG5YT2ZTWklLUXJIRkZsdk9GQU9WNVdxNXBudFRTUUlnNVFaakxiVGl0LWlSd2lLR3VnR3ByOG5TQWh0SFFSaEw?oc=5",
+          "date": "2026-06-30T18:43:48+00:00",
+          "snippet": "Google News...",
+          "type": [
+            "acquisition"
+          ]
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_42_2026_07_04_d7a72d"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "A Cybersecurity Breach Rattles Apple\u2019s Partner In India. What This Means for AAPL Stock Here. - Barchart.com",
+          "url": "https://news.google.com/rss/articles/CBMizwFBVV95cUxNTXJrcnY3ZEhBekpNRUdBVldXODJHMTJrQ0hZeWhjTmF6NW9xRnlQQmdnVy12S0ptb1JNUFdKMVpQMmpSRjdsLTd5MFY4WE9DTDJwLWJadm82WFcyZGR1U3hVUnBTanlmRWo2b0FpRllYYkVrZTdkSWI3OTNfTjN4LVMxS3VUZDVVZmZnUlJ5Zi03ci0zbV9SUS13M3JSVmtPN25YdnF1NFJfS3FHNGx3YVdKNjBpWEF6NHhGTDJQTGV6RVNabXNGeTlINWcxNms?oc=5",
+          "date": "2026-07-01T18:02:48+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_43_2026_07_04_5c982e"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (AAPL) Stock Fair Value Edges Higher As AI And Siri Plans Draw Split Views - Yahoo Finance",
+          "url": "https://news.google.com/rss/articles/CBMilwFBVV95cUxOcV9CTVc3Z25OLXRXMkFyZHZiNGJmeGxGVjVoOGxCNVg0X1J5LWg1cEhmbklLM09yLWZTNHFSOWdvOVQxUUpsLXJEX1Y5WlNlTE91eGgwSThOTEthaHRnbkZjcWhhbmYySEU1dzIzUjRSNlZVZDNySFR4UlhXSnBoU1FLWVVoNkJDVmY3ejRUeUFzU2RjQklN?oc=5",
+          "date": "2026-06-15T07:00:00+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_44_2026_07_04_3f511b"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (AAPL) Soars 3.1%: Is Further Upside Left in the Stock? - Zacks Investment Research",
+          "url": "https://news.google.com/rss/articles/CBMinAFBVV95cUxPOXR1UlVqYUJidmktb0E2VXgwWkdZaTE0OWt3d2Q0WUI0dklVTFZEVVZ0SUl4SkxfQ21WVktmbjJjY19KMHd6QTdCNUxkOGR3YUVlSmVoQXVsdEVFV3hWOXQ0V3VKbWE4a04xbDhRWUt2X0FjX3daWld5cWJ0Zy1WYTdsenVqNVRjbjJJNDZYS1Zqa2YxQ1I1QlZ1enU?oc=5",
+          "date": "2026-06-29T11:33:38+00:00",
+          "snippet": "Google News...",
+          "type": [
+            "investment"
+          ]
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_45_2026_07_04_19a9b4"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (AAPL) Raises MacBook And IPad Prices, Is The Upside Already Priced In? - simplywall.st",
+          "url": "https://news.google.com/rss/articles/CBMivAFBVV95cUxPeUVKLU1KMzBSRmJLV3NUclVqREhVOFFoS2sxRTlWeDlYZUotSFhIUVJnV3ZJcTFQWEtYWnlNeUNpQ2RqVk5oZHFzMVpkVzBDbUYtUEFNVktpd0NTb05uUVZhUTZadFI0bmVGZXpSaVZ6MEk1QmR1TGE2aHVoVUdJQ1YyTmxWNGRXS2VGLXFXcVFZUG5Fc1k4djRCSXhjLTdBWmFiLUFjTDZZcUZHOFpYdzFJOXRVT2ZDajI3UdIBwgFBVV95cUxOdnp2NDZMMWZ3S0std1JuMFhISnlJbFJCVm9KTG8wcE9Sc0lCVmRNeXJtYnotREZPaDdYU2Y0dnVyeGVEcGdMOEJ4cTZwbGhtRFpkSWhYR2g3aDNpRGdtb3NSZlo2T0gwWkhEc0d3NTNNOWhDczJzbEltV0o2dk1Hc2lBaTVGUkkyMEV1akwxVHgyREMwWWlYUGI2Y3Z5dlA0blM1MWpwSTdEeHgzejFPQXZoeEs0UG9SajdfcmFENjc2Zw?oc=5",
+          "date": "2026-07-01T17:41:05+00:00",
+          "snippet": "Google News...",
+          "type": [
+            "investment"
+          ]
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_46_2026_07_04_fc65e3"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (AAPL) Stock Could Be 25% Expensive As Siri AI Debuts - Yahoo Finance",
+          "url": "https://news.google.com/rss/articles/CBMilAFBVV95cUxOQ0FPOG5pMFprLTEwMlB2aGh4VEhYTFVLMDd3QmdXYkRKRzdFRTRITTZfT1RjckxYV0RYRWVTR2xGVk5vWkpJTTd3NlpDRjY0Q3gzRDRDQlkySy0xTDRXVndPemNTTmh1Tm1jeENKZDRYYVAtaEp4Q05OY2pjZUF3czFLaFVqUF9WSE9oTUJKeGV0M0JW?oc=5",
+          "date": "2026-07-01T16:23:05+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_47_2026_07_04_dbceb3"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "AAPL Stock Dips Premarket: Report Says Apple Is 'Concerned' Over Tata Data Leak Exposing Confidential iPhone Files - TradingView",
+          "url": "https://news.google.com/rss/articles/CBMigAJBVV95cUxPS3hVU1Y4bVd3VUk1RXBKWTJsWFZRT3JSc0k1QlZaUkRmUEVEUWZyakZkX2ZyVGR1SzV2Vm5yOG1KbU9xOUpxd0FnUmh0NG84UDlndWx0a1FORkRjdDRfbEd1VWVzTlA5MGFLVU9ONzIzLWNJSHpVUmF0QzRtU3RPTkZiMVdfOVhrcUc3UHcweU5OREpmcnc5eHppa2Y0eDNLVU9PTmJmakg4YU5oNFJEX0ZyQl9pRWhFUHdYa0pIZEx5YmI5ZHRBX1NSU1ZrbEdXZy1kVElpdnJZZElORWpFT1dUdFVGaUZlVDVPeGZvMEF3MXd6b3h1OVRSU2dnOWUw?oc=5",
+          "date": "2026-06-30T09:32:33+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_48_2026_07_04_a1db3e"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (AAPL) Explores Chip Acquisition Amid Global Shortage - GuruFocus",
+          "url": "https://news.google.com/rss/articles/CBMinAFBVV95cUxQeE9GUXA2UFI3aEZCZHFjc3M3ajczZU5zTG83RjZsS1k5Y2tCc1FPbk9oNk90bXQ3ZUJKa09ySC13bkxLTVFOcUc2cUIwdE1xODcyV0tVSE41bGRmb01ZVmZJdE9BX3ItY3JXV3Z5TGU1dlJMYWdnTFRNblRTakRLMzNkclQzZ24yT0hhd0dKMXUtenFKbmNqRjV3V1o?oc=5",
+          "date": "2026-07-01T21:17:00+00:00",
+          "snippet": "Google News...",
+          "type": [
+            "acquisition"
+          ]
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_49_2026_07_04_80f6d6"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (AAPL) Receives Buy Rating Amid Memory Chip Procurement Ef - GuruFocus",
+          "url": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxNLTVIbHE4Ty1SSUhMc0JKdy13TFdzUlNLX2M0TW5BaUF5T0VQNVJmZmR6X2JwYm4zSkN1ZUhzY0I0UG1LbXZ6RVNKdnQzY1JtaUZjQzc4Zjg4cmJwOXZsNzZxdFVVcHE0U21DZ3ZtdVlDRXZ3X2QxSjRmV2oxS1Uta0pCeE1iMmxZQTBQRnprZDVaYjNNWnVmYkVBTmRXUTRUc2ZMNmRBSDdhZw?oc=5",
+          "date": "2026-06-29T15:10:15+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_50_2026_07_04_862be1"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Data Breach Hits Apple (AAPL) Supply Chain Ahead of iPhone 18 Pr - GuruFocus",
+          "url": "https://news.google.com/rss/articles/CBMirgFBVV95cUxNYWVpYjNHdC1PX2xpbE1SNEE5UTdWYUVCd2RsOGV5NzJTcU5yZThadE8za3JwZDBqY2pYd3ppLUE0Y24yeXhjajZFejE3aXY2LTlGS0M5RWJFLTBmNkRPREdjWXR2NmNSZ1JFalg0QXVDVHp3YzNHSWZuVnVDQnRTNWpaTzVGYmxMNm9SbjFzTWFVMDlTc0lsbFJBeWhrRnM1NzlYcHF1SDNxa0ZiN1E?oc=5",
+          "date": "2026-06-30T10:36:25+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_51_2026_07_04_c845eb"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Is Apple (AAPL) One of the Top 12 Dividend Stocks to Buy According to Billionaire Cliff Asness? - Yahoo Finance",
+          "url": "https://news.google.com/rss/articles/CBMijwFBVV95cUxNYjRxWXBtTlBFU1dSMzdSZGZ6U0VxYWNjSnQtM2JtQ2F5Y0M1UHNHdW9UbTBTUU1HQ2h4MFNFZHBkVUVFeXJXcmk4YVJUOEdFR0hTaUJsMVZtcEZKMVYzS0pMWkk0Nkp3ZkNiNWZKbWFEVU0xb3gyX1VyMVlIUjlCVHJ1UkNRY2hjZjZjeGd1bw?oc=5",
+          "date": "2026-06-21T07:00:00+00:00",
+          "snippet": "Google News...",
+          "type": [
+            "dividend_buyback"
+          ]
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_52_2026_07_04_9ca1cc"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "AAPL Stock Slips After-Hours: Apple Reportedly Maps Out 2027 Product Push With New iPad Pro, MacBook Pro - Stocktwits",
+          "url": "https://news.google.com/rss/articles/CBMi2wFBVV95cUxPRnRxbjFKSWxGWHhvOGFyZlY1eXRZeVJKNTAzbHFPTi0wa29VZU5NU204ZXloY0pOZGd4R1lMZ0x4T2ZQTGUzNUl0WF9MVVU1WmRPSVhVVnU0TGt1UWRVQmlpaEZPQ0haVVNTWjJuekxIMGVvNTNQMjA0WEZoOUxydERmOGk1d3pUb3B6V3Bra0lSZS1qYkZ3Q0lhQXRBek1NNVhKNFBQRFBqVU4ydXE0VV83QmNXWjZJNU1YaklMUnY3b21rZkw2eGhxU1ZPa09XbzZRUzRjaUJqcjQ?oc=5",
+          "date": "2026-07-01T01:21:39+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_53_2026_07_04_d82014"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (AAPL) BofA Stays Bullish as Price Increases Could Offset Higher Memory Costs - Yahoo Finance",
+          "url": "https://news.google.com/rss/articles/CBMimgFBVV95cUxQdURiUGhWZDYwNnFkZ0l0QlZGUXV3N2taUGF0b3BmUHZ5NEhJbFY2UWRJcVZsOVpqNzNFeU9YbGpVX1lTZUE1T0VfdXZHcEQ2MTFJTnI3dTJXS2x5RlprQ2xuemJ6LU9QOWh6d3RDcmJtSzVOSjJSTlBPMWh5LWQ2N1NoSGsyOG1XcXVCaDBMcjhvUXAwVjR6UGNn?oc=5",
+          "date": "2026-06-24T07:00:00+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_54_2026_07_04_818e01"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (AAPL) Boosts Foldable iPhone Production Expectations Amid Supply Shortages - GuruFocus",
+          "url": "https://news.google.com/rss/articles/CBMiugFBVV95cUxQRjlaalhKVTMtY01LTjhtTVhoeWtwb2JxaWY0TTI3V25USE1Gdlp0WVhhNDIyeVJYeXpkdWNJMzJJLXdUREZ1SGlqUEl3LURrejdGSjhReENLWVk1bEswZnNoMHBCclh5eDRPN3dsbDFIbnFGWHk0YW1wMmczemtacWU4ME51emtPVjJ0MnpicUdRYUc5LUJ2dlFodDk0MHpCUWE3VWlHX3FxbXQ5UkVqaW1JdDFlVEJfYmc?oc=5",
+          "date": "2026-07-02T10:04:44+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_55_2026_07_04_5e1115"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple\u2019s China Memory Push Could Be a Win for AAPL Stock - Barchart.com",
+          "url": "https://news.google.com/rss/articles/CBMinwFBVV95cUxNZ0YxRXBhQnJzQklsVmxUZkdxeHR4VERTNG5aLWhuWS1DczNRODEyRFZDQkRhUlctM1E3Tk44MUpCNndXTWFmemRDNXMwVGF1ajRMOFZTSlZtaHdHQUM5VzRTamVKWFNQUkM4LVhWdnljOVFIWUFQRWsyS0U5cl9leHZfSTNlZGhsbmpfWktUXzNJZnhsRTdseGw0b1FYdWM?oc=5",
+          "date": "2026-06-30T18:50:47+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_56_2026_07_04_901151"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (AAPL) Sees Increased Purchase Intent Among Smartphone Use - GuruFocus",
+          "url": "https://news.google.com/rss/articles/CBMipgFBVV95cUxQdEx0Nm96TWR3Z2YtczlVaFZVbjcxalpETE9XbVNxWmd3ZUVSdjc4Ui1UREJ1dTNFSFhyYkhwWUl5X2ZEWktLQl9JU0xid0tBWld1Y3pfRTlwSW0tdVpuUmt0LWJCdXl6S2pTVFl3U3phX1NkY21oc2k4ejl6Y3BJanRGVGgyZUN1RHhNVE9taV9Ob1gzTUJkWTJod0ZzYXFtZUpBdURB?oc=5",
+          "date": "2026-07-01T11:52:50+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_57_2026_07_04_af8239"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Legal Advantage Investments Inc. Decreases Stake in Apple Inc. $AAPL - MarketBeat",
+          "url": "https://news.google.com/rss/articles/CBMixAFBVV95cUxOOG5NNUs1LUtHTHRyb0R5cUdHdjJpYm0tYnA5SW43LXRVQTAzTm9udVJKRWJXdUItbmlwNEc5dVBPQUI5ajhTdXEzQjFfY3pJTUdGWGhpNGxBc0ZDMnhhcnhjWlAxYWNDUC1IMUQ0d3RsTXBxQzRVSlQxM1c3R090VnVSWkdSelhfbk83aGNyMVZPMzhUaE5CeXh0Z2dnUWNTajNvX1g2RjIyQUlJZ2M1RmsxdlF2bVZGR2tFVURJdVFTVkhf?oc=5",
+          "date": "2026-07-01T08:29:10+00:00",
+          "snippet": "Google News...",
+          "type": [
+            "investment"
+          ]
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_58_2026_07_04_ff87fc"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (AAPL) Plans Mac Chip Roadmap Shift Toward AI-Focused M7 - Yahoo Finance",
+          "url": "https://news.google.com/rss/articles/CBMikwFBVV95cUxPcFpZZldqMXdvZVV3MGd2YndXUGsyaGpLS2VwbXh1VHQ2d2thbFhsYWFQZ0MxN0NZRTVybVVQSzJQRTQ5YTIzNDFmWFNqUElZbktOU2pxQ052NHdwalJjSklyWnZNMlVNdnFabXpONTM2Y2JDLWFERTFwdjFmSzlkWVlwY3RPUlJtZkMyZlJxWTVNLXM?oc=5",
+          "date": "2026-06-27T19:32:17+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_59_2026_07_04_f2e6b2"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (AAPL) Plans Major Upgrades for iPad Pro and MacBook Pro b - GuruFocus",
+          "url": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxPS1U4VmhHMVVUYWRiVXVQSS1TQXRBLXRJejg2Ync5aDBYWW1peHFxR2tLdmJkSC00Z2h1TlliSXN6QjF2am5NSGw2V3pyRDhNZlJ1X3dFNHJ5QlVsUjJtLTA0aHBobFNlSmtoMWFSZF9ORWdtbU81VEEzcUMxWHZla25PdVZ6Unh4cVplcjlvUFo0NzVYVzZ6UU8weTJHZ0VyWlZOM3FIZnBwMUk?oc=5",
+          "date": "2026-07-01T21:37:02+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_60_2026_07_04_c1b3d1"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (AAPL) and Microsoft (MSFT) Face Challenges Amid Rising Me - GuruFocus",
+          "url": "https://news.google.com/rss/articles/CBMitAFBVV95cUxOOFhZelJtSWZ5c1VORjFvbFY2bTVpQ2ZPME5nQ1EwVjRWYmFpcHhhd1F4OF8zUkNzOWhrY25VZzloOUhRbGJFTml6SXZZZXBja3FST0psbElnalpjQ3I5Y3RSWS02UXo1eXdsY21QRmJMbEgxTjlscExBSTNLS0dLVXNrLTAzS2UtUnQ5MHhhUEpFVXFvOVR4RTV1M2NhbC1sclRxR0U1MDdMeWZsYmpUbmk2OGU?oc=5",
+          "date": "2026-06-29T23:32:15+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_61_2026_07_04_4fbcba"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "How Apple\u2019s AI-Driven Chip Costs And Intel Partnership At Apple (AAPL) Has Changed Its Investment Story - simplywall.st",
+          "url": "https://news.google.com/rss/articles/CBMivAFBVV95cUxQMnVzeEI4NERxRjVEeTRPRWsxejFoMlhqNmNOM21peEp0eG53b0FpTmFld2J0d2s4WXhSOHZ4ZGE4WXVGQkxLOXZRVDVEX0RZOGNGWWI3clFNU3dWY3dsUGd6QWpiczl3LThHUXRIN2liM2V3Z0RBREN6SG5pUWJIcWxDZ2haV1VmaXRRRWFvQ1pTdjZaSnc0QlJWM1I0Y3FlREhIV3VBbXdYek9yQ1ZkcXFmRTd2UGpCN1hSbdIBwgFBVV95cUxQNXAzbnVLUFplTUVsbDdZaVJtZmdMWk5Kam5haEZHZWg0dUt6NWxSQWhqS1BoNGozNm44QWFsMC04ZFcxUWM4M1dtU0lpRzJjME10WlFKd0NDT1ZFNW4tbm1vdUp0TktrcEhJLUtqZHpwdWxLNGVfTkppX3lsMXNvNkFYUXBaQmxkc2g3MUNGc3lpTndwWjFFRHN1ZFZ0eVRSUkFVak1JZGdUclJpcjBMdkV5Nnd6WHZEYkhwWG1zdWZ6QQ?oc=5",
+          "date": "2026-06-24T10:58:19+00:00",
+          "snippet": "Google News...",
+          "type": [
+            "investment",
+            "partnership"
+          ]
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_62_2026_07_04_3c3548"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple reportedly plans major iPhone expansion with five new models through 2027 (AAPL) - Yahoo Finance",
+          "url": "https://news.google.com/rss/articles/CBMinAFBVV95cUxPSklYdkVaTU9xWGkzdngzZlc4X2tJUTRXVWVpclJheExjTG1keEhabzAtTC03M1BJdkZraTRQMWd1TlpYWWtRRDBjWG5FbVRpbmFPbHRLcm9XeEZpVkVPWUNyakZ2Sm91WkpDNmR3cDlwVldIZGtfLUhDRWtDNEdmVjNTVjZ5WHY1TUt2VTVMdnNjTGllUE9ra1RLQ1Q?oc=5",
+          "date": "2026-07-02T09:43:05+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_63_2026_07_04_db038c"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple Is Best Positioned To Face Memory Shock: Reiterate Buy - Seeking Alpha",
+          "url": "https://news.google.com/rss/articles/CBMiogFBVV95cUxOeGtZV3JSc3dQdFAtVHVmS1JBdDlBcldHTlpFREozdk94TFNtaWlZWlJGVldhUV9XRTNNYXdVSVBDeVBQaUltWEp2RTQybDl4YjBuYzMxaVhFeUhwMjBaREthWEh0QzFjZldMa3VDZS1IVm9xZjZudmx4NmF5Z2lwY0JlSk04bzBWal9KUXVvYzByOU9acXBEYmtrSnNHOEI0Umc?oc=5",
+          "date": "2026-07-02T07:05:50+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_64_2026_07_04_bc416d"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (AAPL) Negotiates Chip Purchases from Blacklisted Chinese Manufacturers - GuruFocus",
+          "url": "https://news.google.com/rss/articles/CBMitAFBVV95cUxOR1FCUjZ6U0VMTEg4Uk4xcXI0anVxaHdIRjAwajhxUENsanNDQ0kxZEN6dlNiN0l5UUZrM2xGNERiNkFTdmViM1JOOFJPZ19CYjZjdGd0Z19RUGZnTXFxZkpBcGZnSVVfZjJNdENnVTRUY3JicjhTNUhJRmRYU3JHQ0hUZ0xFWVFHR3UyTmZBaFJVMW5fSGVTcnFUdWxlWmpQc1JabFhPS2hfaFlpNENrbzlQLXc?oc=5",
+          "date": "2026-07-02T02:08:37+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_65_2026_07_04_722a23"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (AAPL) Expands Foldable iPhone Plans With 10 Million Unit Target - simplywall.st",
+          "url": "https://news.google.com/rss/articles/CBMivAFBVV95cUxQek9OeDBhLTJ2d0V2dGRUeWJ6WXM1OWVhTUdIRU54c3JUNHNySlRIbHZaaWl3S1VDd1BwdW9yWHlBeEwtRWZQMWhVT2tDWmtTbTJFZHlWb29uX25RanIxRkRwOHJCREhSLW5LWHNkYWR0MUs0b3I2ZmdHRUNqRm1EVVRfbG82ZUI0Q1RRQk4xSmFkZnFTWThkQ1phLTlNMHdac2JJNFhhdlBRcTZoYnR5R0l3TmVzVHlmVWJRLdIBwgFBVV95cUxNYXBKMXNOei1lTExUd1N3VkR4Y19lQnc5aW9YOXJwcHNFeThSZjc0QUsxOFFZeU9PY1Fwdkg0cTdpazdqMkdjZklQUW1GQU1jSllzeTA5cnE3aV9fQ2J2eEVTY2JrcDYwRDAtdnd4bm5zbUpvMWt3RDYwVGxCZ2F0dHJrdDljbW51c3JzMHE5QWp6clE1bzJQajMzTnJVMy1oNlhVRDBuYlVRTUg0Y21ZSk1tbGpNVTNUM2tkUDVTVzVoUQ?oc=5",
+          "date": "2026-07-03T00:21:16+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_66_2026_07_04_505a9b"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Trump Accounts and Apple: Kids get AAPL exposure via S&P 500 ETFs - MacDailyNews",
+          "url": "https://news.google.com/rss/articles/CBMiogFBVV95cUxOZVU5NmV5NDRVaEhSalpGZmZhQ3B4aklXZnBnZkxWVXlsY1BxT2hnUmtXUk1MR1YxY1ZlYXNETUE4TGFWY19LYVlkRm11YV9QNGswbEtGSUVEN2pmNGsyZ2w2eFR0eE55SDlDRWxkSmdFRlZ4MEdLdlhKTEU1YTZ6dGVtd1doWURYdmhZTnVHWUdfdUZlYk5EQXdrTklCdmQ3LUHSAacBQVVfeXFMTkVhdWR1OXRBQzRuYnpVM3pyTjFxcjFIcnJlR0NWZ2dLVF9JT0c3cVAzS0E2N0NPM2VJaVJwOGdQcl80V2xLcG43U2N1VHl5ckpGbGszRDFaRmJ1dy1IRlFHaDF2TTEybDUydmZka2xHNUtCQ3JzTWh5WDRRRVhnSUpjakRVWUo1M2ozSXZvSFUxSUY4VjhWRzMtUkNnWE5WXzk4VE9uRDQ?oc=5",
+          "date": "2026-07-02T19:00:25+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_67_2026_07_04_1bbfe5"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Loop Says Apple (AAPL) Is Looking to China for Memory Supply Relief - Yahoo Finance",
+          "url": "https://news.google.com/rss/articles/CBMimAFBVV95cUxPaXhzZlFOOS0xV3pOSnZDcXUxY0VKN05EcVF4TlBkaVRfSy1jRmlGRElQeHFXeHYwZE9valFyN0FNN3RhbHY2bkx5dGZaXzNHZnJEb0d4bU1FQld3UklBVi1wVTc3cVQ4azVMMnJZZ19OZDlMem9iZ3NER1Y5WVF3MmtKd195OC1EQjZyWS1HTGtleXVaU0Zocw?oc=5",
+          "date": "2026-06-30T10:26:16+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_68_2026_07_04_ee7350"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Dopkins Wealth Management LLC Boosts Stock Position in Apple Inc. $AAPL - MarketBeat",
+          "url": "https://news.google.com/rss/articles/CBMiygFBVV95cUxObFEwWEhDbkpmUVFPMFV5NUNzOXNaeHAxUUhlMm9vdkhxRG1rR2FTcHpxSFE2NUUwUE1veEtaQVBpNy1DRjI3WW5jdHYwbHRJOTg2SXEtRkxpb28wYWx4cUdySk1DMkVfQ2xwMmFDbHRfQWY4WVRBMGoyVVBKSktvUlRMZzVyRndSTGdUWnIyeWhrbDlhcVZHNzlRRTd0Z0pVcnFyUkRhY2tRMExKeFY0cWZCQWRiUXZzLW51eWN1TVl5ekRseE1VUnFR?oc=5",
+          "date": "2026-07-01T07:23:51+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_69_2026_07_04_cc71f6"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "AAPL stock slides, but is it a reaction to AI announcements? - 9to5Mac",
+          "url": "https://news.google.com/rss/articles/CBMilAFBVV95cUxOMEw3NF9haFRTdFhtb2EtSjR6dUNCbnhIZTFWaEtrR0c3T2NPUXY2V2VsOTRmaGIyemVwT2tDZl9KUFlXUlVMeVpKTmwybm5rN3k2UEZWa3BaTEh1Q05POHBTNFJYU1FxeUoxVnlTdTd5RmFjVHo4bDdDQU95WGY3a0phd2FTS0xXM19rb3h6OGpzNFBG?oc=5",
+          "date": "2026-06-10T07:00:00+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_70_2026_07_04_3010fe"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Consultation on New Guidelines for Apple (AAPL) in UK Digital Ma - GuruFocus",
+          "url": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxPT2I4RURfbGFETXRmZUZxaldhRXI0WHAwWVhGd3kyVlZDRmgzSmFzRG94UDdXamlIcWJCMlY5SzFDUnhRc3Q1MHdkTlpZN2FObjJwSUVHbGlhRGt4SmJWRWcxSy01d3E5REpoQ1lGUHJzNkprOG1MdEY4bS00Tko1Y3V2MWtzcXN2amxyVVZDNExGVGk5Q0ZMN1lfSF9mTk55Nl91UE9TV08?oc=5",
+          "date": "2026-06-30T15:05:03+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_71_2026_07_04_a9b595"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple Inc. $AAPL Shares Sold by Brandywine Oak Private Wealth LLC - MarketBeat",
+          "url": "https://news.google.com/rss/articles/CBMiwgFBVV95cUxQbC12cVU0enN5UVpwUzBWSW8zU05LSThad2dsV2tpVnJQRXRPUXFTNjZvM2RHN1BqdzZhaWtMZTJMT2lfU0NHQkM0ZHdCZVA2a3FTZjd1cGNEeC1WV3o1b016eXdEU19aQnVqeFFiSVVucUpkR1l2TmptdDlWQ0JYaENXN0N6bTRCcFpVOWpNei0zQ1pJOEl1cHExSHlrYnR0cW5SLWNHeW95aVhWMTZXRHh6ZXBvVkxoREpMc1J4TkRJZw?oc=5",
+          "date": "2026-07-01T07:17:47+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_72_2026_07_04_30e589"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "What's Going on With Apple Stock Thursday? - Benzinga",
+          "url": "https://news.google.com/rss/articles/CBMitAFBVV95cUxQeGpCUWhMUW1HLUJfTGNOVEJjTGt2ZzcxaXRBbFVEcmg0UW0yRm9ROUNSNnlkbGJxQ1l3aG9lLWs5bGRKMXRHUEU5aGg5QmlucVpSdVNxbzcxb0o1RDNWc3g1NGNMSjBfVGxPSmNCNE56M2ZCTEdjUEduZkdoUWJCaEV2N2thTWVOczFTNF9BT1dBSFRwUjU1MHFLa0ZoSmVsV1JMelg4TzhlODBvY2hjTHM3WUc?oc=5",
+          "date": "2026-07-02T16:33:36+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_73_2026_07_04_fb964d"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "BCS Wealth Management Lowers Stake in Apple Inc. $AAPL - MarketBeat",
+          "url": "https://news.google.com/rss/articles/CBMiswFBVV95cUxPbHNxU2ExTFVtTHdSVGlsNDdpUmNRVFNiT0RhZVpCQ3Z2ZzJ5cFJLRUdDaGI3aGxwbGtOMFV6RWFuNTZWbVJ3b1VoMXpmank1V24ybzBQY0lKV1hOcVNJLWtFbldTS0N1aXpHRE5uM19EV2lFaEJaRTBJMEE3T0dDdzNIN09HWGdCUHBUSWtNaDFFbEMzZ3Z2N2E4bGpiTl93Z1VXUDYycVpkc25jTnpMODlhOA?oc=5",
+          "date": "2026-06-30T07:21:29+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_74_2026_07_04_e8ffbd"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Should You Buy, Sell, or Hold AAPL Stock After a 52% Rise in One Year? - Yahoo Finance",
+          "url": "https://news.google.com/rss/articles/CBMikwFBVV95cUxQS1REQW1vVm9PTFBxbXMtY29DQ21CNjdLcWp2b1JyVnpyZWhSNUVCbVlLYldQSWVPQVdxclFSMkxXTjBpejRSUURkcG92VWEwZ19xeDlfaGRTaXkyWHdYOUdrVjhPb281QkJnUlB3ZkwxSUhKZVc3OTRVRG5xR1N1MjU0N0tHWm4wQkRpRlJ4T1JNNlU?oc=5",
+          "date": "2026-06-17T07:00:00+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_75_2026_07_04_1a2573"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (AAPL) Accelerates Software Updates Amid AI Security Conce - GuruFocus",
+          "url": "https://news.google.com/rss/articles/CBMipwFBVV95cUxNaE1MMlFHNFl6M01fY2lWdmZhc2EyWXRHVTRDeWtoMkx4NnlGTXpMM1VySnJhNmNsM1Q0dW1CNXc4YTRnTFYyMTk3VTJrVlVJZVBRNnpXX2FwemtzYkxTQzByb3FHcEhpeEg4ekFzY1ctQWV4a21nZ0FFTm5IaDRjREJnUnZOVFB5TWVQTlloS0lFS01sR1RhcHROeEtsdUtWNW5YVEdyOA?oc=5",
+          "date": "2026-06-30T10:13:31+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_76_2026_07_04_926e57"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Price Hikes Could Create a Major Problem for AAPL Stock - Barchart.com",
+          "url": "https://news.google.com/rss/articles/CBMioAFBVV95cUxQTTc4QWRxX2dPWEJBM1J6bzNlU2JBOElScVV3MjBrMHM4VG8xVjd3WFV5T1N3cHRpOGNMelhHcDQ3TVlPVlFwUHVqTGlsblFTRkNGOTlfUnYxcDktSmJOUjRyb1daSXpqdWRfSmVoZko3bzY5bmxPRFRPRm1SRkp0RXhCTl9MajhxeVNOLTBSSGM5bHVkaWdMRTVsRE4xNkJx?oc=5",
+          "date": "2026-06-29T19:49:19+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_77_2026_07_04_495f99"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Why Apple Stock Rallied Today - The Motley Fool",
+          "url": "https://news.google.com/rss/articles/CBMiekFVX3lxTFBpUjJJcE8tVFFOQXZHQXktZk83MVVJYWJ4NmVYWWdsOUxSeVpwNzlYenlwZUVPZmVPSHJNNHBaYkxlejJzYkc1WThxZWlZekxnaTVadl81RE05T2kydGFYeXZwUGpiSk1PT2djbkFOcDdOTXU5M3l0YkJB?oc=5",
+          "date": "2026-07-03T02:56:00+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_78_2026_07_04_392fc1"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Biggest stock movers Thursday: ADBE, AAPL, and more - Seeking Alpha",
+          "url": "https://news.google.com/rss/articles/CBMijwFBVV95cUxNcGpSVXEzSlhTMkpKNml3Smh2VUx1VDNrVjlHS0lsTVdBbFN1bmZiT0NrTFpnaVZqWVhOdFJNY2xRQmNzMkZ5b1hqeEpQWHBZLWNNMjZFSUtVUHd6ajJDeUhROTM0R294Y2VyRjRpUVVQY3ZiSG01X0VMeTk1aHFxYUNFckx5aElFaERLVWIxNA?oc=5",
+          "date": "2026-07-02T16:03:00+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_79_2026_07_04_a3c7cf"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple Stock: A Familiar Ride With Better Shocks - Trefis",
+          "url": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxPYVE5dlVlRFlmUEtoeWF2ZExsNFNPSE5PTHZqV2xuWWEzTDBqUGlpcEpPVkNISEEzblVBSWZ5ZkViQzd5VWo4MGhZSHhKek94T0FJazJhbGdOUlhSWjRNXzdZenBmakE2OUEzVTl5M0hlZU1wVUdWT29VaDJnMWI0MWF4WEdGMGlQZDlwbERvcnl4R0dBeWhHM1I3dEtuNGJ3VWw5X3RHbGdfSFk?oc=5",
+          "date": "2026-07-03T12:10:52+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_80_2026_07_04_1e1d36"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Consilium Wealth Advisory LLC Has $19.64 Million Stake in Apple Inc. $AAPL - MarketBeat",
+          "url": "https://news.google.com/rss/articles/CBMiywFBVV95cUxQRE9MZXBOZDhZckpHUHZGYnpWWWhsd1pZdVZNYnJXaThuUVpreV80b2xmOGlHRHJnamdkUy01a0tmLVFucEw4SVpLSmhLYkZEanFVNmE2cEEtcEJsU0I5Y01RTERYTlVPMnpFY09lS2RaeU1VT000ZktNWU94TDdxNXNQcXluVm5zWjZMR1hLRnZjM2sxV25aWDVNVXltU0E2eDJ2a3ZBSlhmbEpBVnliREM0WFF0cy1EaXc3enlfOG93LVVYRHJRaXQwaw?oc=5",
+          "date": "2026-07-01T07:23:55+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_81_2026_07_04_0a2169"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (AAPL) Supreme Court to Review Antitrust Case Against Epic Games - GuruFocus",
+          "url": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxOMWJSSWZ2SFNBZ0JwUnBNakRicThxU0drNnRPbUtkaHJBUE1hQlJIMGs3UUpscWRSUk5XaGxBcVNzVnJPNmdsdWJSc19RcXNTYVlEcGhNRWpjODdwd0lod0pLSDlCcF80T3d5RG1VN3o2LVpCSGRzeFNhV0VkQXFlcGQwU3lBczBWS3NhNVVYMTJDcHB5WnZhWm5lQjRueFItZkY2aDlEMlI2S1U?oc=5",
+          "date": "2026-06-30T18:11:51+00:00",
+          "snippet": "Google News...",
+          "type": [
+            "litigation"
+          ]
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_82_2026_07_04_169fa6"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (AAPL) Faces Memory Shortages And Tata Ransomware Leak Ahead Of iPhone 18 Pro - simplywall.st",
+          "url": "https://news.google.com/rss/articles/CBMivAFBVV95cUxPWTNveVA2YkRsT3RlOUN6a0JyWmVPOXB4djU0ejh2Rl9xX0NCQ1BSTzlOeHdydHEzR1FXUHlQbUpZN1ZjQUlZUXBGMDI2aWhBRHJ6M1J1VjRrNS16ejlwY1lPWFpUS1dab0ZSTGQ2RERlMmxoM21EdE96Y2lnMC1hOFhsRnNWaE1yTDVlbWR2c0lGNzVpLWVqVi1UYy1FeS1yNFM5S0NheVpHWEJIdS1tTkppUnZ2LW1vdk43SNIBwgFBVV95cUxPUzFZZzNPUm0xRm5fazR5MGsyZjlHbDVyUmJEeXJXWUdxNzV0OGhVQW1rT0l3S1R4UjdWMUhQd2NtYkJCcXp2X2FRSGlBall4ajJkQUR0WFlMT0ZCNFNGWUdzLVRYUHBFRXc2ZUtTTGFLX3BFeWtfTlRwaXF0LVE0V1JwWDlPZ3V0aFEwZkkzd2lnRWczODhIWWhkc2t4RUstRVp4XzNDYlRBc2pIOFdhR3BkT2lOU19xbWc5LTBpY242QQ?oc=5",
+          "date": "2026-06-30T11:52:02+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_83_2026_07_04_5f2d04"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (AAPL) CEO Tim Cook Discusses Siri AI Expansion in Europe - GuruFocus",
+          "url": "https://news.google.com/rss/articles/CBMiogFBVV95cUxNblVDNkt5ZzR6ZldhSDQ2M2xZZ29SWXk0Z0llb0d0amRXSGJMVTJTVVBoMks4eFhoamh5SWVGc3BINGt1MkVzVEVaZUx6b2FCQjlaZmwxQ3lpYUdiOGNKUzRzSHlVOGxsUEEtN1lETjhUa240MnhYeVQ5T2wxUEhlSGNTdGU0ZkhGTU9tY25aTElpUFpxWU4tVjBCRjVhLUkzN0E?oc=5",
+          "date": "2026-07-01T13:29:17+00:00",
+          "snippet": "Google News...",
+          "type": [
+            "leadership_change"
+          ]
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_84_2026_07_04_4cb5bf"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple (AAPL) and EU Engage in Productive Talks Over Siri AI Laun - GuruFocus",
+          "url": "https://news.google.com/rss/articles/CBMipgFBVV95cUxQeFp6YkI3YUVsRUhGUWtoa2duRUJ5NEVEUk5mODl5bEhrcmFPeW9Bazl5VkhPUFYwajQ0MVoyTHE4bUI4MU5PbThhQ1QzS1BXRHo4RFJhUWFocjNsRG1rZHpWWjctdHVsbmRPQ1BJVmZnOXFjRG1QN283RDZNWjJnTlROR0xPVVlXalY2U0VIOVlPLXVIaVlleXhXUl9URTBmVEpHNFB3?oc=5",
+          "date": "2026-06-30T23:51:05+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_85_2026_07_04_9ef6f2"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Will a Foldable iPhone Be the Catalyst to Drive Apple Shares to $400? - 24/7 Wall St.",
+          "url": "https://news.google.com/rss/articles/CBMisAFBVV95cUxPUXp6Qjh1RDhib0NrdU5VVGh5VlZzeHFTamltQVlmb0NrZ1hKMGQ3VEs1VXNJVVl6U1R6eVA4YTZrNnJnakpraUdjWHMyZGtJckdXaUJfZWJDTkZuWGwwRmQ4ZHE5Y0paSXFsS2oxVGRjMTlwZjBwZVFLMmVuZzFiS2FUVE56eGJ4eXpTQ0FnZGpQNndCeXg5ZHVkdVBHV0owQ3lBaEJHQTFZU1Z4aHktbg?oc=5",
+          "date": "2026-07-02T17:15:07+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_86_2026_07_04_37a0f6"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "What's Behind Apple's Hardware Price Hikes as Memory Supplies Tighten? - Benzinga",
+          "url": "https://news.google.com/rss/articles/CBMixwFBVV95cUxNQzBBcHNPYjFyUGRweW9sSTRINFZCS2pjLW9KV3A2RVJKZlUwaHFRSEo4VnZmVTZSZWQyb0NDVElaakF4dWF3cWNGM3hMdGtVcHJ2bTloejV3aUwyYUVkb1Z6S09faWhLQVpLV0lsNFZId21DcGFZVGxLNzdoeDB4SHA2bC1qMEVYdGJVWWNVMzJKT0xEaGN6WnpuXzlkRURQZGJ4MEZMMmNSVlM2eXllTmtOUmNfa1VvVE1lV3JhNS16dU9zaDhz?oc=5",
+          "date": "2026-07-02T13:39:27+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_87_2026_07_04_fa4968"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "UK Plans to Break Down Payment Barriers Imposed by Apple (AAPL.US) and Google (GOOGL.US), Dealing Another Blow to 'App Store Tax' - Moomoo",
+          "url": "https://news.google.com/rss/articles/CBMinwFBVV95cUxNc0RHQWplam5yWk50VW02NzJjUm5XT0w3MlNiXzJENWYzNUtoY1pQT01vNEVLVXRKbU9SNzFDSkxZSHgyeFFBQ2J4VlF5Y3ZaNFlCNGE2alhPQWp0NGh1b2N4NExWOGxCcmZJVzZ2WGxlLTI4RFlQa3lLUnNZWE45VVZ1OE5wX0VBbnptdEctNlgwRzVOMVl2QjBvT1MtZTA?oc=5",
+          "date": "2026-06-30T08:40:41+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_88_2026_07_04_705920"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "One Tech Stock to Buy and Hold For The Next Decade - 24/7 Wall St.",
+          "url": "https://news.google.com/rss/articles/CBMimgFBVV95cUxNZVJOck1odC1qejdJMmVoTDZvU0syUjN2VndiTG8yVE40aDBpNUxuYWxTbDRTZ2ZLc1BJLW8wempLUEFxV0dua0ttaWZMQmxqQU8xVlIwUW9iYVc4NVlSY04tMWg3NGRzOHE5OWUzWG5lem5vbkZKbDlhWUJ2Z3UyOFRINmVzLUNTRWNFVzhLak0yWTZVMWwwVXJR?oc=5",
+          "date": "2026-07-02T15:15:43+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_89_2026_07_04_29eddd"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Trump bought Apple, Nvidia and other tech giants before tariff reversal fueled rebound - CNBC",
+          "url": "https://news.google.com/rss/articles/CBMifEFVX3lxTE5uU09BV2VxQk4wa2RVdFM0c1pfb2hsNlZoREp2a1h0OHFNQVRmVGk1aDFqZEl6ajhhY1p4WDRFeDVKSUkzN1NmSlVvOHFMZktfRDg0bEJITDFsT1dRNkxGclFRMFFmb1lIODh1TkFCU3ZaYXdHSVBzUmx4RkjSAYIBQVVfeXFMT1U5UVUxWUp0RXNqdGwxazBxbVRqU1JqNVY1MXUxTmtIa0J2dnlYc0NWNGhDMnlrbGlaRUpuV2wzNGJJOVIxNlVfeUZBZ3cxSzFXNl9od195bkFmNElDazlyYXdyd1NhbnlsMXhJRXRUTG5KQzFrLThoMGp3bG5vZEtHZw?oc=5",
+          "date": "2026-07-02T18:37:05+00:00",
+          "snippet": "Google News...",
+          "type": [
+            "acquisition"
+          ]
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_90_2026_07_04_cf29b3"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Apple Eyes 10 Million Foldable iPhones in Major Expansion Move - TradingView",
+          "url": "https://news.google.com/rss/articles/CBMivwFBVV95cUxPd0JQMmdlb3luelpRc0dlOVd6UmRDcjllWmczaHBMLXpDLWRFY2VkYno4M2xKaGpEMnBzaDFDX0l1RjBDaFIybTh6dFhrLW51UF9EdlpCZFQta2puMnpnU281UUtQY3dSSVJtb2JzVFZpa1RxQmJWVzV4aExoVTBXc21KUTNpVTVHOXoySm5Ubk9zR2FkZHVNSFBvOGhuUWhoc3pJMmJGeG1rRkJudV8xM3V3ZW55TUVoWHJIeGxoSQ?oc=5",
+          "date": "2026-07-02T13:53:39+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_91_2026_07_04_380041"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "3 Nasdaq 100 Stocks to Research Further - StockStory",
+          "url": "https://news.google.com/rss/articles/CBMiowFBVV95cUxQT19Pd0xFTmtnSXdCbUc3YUdtOVNtQkExWEVFTU1ZU3R3M0hNZXJFSWtoTTl1bHkyQmRCT1Z4S3dYNU53blp1NlJZWXIxVGlCN2hwN193NVBGYldXVVVkT3dFZTU2ZHgzdzl1d1NLaTdoR1VXRkF3VU44ZDVkY1EwUW9XbnFCcldqSnhfam1PR3lJcU5GZjFyM1NKWG9FS3NDNV9B?oc=5",
+          "date": "2026-07-03T10:43:42+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_92_2026_07_04_cc2d51"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Trump will oppose heavy US AI regulation, says outgoing tech adviser",
+          "url": "https://www.ft.com/content/5128e476-db8b-48ac-a8fb-0f16d0f5c2ed",
+          "date": "2026-07-03T14:32:49+00:00",
+          "snippet": "",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_93_2026_07_04_54e7ee"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Could Apple's China Play Be the Answer to Its Memory Pressure Problem? - MarketBeat",
+          "url": "https://news.google.com/rss/articles/CBMirwFBVV95cUxQakFiTjlGM3pKeHREdDlnNjhYQjVnN1F0OXRWYUkyOUhxbnd3TmVUNWxqN0NTU1NLUXNMSEpTV2hveWV5N1FhSlk4RFVaYmxnYk1kaEUxN2dEaHdSank5LTRHYUxIQllMSGFETVdKWWM1SHdyTTVBZmxtOWxLeDR6cW1Cc1RMTnFfWTM2aFVTSUtqMktkQ3RVeVhXWklFY3J5X2x3UXcxaEc4Vk5VaUZZ?oc=5",
+          "date": "2026-07-01T12:47:43+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_94_2026_07_04_3eb15e"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "This Stock is My Biggest Bet For July - 24/7 Wall St.",
+          "url": "https://news.google.com/rss/articles/CBMiiAFBVV95cUxOUm1UZGVySmV5bzdZWmcwSC1wTlBMYVJrbnJnRWpFYjBHY29FeWR2OG5qclJsTXM3ckNJVFg5R01BanBBTTlqOUY3NlFUeEZGX3hIN1I3aFJHZngyZWtudnRTNU1PNG9OVExXVUliQ0x0TENXTFVoanh6OUFPRUtncV9aVEhwTDRk?oc=5",
+          "date": "2026-06-30T11:49:59+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_95_2026_07_04_428b44"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Quick AAPL read from moomoo's Trade Stats - Moomoo",
+          "url": "https://news.google.com/rss/articles/CBMimwFBVV95cUxOSGdvQ0hnN3JjdDNQSXRNNTc5RlU0cG10emI5UkI2QzFnSy11MDZ2OHlZZTFvdXNFTjlvWGM2NzZxbFlpVHh0MzBkRHpTUHEtYUY0Y3Z2a1pMenZwZVVyUXgtaEJZNTFqVm84ZGQ5Q2NwcV9weHJ6QkhUX21tOUx2S0pvV1ExQzl4bWZWYm1yb01aeUxDTzNQMkN1TQ?oc=5",
+          "date": "2026-07-02T05:33:50+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_96_2026_07_04_a5d6e3"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Simon Schama: The founding fathers and the battle for America\u2019s future",
+          "url": "https://www.ft.com/content/34eb59fa-fc22-4b03-b9e6-205443d19dd1",
+          "date": "2026-07-04T04:00:21+00:00",
+          "snippet": "",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_97_2026_07_04_dc8cc4"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Wall Street Today; DJIA Hits Record and S&P 500, Nasdaq Comp Rally as SNDK, AMD, INTC, AAPL, MU Rise - Moomoo",
+          "url": "https://news.google.com/rss/articles/CBMioAFBVV95cUxQYlN5eVRKV0tWSk01SWU2bnZJejhJUnZNdV9MSUZoYklIQjZ4cDRoYVdsY1NRSF9hMjJpaGlXRWJCVkduSFlGeDFaY05peGtHNDN4ZHBMSUJFYnlhY3hoMUZpS2lfc2xINXBrMWxtV1k2THZkSmdVV1dmTUh3U2VWekc4bEsxdmY3XzBfSUs5d2NuSVg0Nk1PeVdoRTQxaERH?oc=5",
+          "date": "2026-06-30T20:00:44+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_98_2026_07_04_3fde1c"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": {
+          "title": "Stock Market Volatility: History Says This 1 Investing Move Is More Important Than Ever Before - The Globe and Mail",
+          "url": "https://news.google.com/rss/articles/CBMijAJBVV95cUxNM19mdWt3M0FNcElWaUdwZThhU2xGeU85TUI2XzdsS2lWZUh1R25hQjdraTNsd0NVbnBQVlZxNEEtVnJ2SGVFSEtWLUtMd1lrZTY1QjlUVFQwa2ltckdPZWtKMWRPWXFVdXF3SVRyRWlhOGx2V21Wc0NqUnpRS0RodGxaNDMyM3hBVTNjcVJMQ18zUzZVWHdZckhORXRKVE5DTzJvckx2b01nY1pCcUNpTEVGR0otc3hCNXVsNzk1S0l3QzFvSEhKS1EwUXdTNExuS0xoZ1U0bnB3YlM5NWpFX0pSMEdnUU9ta2c4NDUwWE0yMC1ZZ0xKa0haREl4SlZLWDVBNGlTbS1VZDZ3?oc=5",
+          "date": "2026-07-04T08:06:11+00:00",
+          "snippet": "Google News...",
+          "type": []
+        },
+        "source_ids": [
+          "news_intelligence_aapl_news_event_99_2026_07_04_8f4721"
+        ],
+        "confidence": 0.8
+      }
+    ],
     "technology_stack": [],
     "financials": {
-      "revenue_history": {},
-      "net_income_history": {},
-      "operating_income_history": {},
-      "assets_history": {},
-      "liabilities_history": {},
-      "cash_flow_history": {},
-      "shares_outstanding_history": {},
-      "market_cap": null,
-      "pe_ratio": null,
-      "current_price": null,
-      "fifty_two_week_high": null,
-      "fifty_two_week_low": null,
-      "revenue_annual": "N/A",
+      "revenue_history": {
+        "value": {
+          "TTM": 451442016256
+        },
+        "source_ids": [
+          "yfinance_aapl_revenue_ttm_2026_07_04_05d1c3"
+        ],
+        "confidence": 0.88
+      },
+      "net_income_history": {
+        "value": {
+          "TTM": 122575003648
+        },
+        "source_ids": [
+          "yfinance_aapl_net_income_ttm_2026_07_04_78f1a4"
+        ],
+        "confidence": 0.88
+      },
+      "operating_income_history": {
+        "value": {
+          "TTM": 159975997440
+        },
+        "source_ids": [
+          "yfinance_aapl_ebitda_ttm_2026_07_04_359811"
+        ],
+        "confidence": 0.88
+      },
+      "assets_history": null,
+      "liabilities_history": null,
+      "cash_flow_history": {
+        "value": {
+          "TTM": 101090746368
+        },
+        "source_ids": [
+          "yfinance_aapl_free_cash_flow_ttm_2026_07_04_6649b3"
+        ],
+        "confidence": 0.88
+      },
+      "shares_outstanding_history": null,
+      "market_cap": {
+        "value": 4532958920704,
+        "source_ids": [
+          "yfinance_aapl_market_cap_2026_07_04_004a5c"
+        ],
+        "confidence": 0.95
+      },
+      "pe_ratio": {
+        "value": 37.319225,
+        "source_ids": [
+          "yfinance_aapl_pe_ratio_2026_07_04_5f7925"
+        ],
+        "confidence": 0.95
+      },
+      "current_price": {
+        "value": 308.63,
+        "source_ids": [
+          "yfinance_aapl_current_price_2026_07_04_31a27f"
+        ],
+        "confidence": 0.95
+      },
+      "fifty_two_week_high": {
+        "value": 317.4,
+        "source_ids": [
+          "yfinance_aapl_fifty_two_week_high_2026_07_04_2a57e2"
+        ],
+        "confidence": 0.88
+      },
+      "fifty_two_week_low": {
+        "value": 201.5,
+        "source_ids": [
+          "yfinance_aapl_fifty_two_week_low_2026_07_04_4fbdfe"
+        ],
+        "confidence": 0.88
+      },
+      "revenue_annual": "451442016256",
       "funding_total": "N/A",
       "last_round": "N/A"
     },
@@ -614,11 +2835,67 @@
       "revenue_growth": {},
       "profit_growth": {},
       "cagr": {},
-      "debt_equity": null,
-      "operating_margin": {}
+      "debt_equity": 79.548,
+      "operating_margin": {
+        "TTM": 0.32275
+      },
+      "net_margin": {
+        "TTM": 0.2715188202120983
+      },
+      "fcf_margin": {},
+      "roa": {
+        "current": 0.26229
+      },
+      "roe": {
+        "current": 1.4147099
+      },
+      "interest_coverage": {}
     },
-    "valuation_multiples": null,
+    "valuation_multiples": {
+      "pe_ratio": 37.319225,
+      "pe_sector_median": null,
+      "ev_ebitda": 28.437,
+      "ev_ebitda_sector_median": null,
+      "price_to_sales": 10.041065,
+      "price_to_sales_sector_median": null
+    },
     "capital_allocation": null,
-    "risk_factors": []
+    "risk_factors": [
+      {
+        "value": "Market/Regulatory News: Apple (AAPL) Explores Chip Acquisition Amid Global Shortage - GuruFocus",
+        "source_ids": [
+          "news_intelligence_aapl_news_event_49_2026_07_04_80f6d6"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": "Market/Regulatory News: Apple (AAPL) Boosts Foldable iPhone Production Expectations Amid Supply Shortages - GuruFocus",
+        "source_ids": [
+          "news_intelligence_aapl_news_event_55_2026_07_04_5e1115"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": "Market/Regulatory News: Apple (AAPL) and Microsoft (MSFT) Face Challenges Amid Rising Me - GuruFocus",
+        "source_ids": [
+          "news_intelligence_aapl_news_event_61_2026_07_04_4fbcba"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": "Market/Regulatory News: Apple (AAPL) Faces Memory Shortages And Tata Ransomware Leak Ahead Of iPhone 18 Pro - simplywall.st",
+        "source_ids": [
+          "news_intelligence_aapl_news_event_83_2026_07_04_5f2d04"
+        ],
+        "confidence": 0.8
+      },
+      {
+        "value": "Market/Regulatory News: Trump will oppose heavy US AI regulation, says outgoing tech adviser",
+        "source_ids": [
+          "news_intelligence_aapl_news_event_93_2026_07_04_54e7ee"
+        ],
+        "confidence": 0.8
+      }
+    ]
   }
 }

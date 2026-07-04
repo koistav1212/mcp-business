@@ -5,6 +5,7 @@ from services.research.providers.company_provider import CompanyProvider
 from services.research.providers.web_provider import WebProvider
 from services.research.providers.people_provider import PeopleProvider
 from services.research.providers.reddit_provider import RedditProvider
+from services.research.providers.global_markets_provider import GlobalMarketsProvider
 
 TOOLS = {
     "company_provider": {
@@ -24,6 +25,12 @@ TOOLS = {
         "cost": 1,
         "quality": 0.9,
         "instance": YFinanceProvider()
+    },
+    "global_markets": {
+        "mcp_server": "market-mcp",
+        "cost": 2,
+        "quality": 0.9,
+        "instance": GlobalMarketsProvider()
     },
     "news_provider": {
         "mcp_server": "news-mcp",

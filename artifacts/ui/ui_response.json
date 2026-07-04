@@ -57,6 +57,49 @@
             ]
           }
         ]
+      },
+      {
+        "id": "financials",
+        "title": "Financial performance",
+        "icon": "chart-bar",
+        "business_question": "Is this company financially healthy and growing?",
+        "sections": [
+          {
+            "id": "fin_section",
+            "title": "Financial summary",
+            "col_span": 12,
+            "components": [
+              {
+                "id": "revenue_chart",
+                "component": "RevenueLineChart",
+                "source": "financials.revenue_history",
+                "col_span": 8,
+                "row_span": 1,
+                "props": {
+                  "title": "Revenue trend",
+                  "format": "currency_usd",
+                  "show_when_empty": false,
+                  "data_status": "available",
+                  "priority": "critical"
+                }
+              },
+              {
+                "id": "margin_chart",
+                "component": "MarginAreaChart",
+                "source": "analytics.operating_margin",
+                "col_span": 4,
+                "row_span": 1,
+                "props": {
+                  "title": "Operating margin",
+                  "format": "percentage",
+                  "show_when_empty": false,
+                  "data_status": "available",
+                  "priority": "high"
+                }
+              }
+            ]
+          }
+        ]
       }
     ],
     "global_filters": [
@@ -91,31 +134,21 @@
       "Workspace: CEO_REPORT. Theme: executive_dark."
     ],
     "data_gaps": [
-      "Field 'financials.revenue_history' is unavailable \u2014 component omitted",
-      "Field 'financials.net_income_history' is unavailable \u2014 component omitted",
-      "Field 'financials.operating_income_history' is unavailable \u2014 component omitted",
-      "Field 'financials.market_cap' is unavailable \u2014 component omitted",
-      "Field 'financials.pe_ratio' is unavailable \u2014 component omitted",
-      "Field 'financials.current_price' is unavailable \u2014 component omitted",
       "Field 'analytics.revenue_growth' is unavailable \u2014 component omitted",
       "Field 'analytics.profit_growth' is unavailable \u2014 component omitted",
       "Field 'analytics.cagr' is unavailable \u2014 component omitted",
-      "Field 'analytics.operating_margin' is unavailable \u2014 component omitted",
-      "Field 'analytics.debt_equity' is unavailable \u2014 component omitted",
-      "Field 'valuation_multiples' is unavailable \u2014 component omitted",
       "Field 'hiring_signals' is unavailable \u2014 component omitted",
       "Field 'competitors' is unavailable \u2014 component omitted",
       "Field 'competitive_positioning' is unavailable \u2014 component omitted",
       "Field 'swot' is unavailable \u2014 component omitted",
-      "Field 'risk_factors' is unavailable \u2014 component omitted",
       "Field 'capital_allocation' is unavailable \u2014 component omitted",
       "Field 'management_commentary' is unavailable \u2014 component omitted",
-      "Field 'news' is unavailable \u2014 component omitted",
       "Field 'social_sentiment' is unavailable \u2014 component omitted",
       "Field 'technology_stack' is unavailable \u2014 component omitted",
       "Field 'draft_report.key_findings' is unavailable \u2014 component omitted",
       "Field 'draft_report.risks' is unavailable \u2014 component omitted",
       "Field 'draft_report.opportunities' is unavailable \u2014 component omitted",
+      "Field 'draft_report.recommendations' is unavailable \u2014 component omitted",
       "Field 'draft_report.evidence_gaps' is unavailable \u2014 component omitted",
       "Field 'industry_context' is unavailable \u2014 component omitted"
     ]

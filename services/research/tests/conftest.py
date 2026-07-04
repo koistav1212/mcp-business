@@ -3,7 +3,7 @@ from unittest.mock import patch
 from services.research.tests.fixtures import MOCK_COMPANY_RESPONSES
 from services.research.providers.entity_resolver import EntityResolver
 from services.research.providers.company_provider import CompanyProvider
-from services.research.providers.news_provider import NewsProvider
+from services.research.providers.news.news_provider import NewsProvider
 from services.research.providers.yfinance_provider import YFinanceProvider
 from services.research.providers.people_provider import PeopleProvider
 from services.research.providers.web_provider import WebProvider
@@ -58,9 +58,10 @@ def mock_providers():
             })
         return await original_news_fetch(self, company)
 
-    async def mock_yfinance_fetch(self, ticker_symbol: str):
+    async def mock_yfinance_fetch(self, target: Any):
+        ticker_symbol = self._extract_identifier(target)
         if not ticker_symbol:
-            return await original_yfinance_fetch(self, ticker_symbol)
+            return await original_yfinance_fetch(self, target)
         ticker_upper = ticker_symbol.upper()
         if "ZOHO" in ticker_upper or "MOCK" in ticker_upper:
             if "ZOHO" in ticker_upper:
@@ -74,7 +75,7 @@ def mock_providers():
                     "fifty_two_week_low": None,
                     "raw_data": {"note": "No ticker symbol resolved or private company."}
                 })
-        return await original_yfinance_fetch(self, ticker_symbol)
+        return await original_yfinance_fetch(self, target)
 
     async def mock_people_fetch(self, company: str):
         company_lower = company.lower()

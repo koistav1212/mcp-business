@@ -43,9 +43,11 @@ class NewsAPIClient:
                                 
                         results.append({
                             "headline": art.get("title", ""),
+                            "summary": art.get("description", ""),
                             "url": art.get("url", ""),
                             "published_at": dt,
-                            "publisher": art.get("source", {}).get("name", "NewsAPI")
+                            "publisher": art.get("source", {}).get("name", "NewsAPI"),
+                            "source_score": 0.7
                         })
         except Exception as e:
             logger.debug(f"NewsAPI fetch failed: {e}")

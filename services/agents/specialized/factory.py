@@ -58,17 +58,18 @@ class GenericLLMAgent(BaseResearchAgent):
         if True:
             try:
                 # Relying on router to enforce token limits natively
-                payload = await ProviderRouter.generate_json(
+                raw_text = await ProviderRouter.generate_text(
                     agent_name=self.agent_name,
                     system_prompt=system_prompt,
                     user_prompt=user_prompt
                 )
                 
-                if not isinstance(payload, dict):
-                    raise ValueError(f"LLM returned {type(payload)} instead of dict. Content: {payload}")
-                
-                # Ensure evidence is empty as we don't need to pass it back
-                payload["evidence"] = []
+                # Wrap the text in the expected AgentResult format
+                payload = {
+                    "findings": [raw_text],
+                    "confidence": 0.9,
+                    "evidence": []
+                }
                 
                 return AgentResult.model_validate(payload)
             except Exception as e:

@@ -25,7 +25,7 @@ class BaseProvider(ABC):
             return target.company_name
             
         if isinstance(target, dict):
-            return target.get("ticker") or target.get("company_name") or str(target)
+            return target.get("ticker") or target.get("canonical_name") or target.get("company_name") or str(target)
             
         return str(target)
 

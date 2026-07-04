@@ -36,25 +36,33 @@ class IntentEngine:
         explicit_required_data = plan_dict.get("required_data", [])
         
         # Prioritize entity_hint if provided, otherwise fallback to target_company
-        target_company = entity_hint or plan_dict.get("target_company")
+        target_company = entity_hint or plan_dict.get("target_company") or query.replace("Research ", "").strip()
         
         # Map required_sources to required_data
         required_data = []
         required_data.append("company profile")
-        if "people" in req_sources:
-            required_data.append("leadership")
-        if "hiring" in req_sources:
-            required_data.append("hiring signals")
-        if "competitors" in req_sources:
-            required_data.extend(["competitive positioning", "swot"])
-        if "news" in req_sources:
-            required_data.append("recent developments")
-        if "sec" in req_sources:
-            required_data.append("financial history")
-        if "yfinance" in req_sources:
-            required_data.append("market valuation")
-        if "web" in req_sources or "competitors" in req_sources:
-            required_data.append("technology stack")
+        
+        # We need to map generic aliases back to required data, just in case
+        for src in req_sources:
+            src_clean = src.lower()
+            if src_clean in ["company"]:
+                required_data.append("company profile")
+            elif src_clean in ["people"]:
+                required_data.append("leadership")
+            elif src_clean in ["hiring"]:
+                required_data.append("hiring signals")
+            elif src_clean in ["competitors"]:
+                required_data.extend(["competitive positioning", "swot"])
+            elif src_clean in ["news"]:
+                required_data.append("recent developments")
+            elif src_clean in ["sec", "financials"]:
+                required_data.append("financial history")
+            elif src_clean in ["yfinance", "market"]:
+                required_data.append("market valuation")
+            elif src_clean in ["web", "technology"]:
+                required_data.append("technology stack")
+            elif src_clean in ["social", "social_intel", "reddit"]:
+                required_data.append("social sentiment")
             
         required_data.extend(explicit_required_data)
         required_data = list(dict.fromkeys(required_data))
