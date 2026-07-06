@@ -65,7 +65,7 @@ WORKSPACE_TEMPLATES = {
         "layout_style": "command_center",
         "primary_color": "#7C3AED",
         "accent_color": "#10B981",
-        "page_count_hint": "3-4",
+        "page_count_hint": "5-6",
         "priority_sections": ["hero_identity", "executive_summary", "financial_performance", "competitive_landscape", "risk_register", "strategic_recommendations"],
     },
     "COMPETITOR_ANALYSIS": {
@@ -89,7 +89,7 @@ WORKSPACE_TEMPLATES = {
         "layout_style": "data_dense",
         "primary_color": "#1E40AF",
         "accent_color": "#F59E0B",
-        "page_count_hint": "2-3",
+        "page_count_hint": "5-6",
         "priority_sections": ["ticker_hero", "financial_scorecard", "valuation_multiples", "earnings_trend", "risk_register", "analyst_verdict"],
     },
     "SALES_INTELLIGENCE": {
@@ -161,6 +161,7 @@ Financial data:
   financials.assets_history          → Dict[year_str, float]
   financials.liabilities_history     → Dict[year_str, float]
   financials.cash_flow_history       → Dict[year_str, float]
+  financials.long_term_debt_history  → Dict[year_str, float]
   financials.market_cap | financials.pe_ratio | financials.current_price
   financials.fifty_two_week_high | financials.fifty_two_week_low
 
@@ -222,6 +223,8 @@ DATA CARDS (KPI-style):
 CHARTS:
   RevenueLineChart    → Multi-year revenue trend (source: financials.revenue_history)
   MarginAreaChart     → Operating margin over time (source: analytics.operating_margin)
+  CapitalAllocationChart → Capital allocation summary (buybacks, dividends, capex) (source: capital_allocation)
+  DebtTrendChart      → Long-term debt history (source: financials.long_term_debt_history)
   CAGRBarChart        → 3Y/5Y/10Y CAGR bars (source: analytics.cagr)
   WaterfallChart      → Revenue → EBIT → Net Income bridge
   FinancialHeatmap    → Year×Metric grid with color intensity
@@ -371,10 +374,13 @@ EMPTY STATE RULES:
 
 WORKSPACE-SPECIFIC RULES:
   CEO_REPORT:
+    Build 5-6 pages whenever enough data exists.
     Page 1 — Command Center: CompanyHero + MetricStrip + ExecutiveSummaryCard
     Page 2 — Financial Performance: RevenueLineChart + WaterfallChart + FinancialTable + ValuationCard
-    Page 3 — Competitive Landscape: MarketShareDonut + AxesComparisonBar + SWOTGrid + CompetitorMatrix
-    Page 4 — Risk & Strategy: RiskTable + RecommendationCard + ManagementQuoteCard
+    Page 3 — Business Quality: MarginAreaChart + CAGRBarChart + capital allocation metrics + FindingsAccordion
+    Page 4 — Competitive Landscape: MarketShareDonut + AxesComparisonBar + SWOTGrid + CompetitorMatrix
+    Page 5 — Operating Signals: TechStackBadges + LeadershipTable + NewsTimeline + HiringSignalsPanel
+    Page 6 — Risk & Strategy: RiskTable + RecommendationCard + ManagementQuoteCard + EvidenceTable
 
   COMPETITOR_ANALYSIS:
     Page 1 — Comparison Overview: ComparisonHero + head-to-head MetricStrip (one column per company)
@@ -383,10 +389,13 @@ WORKSPACE-SPECIFIC RULES:
     Page 4 — Strategic Verdict: RecommendationCard + EvidenceTable
 
   INVESTMENT_BRIEF:
+    Build 5-6 pages whenever enough data exists.
     Page 1 — Thesis: TickerHero + ValuationCard + SentimentGauge + ExecutiveSummaryCard
     Page 2 — Financials: RevenueLineChart + MarginAreaChart + CAGRBarChart + WaterfallChart
-    Page 3 — Risk: RiskTable + FinancialHeatmap + CompetitorMatrix
-    Page 4 — Verdict: RecommendationCard + EvidenceTable + ManagementQuoteCard
+    Page 3 — Capital Allocation & Quality: MetricStrip + FinancialHeatmap + FindingsAccordion
+    Page 4 — Market Positioning: CompetitorMatrix + PositioningScatter + AxesComparisonBar
+    Page 5 — Risk: RiskTable + NewsTimeline + ManagementQuoteCard
+    Page 6 — Verdict: RecommendationCard + EvidenceTable
 
   SALES_INTELLIGENCE:
     Page 1 — Account Snapshot: CompanyHero + MetricStrip + TechStackBadges + LeadershipTable
@@ -480,6 +489,7 @@ class UIAgent:
             "financials.revenue_history":       is_real((context_dict.get("financials") or {}).get("revenue_history")),
             "financials.net_income_history":    is_real((context_dict.get("financials") or {}).get("net_income_history")),
             "financials.operating_income_history": is_real((context_dict.get("financials") or {}).get("operating_income_history")),
+            "financials.long_term_debt_history": is_real((context_dict.get("financials") or {}).get("long_term_debt_history")),
             "financials.market_cap":            is_real((context_dict.get("financials") or {}).get("market_cap")),
             "financials.pe_ratio":              is_real((context_dict.get("financials") or {}).get("pe_ratio")),
             "financials.current_price":         is_real((context_dict.get("financials") or {}).get("current_price")),
@@ -666,6 +676,26 @@ class UIAgent:
                 "props": {"title": "Operating margin", "format": "percentage",
                           "show_when_empty": False, "data_status": "available", "priority": "high"},
             })
+        if available_fields.get("capital_allocation"):
+            fin_components.append({
+                "id": "cap_alloc_chart",
+                "component": "CapitalAllocationChart",
+                "source": "capital_allocation",
+                "col_span": 6,
+                "row_span": 1,
+                "props": {"title": "Capital allocation",
+                          "show_when_empty": False, "data_status": "available", "priority": "high"},
+            })
+        if available_fields.get("financials.long_term_debt_history"):
+            fin_components.append({
+                "id": "debt_trend_chart",
+                "component": "DebtTrendChart",
+                "source": "financials.long_term_debt_history",
+                "col_span": 6,
+                "row_span": 1,
+                "props": {"title": "Debt trend", "format": "currency_usd",
+                          "show_when_empty": False, "data_status": "available", "priority": "medium"},
+            })
         if fin_components:
             pages.append({
                 "id": "financials",
@@ -674,6 +704,143 @@ class UIAgent:
                 "business_question": "Is this company financially healthy and growing?",
                 "sections": [{"id": "fin_section", "title": "Financial summary",
                                "col_span": 12, "components": fin_components}],
+            })
+
+        # Page 3: Competitive landscape
+        comp_components = []
+        if available_fields.get("competitors"):
+            comp_components.append({
+                "id": "competitor_matrix",
+                "component": "CompetitorMatrix",
+                "source": "competitors",
+                "col_span": 8,
+                "row_span": 1,
+                "props": {"title": "Competitive landscape", "show_when_empty": False,
+                          "data_status": "available", "priority": "high"},
+            })
+        if available_fields.get("swot"):
+            comp_components.append({
+                "id": "swot_grid",
+                "component": "SWOTGrid",
+                "source": "swot",
+                "col_span": 4,
+                "row_span": 1,
+                "props": {"title": "Strategic posture", "show_when_empty": False,
+                          "data_status": "available", "priority": "high"},
+            })
+        if comp_components:
+            pages.append({
+                "id": "competition",
+                "title": "Competitive positioning",
+                "icon": "target-arrow",
+                "business_question": "How well positioned is the company versus competitors?",
+                "sections": [{"id": "competition_section", "title": "Market context",
+                               "col_span": 12, "components": comp_components}],
+            })
+
+        # Page 4: Operating signals
+        ops_components = []
+        if available_fields.get("technology_stack"):
+            ops_components.append({
+                "id": "tech_stack",
+                "component": "TechStackBadges",
+                "source": "technology_stack",
+                "col_span": 4,
+                "row_span": 1,
+                "props": {"title": "Technology stack", "show_when_empty": False,
+                          "data_status": "available", "priority": "medium"},
+            })
+        if available_fields.get("leadership"):
+            ops_components.append({
+                "id": "leadership_table",
+                "component": "LeadershipTable",
+                "source": "leadership",
+                "col_span": 4,
+                "row_span": 1,
+                "props": {"title": "Leadership", "show_when_empty": False,
+                          "data_status": "available", "priority": "medium"},
+            })
+        if available_fields.get("news"):
+            ops_components.append({
+                "id": "news_timeline",
+                "component": "NewsTimeline",
+                "source": "news",
+                "col_span": 4,
+                "row_span": 1,
+                "props": {"title": "Recent developments", "show_when_empty": False,
+                          "data_status": "available", "priority": "medium"},
+            })
+        if ops_components:
+            pages.append({
+                "id": "operations",
+                "title": "Operating signals",
+                "icon": "activity-heartbeat",
+                "business_question": "What operating signals or market developments matter right now?",
+                "sections": [{"id": "operations_section", "title": "Signals and momentum",
+                               "col_span": 12, "components": ops_components}],
+            })
+
+        # Page 5: Risks and recommendations
+        risk_components = []
+        if available_fields.get("risk_factors"):
+            risk_components.append({
+                "id": "risk_table",
+                "component": "RiskTable",
+                "source": "risk_factors",
+                "col_span": 8,
+                "row_span": 1,
+                "props": {"title": "Risk register", "show_when_empty": False,
+                          "data_status": "available", "priority": "critical"},
+            })
+        if available_fields.get("draft_report.recommendations"):
+            risk_components.append({
+                "id": "recommendations_panel",
+                "component": "RecommendationCard",
+                "source": "draft_report.recommendations",
+                "col_span": 4,
+                "row_span": 1,
+                "props": {"title": "Strategic priorities", "show_when_empty": False,
+                          "data_status": "available", "priority": "critical"},
+            })
+        if risk_components:
+            pages.append({
+                "id": "risk_strategy",
+                "title": "Risks and strategy",
+                "icon": "shield-alert",
+                "business_question": "What could go wrong, and what should leadership do next?",
+                "sections": [{"id": "risk_strategy_section", "title": "Downside and response",
+                               "col_span": 12, "components": risk_components}],
+            })
+
+        # Page 6: Evidence appendix
+        appendix_components = []
+        if available_fields.get("draft_report.key_findings"):
+            appendix_components.append({
+                "id": "findings_accordion",
+                "component": "FindingsAccordion",
+                "source": "draft_report.key_findings",
+                "col_span": 8,
+                "row_span": 1,
+                "props": {"title": "Key findings", "show_when_empty": False,
+                          "data_status": "available", "priority": "medium"},
+            })
+        appendix_components.append({
+            "id": "evidence_gaps",
+            "component": "EvidenceGapBanner",
+            "source": "draft_report.evidence_gaps",
+            "col_span": 4,
+            "row_span": 1,
+            "props": {"title": "Evidence gaps", "show_when_empty": True,
+                      "data_status": "partial", "priority": "low"},
+        })
+        if appendix_components:
+            pages.append({
+                "id": "appendix",
+                "title": "Appendix",
+                "icon": "file-text",
+                "business_question": "What evidence supports the view, and where are the gaps?",
+                "sections": [{"id": "appendix_section", "title": "Supporting evidence",
+                               "col_span": 12, "components": appendix_components}],
             })
 
         return {

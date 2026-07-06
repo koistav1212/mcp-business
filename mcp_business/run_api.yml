@@ -5,13 +5,10 @@ info:
 
 http:
   method: POST
-  url: http://127.0.0.1:8000/workspace/run
+  url: http://localhost:8000/workspace/run
   body:
     type: json
-    data: |
-      {
-        "query": "Analyze Apple"
-      }
+    data: '{"query": "Analyze Apple"}'
   auth: inherit
 
 settings:

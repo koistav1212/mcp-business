@@ -7,6 +7,7 @@ from services.llm.request import LLMRequest
 from services.llm.response import LLMResponse
 from services.llm.model_registry import MODEL_REGISTRY
 from services.llm.provider_factory import ProviderFactory
+from services.llm.providers.self_hosted_provider import build_self_hosted_timeout, sanitize_llm_text
 
 import httpx
 logger = logging.getLogger("uvicorn.error")
@@ -17,7 +18,9 @@ async def _call_self_hosted_text(model: str, system_prompt: str, user_prompt: st
     returns plain text. Uses `content` first, falls back to `reasoning`
     if present. Raises on timeout or empty output.
     """
-    async with httpx.AsyncClient(timeout=timeout) as client:
+    timeout_config = build_self_hosted_timeout(timeout)
+
+    async with httpx.AsyncClient(timeout=timeout_config) as client:
         resp = await client.post(
             "http://localhost:11434/v1/chat/completions",
             json={
@@ -41,12 +44,13 @@ async def _call_self_hosted_text(model: str, system_prompt: str, user_prompt: st
     if not text:
         raise RuntimeError(f"Empty response from self_hosted model: {data}")
 
-    return text
+    return sanitize_llm_text(text)
 
 
 def extract_json(text: str) -> dict:
-    if "<think>" in text:
-        text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL)
+    text = sanitize_llm_text(text)
+    if "Thinking Process:" in text:
+        raise ValueError("Model returned chain-of-thought text instead of JSON.")
         
     text = text.strip()
     
@@ -85,6 +89,7 @@ class ProviderRouter:
         from services.artifacts.artifact_writer import ArtifactWriter
 
         fallback_chain = ["primary", "secondary", "tertiary"]
+        seen_configs = set()
 
         for priority in fallback_chain:
             config = registry_entry.get(priority)
@@ -93,9 +98,14 @@ class ProviderRouter:
                 
             provider_name = config["provider"]
             model_name = config["model"]
+            config_key = (provider_name, model_name)
+            if config_key in seen_configs:
+                logger.info(f"Router skipped duplicate provider config for {agent_name}: {provider_name}/{model_name}")
+                continue
+            seen_configs.add(config_key)
             
             if provider_name == "self_hosted":
-                timeout = 600.0 if agent_name == "synthesizer" else 300.0
+                timeout = 900.0 if agent_name in {"synthesizer", "executive_qa", "financial_agent", "industry_agent", "competitor_agent", "risk_agent", "technology_agent", "director"} else 300.0
                 try:
                     logger.info(f"LLM Routing (Text) -> Agent: {agent_name} | Provider: {provider_name} | Model: {model_name} | text helper")
                     raw_text = await _call_self_hosted_text(model_name, system_prompt, user_prompt, timeout=timeout)
@@ -104,7 +114,7 @@ class ProviderRouter:
                         "validation_result": "success",
                         "errors": []
                     })
-                    return raw_text
+                    return sanitize_llm_text(raw_text)
                 except Exception as e:
                     logger.warning(f"Provider {provider_name} failed for {agent_name}: {repr(e)}. Retrying next in chain...")
                     continue
@@ -155,7 +165,7 @@ class ProviderRouter:
                         "errors": []
                     })
                     
-                    return response.content
+                    return sanitize_llm_text(response.content)
                         
                 except Exception as e:
                     error_msg = str(e).lower()
@@ -203,6 +213,7 @@ class ProviderRouter:
         from services.artifacts.artifact_writer import ArtifactWriter
 
         fallback_chain = ["primary", "secondary", "tertiary"]
+        seen_configs = set()
 
         for priority in fallback_chain:
             config = registry_entry.get(priority)
@@ -211,6 +222,11 @@ class ProviderRouter:
                 
             provider_name = config["provider"]
             model_name = config["model"]
+            config_key = (provider_name, model_name)
+            if config_key in seen_configs:
+                logger.info(f"Router skipped duplicate provider config for {agent_name}: {provider_name}/{model_name}")
+                continue
+            seen_configs.add(config_key)
             
             provider = ProviderFactory.get_provider(provider_name)
             if not provider:
@@ -251,7 +267,7 @@ class ProviderRouter:
                     )
                     
                     try:
-                        parsed = json.loads(response.content)
+                        parsed = json.loads(sanitize_llm_text(response.content))
                     except json.JSONDecodeError:
                         parsed = extract_json(response.content)
                         

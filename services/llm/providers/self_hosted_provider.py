@@ -2,12 +2,42 @@ import os
 import time
 import httpx
 import logging
-from core.config import settings
 from services.llm.base_provider import BaseProvider
 from services.llm.request import LLMRequest
 from services.llm.response import LLMResponse
 
 logger = logging.getLogger("uvicorn.error")
+
+
+def build_self_hosted_timeout(total_timeout: float | None = None) -> httpx.Timeout:
+    """
+    Build an explicit timeout profile for Ollama/self-hosted calls.
+    This makes ReadTimeout root causes easier to reason about than a single opaque value.
+    """
+    if total_timeout is None:
+        total_timeout = float(os.environ.get("LLM_SELF_HOSTED_TIMEOUT_SECONDS", "300"))
+
+    connect_timeout = float(os.environ.get("LLM_SELF_HOSTED_CONNECT_TIMEOUT_SECONDS", "10"))
+    read_timeout = float(os.environ.get("LLM_SELF_HOSTED_READ_TIMEOUT_SECONDS", str(total_timeout)))
+    write_timeout = float(os.environ.get("LLM_SELF_HOSTED_WRITE_TIMEOUT_SECONDS", "30"))
+    pool_timeout = float(os.environ.get("LLM_SELF_HOSTED_POOL_TIMEOUT_SECONDS", "30"))
+
+    return httpx.Timeout(
+        connect=connect_timeout,
+        read=read_timeout,
+        write=write_timeout,
+        pool=pool_timeout,
+    )
+
+
+def sanitize_llm_text(text: str) -> str:
+    if not text:
+        return ""
+    text = text.strip()
+    if "<think>" in text:
+        import re
+        text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL | re.IGNORECASE)
+    return text.strip()
 
 async def _call_ollama_text(model: str, system_prompt: str, user_prompt: str, timeout: float = 60.0, **kwargs) -> str:
     """Paragraph helper for agents like planner, synthesizer, etc."""
@@ -22,7 +52,9 @@ async def _call_ollama_text(model: str, system_prompt: str, user_prompt: str, ti
     }
     headers = {"Content-Type": "application/json", "Authorization": "Bearer ollama"}
     
-    async with httpx.AsyncClient(timeout=timeout) as client:
+    timeout_config = build_self_hosted_timeout(timeout)
+
+    async with httpx.AsyncClient(timeout=timeout_config) as client:
         response = await client.post(f"{base_url}/chat/completions", headers=headers, json=payload)
         response.raise_for_status()
         data = response.json()
@@ -30,7 +62,7 @@ async def _call_ollama_text(model: str, system_prompt: str, user_prompt: str, ti
         content = data["choices"][0].get("message", {}).get("content", "")
         if not content:
             content = data["choices"][0].get("message", {}).get("reasoning", "")
-        return content
+        return sanitize_llm_text(content)
 
 async def _call_ollama_json(model: str, system_prompt: str, user_prompt: str, timeout: float = 60.0, **kwargs) -> dict:
     """JSON helper for JSON agents."""
@@ -92,7 +124,9 @@ class SelfHostedProvider(BaseProvider):
             "Content-Type": "application/json"
         }
         
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
+        timeout_config = build_self_hosted_timeout(self.timeout)
+
+        async with httpx.AsyncClient(timeout=timeout_config) as client:
             response = await client.post(
                 f"{self.base_url}/chat/completions",
                 headers=headers,
@@ -100,7 +134,7 @@ class SelfHostedProvider(BaseProvider):
             )
             response.raise_for_status()
             data = response.json()
-            logger.info(f"SELF_HOSTED RESP: {data}")
+            logger.info("SELF_HOSTED RESP received for model=%s", request.model)
             
             if not data.get("choices"):
                 raise RuntimeError(f"No choices returned from self_hosted model. Raw data: {data}")
@@ -113,6 +147,7 @@ class SelfHostedProvider(BaseProvider):
             if not content:
                 raise RuntimeError(f"Empty content and reasoning from self_hosted model. Raw data: {data}")
                 
+            content = sanitize_llm_text(content)
             logger.info(f"[self_hosted raw] {content[:300]}")
             
             latency_ms = (time.time() - start_time) * 1000

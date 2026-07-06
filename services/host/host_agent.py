@@ -1,13 +1,14 @@
 import asyncio
 import logging
+import re
 from typing import Dict, Any
 
 from services.agents.planner_agent import PlannerAgent
 from services.agents.tool_router_agent import ToolRouterAgent
-from services.agents.synthesizer_agent import SynthesizerAgent
 from services.agents.critic_agent import CriticAgent
 from services.agents.ui_agent import UIAgent
 from services.agents.entity_extractor_agent import EntityExtractorAgent
+from services.reports.coordinator import ReportCoordinator
 
 from services.planning.task_scheduler import TaskScheduler
 from services.research.compressor import ResearchMemory
@@ -23,6 +24,25 @@ from services.artifacts.artifact_writer import ArtifactWriter
 logger = logging.getLogger("uvicorn.error")
 
 class HostAgent:
+    @staticmethod
+    def _extract_markdown_section(report_text: str, title: str) -> str:
+        if not report_text:
+            return ""
+        pattern = rf"(?ims)^##\s+{re.escape(title)}\s*$\n(.*?)(?=^##\s+|\Z)"
+        match = re.search(pattern, report_text)
+        return match.group(1).strip() if match else ""
+
+    @staticmethod
+    def _extract_bullets(section_text: str) -> list[str]:
+        if not section_text:
+            return []
+        bullets = []
+        for line in section_text.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("- "):
+                bullets.append(stripped[2:].strip())
+        return bullets
+
     @staticmethod
     def _extract_domain(website: str) -> str:
         if not website: return None
@@ -40,7 +60,7 @@ class HostAgent:
         self.entity_extractor = EntityExtractorAgent()
         self.planner = PlannerAgent()
         self.tool_router = ToolRouterAgent()
-        self.synthesizer = SynthesizerAgent()
+        self.synthesizer = ReportCoordinator()
         self.critic = CriticAgent()
         self.ui_agent = UIAgent()
 
@@ -478,7 +498,11 @@ class HostAgent:
         
         # 5. Review/Critique
         logger.info("START critic")
-        critique = await self.critic.review(synthesis) if hasattr(self.critic, "review") else None
+        planning_payload = plan.model_dump() if hasattr(plan, "model_dump") else {}
+        if isinstance(synthesis_dump, dict) and synthesis_dump.get("report_critique"):
+            critique = await self.critic.execute(synthesis_dump, planning_payload)
+        else:
+            critique = await self.critic.execute(synthesis_dump, planning_payload) if hasattr(self.critic, "execute") else None
         
         try:
             critique_dict = critique.model_dump() if critique else None
@@ -496,6 +520,23 @@ class HostAgent:
                 synthesis_dict = {"executive_summary": synthesis, "key_findings": [], "risks": [], "opportunities": [], "recommendations": []}
         else:
             synthesis_dict = synthesis.model_dump() if hasattr(synthesis, "model_dump") else (synthesis if isinstance(synthesis, dict) else getattr(synthesis, "__dict__", {}))
+
+        report_text = synthesis_dict.get("executive_summary", "")
+        if report_text:
+            findings_section = self._extract_markdown_section(report_text, "Page 3 - Financial Performance")
+            risk_section = self._extract_markdown_section(report_text, "Page 6 - Risks and Strategic Priorities")
+            competition_section = self._extract_markdown_section(report_text, "Page 4 - Competitive Positioning")
+            recommendations_section = self._extract_markdown_section(report_text, "Page 6 - Risks and Strategic Priorities")
+
+            if not synthesis_dict.get("key_findings"):
+                synthesis_dict["key_findings"] = self._extract_bullets(findings_section) or self._extract_bullets(competition_section)
+            if not synthesis_dict.get("risks"):
+                synthesis_dict["risks"] = self._extract_bullets(risk_section)
+            if not synthesis_dict.get("recommendations"):
+                bullets = self._extract_bullets(recommendations_section)
+                if "### Strategic priorities" in recommendations_section:
+                    bullets = self._extract_bullets(recommendations_section.split("### Strategic priorities", 1)[1])
+                synthesis_dict["recommendations"] = bullets
 
         # Format strings to CitedInsight if needed
         for key in ["key_findings", "risks", "opportunities", "recommendations"]:

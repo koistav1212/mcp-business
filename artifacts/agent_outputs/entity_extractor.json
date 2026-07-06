@@ -3,9 +3,9 @@
   "ticker": "AAPL",
   "exchange": "NASDAQ",
   "cik": "0000320193",
-  "website": "aapl.com",
-  "industry": null,
-  "subindustry": null,
-  "country": null,
-  "headquarters": null
+  "website": "apple.com",
+  "industry": "Technology",
+  "subindustry": "Consumer Electronics",
+  "country": "United States",
+  "headquarters": "Cupertino, California"
 }

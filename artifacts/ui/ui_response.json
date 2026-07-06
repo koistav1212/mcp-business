@@ -96,6 +96,129 @@
                   "data_status": "available",
                   "priority": "high"
                 }
+              },
+              {
+                "id": "cap_alloc_chart",
+                "component": "CapitalAllocationChart",
+                "source": "capital_allocation",
+                "col_span": 6,
+                "row_span": 1,
+                "props": {
+                  "title": "Capital allocation",
+                  "show_when_empty": false,
+                  "data_status": "available",
+                  "priority": "high"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "operations",
+        "title": "Operating signals",
+        "icon": "activity-heartbeat",
+        "business_question": "What operating signals or market developments matter right now?",
+        "sections": [
+          {
+            "id": "operations_section",
+            "title": "Signals and momentum",
+            "col_span": 12,
+            "components": [
+              {
+                "id": "tech_stack",
+                "component": "TechStackBadges",
+                "source": "technology_stack",
+                "col_span": 4,
+                "row_span": 1,
+                "props": {
+                  "title": "Technology stack",
+                  "show_when_empty": false,
+                  "data_status": "available",
+                  "priority": "medium"
+                }
+              },
+              {
+                "id": "leadership_table",
+                "component": "LeadershipTable",
+                "source": "leadership",
+                "col_span": 4,
+                "row_span": 1,
+                "props": {
+                  "title": "Leadership",
+                  "show_when_empty": false,
+                  "data_status": "available",
+                  "priority": "medium"
+                }
+              },
+              {
+                "id": "news_timeline",
+                "component": "NewsTimeline",
+                "source": "news",
+                "col_span": 4,
+                "row_span": 1,
+                "props": {
+                  "title": "Recent developments",
+                  "show_when_empty": false,
+                  "data_status": "available",
+                  "priority": "medium"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "risk_strategy",
+        "title": "Risks and strategy",
+        "icon": "shield-alert",
+        "business_question": "What could go wrong, and what should leadership do next?",
+        "sections": [
+          {
+            "id": "risk_strategy_section",
+            "title": "Downside and response",
+            "col_span": 12,
+            "components": [
+              {
+                "id": "risk_table",
+                "component": "RiskTable",
+                "source": "risk_factors",
+                "col_span": 8,
+                "row_span": 1,
+                "props": {
+                  "title": "Risk register",
+                  "show_when_empty": false,
+                  "data_status": "available",
+                  "priority": "critical"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "appendix",
+        "title": "Appendix",
+        "icon": "file-text",
+        "business_question": "What evidence supports the view, and where are the gaps?",
+        "sections": [
+          {
+            "id": "appendix_section",
+            "title": "Supporting evidence",
+            "col_span": 12,
+            "components": [
+              {
+                "id": "evidence_gaps",
+                "component": "EvidenceGapBanner",
+                "source": "draft_report.evidence_gaps",
+                "col_span": 4,
+                "row_span": 1,
+                "props": {
+                  "title": "Evidence gaps",
+                  "show_when_empty": true,
+                  "data_status": "partial",
+                  "priority": "low"
+                }
               }
             ]
           }
@@ -134,23 +257,17 @@
       "Workspace: CEO_REPORT. Theme: executive_dark."
     ],
     "data_gaps": [
-      "Field 'analytics.revenue_growth' is unavailable \u2014 component omitted",
+      "Field 'financials.long_term_debt_history' is unavailable \u2014 component omitted",
       "Field 'analytics.profit_growth' is unavailable \u2014 component omitted",
-      "Field 'analytics.cagr' is unavailable \u2014 component omitted",
       "Field 'hiring_signals' is unavailable \u2014 component omitted",
       "Field 'competitors' is unavailable \u2014 component omitted",
       "Field 'competitive_positioning' is unavailable \u2014 component omitted",
       "Field 'swot' is unavailable \u2014 component omitted",
-      "Field 'capital_allocation' is unavailable \u2014 component omitted",
       "Field 'management_commentary' is unavailable \u2014 component omitted",
-      "Field 'social_sentiment' is unavailable \u2014 component omitted",
-      "Field 'technology_stack' is unavailable \u2014 component omitted",
       "Field 'draft_report.key_findings' is unavailable \u2014 component omitted",
       "Field 'draft_report.risks' is unavailable \u2014 component omitted",
       "Field 'draft_report.opportunities' is unavailable \u2014 component omitted",
-      "Field 'draft_report.recommendations' is unavailable \u2014 component omitted",
-      "Field 'draft_report.evidence_gaps' is unavailable \u2014 component omitted",
-      "Field 'industry_context' is unavailable \u2014 component omitted"
+      "Field 'draft_report.recommendations' is unavailable \u2014 component omitted"
     ]
   }
 }

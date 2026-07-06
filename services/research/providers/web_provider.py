@@ -120,17 +120,25 @@ If a category has no matches, return an empty array. Do not invent information."
         
         technology_profile = {}
         technology_intelligence = {}
+
+        # If we have essentially no usable signal, skip the LLM entirely.
+        signal_text = truncated_text.strip()
+        has_meaningful_site_text = len(signal_text) >= 200
+        has_github_signal = len(github_langs) > 0
         
-        try:
-            llm_result = await ProviderRouter.generate_json(
-                agent_name="technology_agent",
-                system_prompt=system_prompt,
-                user_prompt=user_prompt
-            )
-            technology_profile = llm_result.get("technology_profile", {})
-            technology_intelligence = llm_result.get("technology_intelligence", {})
-        except Exception as e:
-            logger.warning(f"WebProvider LLM extraction failed: {e}. Falling back to empty profile.")
+        if has_meaningful_site_text or has_github_signal:
+            try:
+                llm_result = await ProviderRouter.generate_json(
+                    agent_name="technology_agent",
+                    system_prompt=system_prompt,
+                    user_prompt=user_prompt
+                )
+                technology_profile = llm_result.get("technology_profile", {})
+                technology_intelligence = llm_result.get("technology_intelligence", {})
+            except Exception as e:
+                logger.warning(f"WebProvider LLM extraction failed: {e}. Falling back to empty profile.")
+        else:
+            logger.info("WebProvider: skipping technology LLM extraction because site text and GitHub signals are too sparse.")
             
         # Ensure default shapes exist
         default_profile = {
@@ -266,5 +274,4 @@ If a category has no matches, return an empty array. Do not invent information."
         except Exception:
             logger.exception("WebProvider: error fetching GitHub languages for %s", github_root)
         return list(set(langs))
-
 
