@@ -1,0 +1,17 @@
+info:
+  name: run_api (1)
+  type: http
+  seq: 2
+
+http:
+  method: post
+  url: http://localhost:8000/workspace/run
+  body:
+    type: json
+    data: '{"query":"Analyse Nvidia"}'
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

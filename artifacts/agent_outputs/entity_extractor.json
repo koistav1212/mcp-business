@@ -1,11 +1,11 @@
 {
-  "company": "Apple Inc.",
-  "ticker": "AAPL",
+  "company": "NVIDIA CORP",
+  "ticker": "NVDA",
   "exchange": "NASDAQ",
-  "cik": "0000320193",
-  "website": "apple.com",
+  "cik": "0001045810",
+  "website": "https://www.nvidia.com",
   "industry": "Technology",
-  "subindustry": "Consumer Electronics",
+  "subindustry": "Semiconductors",
   "country": "United States",
-  "headquarters": "Cupertino, California"
+  "headquarters": "Santa Clara, California"
 }

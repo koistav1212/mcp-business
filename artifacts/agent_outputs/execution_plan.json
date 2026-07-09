@@ -84,8 +84,8 @@
           "cost_signal": "free"
         },
         {
-          "task_id": "reddit_provider_5",
-          "provider_name": "reddit_provider",
+          "task_id": "web_provider_5",
+          "provider_name": "web_provider",
           "target_field": "canonical_name",
           "priority": "medium",
           "timeout_seconds": 30.0,
@@ -110,20 +110,6 @@
           "estimated_latency_ms": 5000,
           "estimated_tokens": 200,
           "cost_signal": "free"
-        },
-        {
-          "task_id": "web_provider_7",
-          "provider_name": "web_provider",
-          "target_field": "canonical_name",
-          "priority": "medium",
-          "timeout_seconds": 30.0,
-          "max_retries": 2,
-          "dependencies": [],
-          "fallback_provider": null,
-          "consuming_agents": [],
-          "estimated_latency_ms": 5000,
-          "estimated_tokens": 200,
-          "cost_signal": "free"
         }
       ],
       "is_mandatory": true,
@@ -133,12 +119,11 @@
   "dependency_graph": [],
   "required_providers": [
     "web_provider",
-    "company_provider",
     "people_provider",
     "sec_edgar",
-    "reddit_provider",
-    "news_provider",
-    "yfinance"
+    "yfinance",
+    "company_provider",
+    "news_provider"
   ],
   "optional_providers": [],
   "required_domains": [
@@ -147,7 +132,6 @@
     "news",
     "people",
     "yfinance",
-    "reddit",
     "web",
     "competitors"
   ],

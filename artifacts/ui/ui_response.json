@@ -115,6 +115,34 @@
         ]
       },
       {
+        "id": "competition",
+        "title": "Competitive positioning",
+        "icon": "target-arrow",
+        "business_question": "How well positioned is the company versus competitors?",
+        "sections": [
+          {
+            "id": "competition_section",
+            "title": "Market context",
+            "col_span": 12,
+            "components": [
+              {
+                "id": "competitor_matrix",
+                "component": "CompetitorMatrix",
+                "source": "competitors",
+                "col_span": 8,
+                "row_span": 1,
+                "props": {
+                  "title": "Competitive landscape",
+                  "show_when_empty": false,
+                  "data_status": "available",
+                  "priority": "high"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
         "id": "operations",
         "title": "Operating signals",
         "icon": "activity-heartbeat",
@@ -260,14 +288,59 @@
       "Field 'financials.long_term_debt_history' is unavailable \u2014 component omitted",
       "Field 'analytics.profit_growth' is unavailable \u2014 component omitted",
       "Field 'hiring_signals' is unavailable \u2014 component omitted",
-      "Field 'competitors' is unavailable \u2014 component omitted",
       "Field 'competitive_positioning' is unavailable \u2014 component omitted",
       "Field 'swot' is unavailable \u2014 component omitted",
       "Field 'management_commentary' is unavailable \u2014 component omitted",
+      "Field 'social_sentiment' is unavailable \u2014 component omitted",
       "Field 'draft_report.key_findings' is unavailable \u2014 component omitted",
       "Field 'draft_report.risks' is unavailable \u2014 component omitted",
       "Field 'draft_report.opportunities' is unavailable \u2014 component omitted",
       "Field 'draft_report.recommendations' is unavailable \u2014 component omitted"
     ]
-  }
+  },
+  "presentation_plan": {
+    "presentation_type": "CEO_REPORT",
+    "target_executive": "CEO",
+    "time_horizon": "12M",
+    "storyline": [
+      {
+        "id": "exec_summary",
+        "title": "Executive Summary",
+        "question": "What is the high-level health and outlook of the company?",
+        "priority": "critical"
+      },
+      {
+        "id": "financial_quality",
+        "title": "Financial Quality",
+        "question": "Is the financial performance improving and sustainable?",
+        "priority": "critical"
+      }
+    ]
+  },
+  "slides_plan": [
+    {
+      "slide_id": "exec_summary",
+      "title": "Executive Summary",
+      "goal": "Provide high-level context.",
+      "decision": "Determine next areas of investigation.",
+      "question": "What is the high-level health and outlook of the company?",
+      "required_data": [
+        "profile"
+      ],
+      "decision_priority": "critical",
+      "time_horizon": "12M"
+    },
+    {
+      "slide_id": "financial_quality",
+      "title": "Financial Quality",
+      "goal": "Provide high-level context.",
+      "decision": "Determine next areas of investigation.",
+      "question": "Is the financial performance improving and sustainable?",
+      "required_data": [
+        "profile"
+      ],
+      "decision_priority": "critical",
+      "time_horizon": "12M"
+    }
+  ]
 }

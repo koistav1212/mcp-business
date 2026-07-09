@@ -19,6 +19,8 @@ import json
 import logging
 from typing import Any, Optional
 
+from .ui_planners import PresentationPlanner, SlidePlanner
+
 logger = logging.getLogger("uvicorn.error")
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -124,10 +126,14 @@ WORKSPACE_TEMPLATES = {
 # Every dotpath reference maps to a real field in models.py.
 # ─────────────────────────────────────────────────────────────────────────────
 
-UI_ARCHITECT_PROMPT = """You are the Senior UI Architect at a top-tier management consulting firm (McKinsey, BCG, Bain quality).
+UI_ARCHITECT_PROMPT = """You are a Presentation Layout Architect for CEO decks.
 
-Your role: Transform verified business research into a multi-page executive dashboard specification.
+GOAL:
+Given (a) a report_type = CEO_REPORT, (b) a list of slide types with their data sources, and (c) a presentation_plan and slides_plan, design a Canva-level visual layout that explicitly implements these plans.
+
+Your role: Transform verified business research and pre-planned slide outlines into a multi-page executive presentation specification.
 This specification is consumed by a React renderer — it describes WHAT to show, WHERE, and HOW.
+You must respect the storyline and slide_plans (use their titles, goals, and business questions).
 You never duplicate data. You only emit rendering instructions that reference source data by dotpath.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -142,6 +148,17 @@ ABSOLUTE RULES
    Use EXACT field names from the ResearchContext schema (listed below).
 5. Design for DECISION-MAKING, not information display. Every section must answer a
    business question. Label each section with its business_question.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STYLE RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Use the following colors to match a modern executive palette:
+  - primary_color: "#1F2933" (navy charcoal)
+  - accent_color: "#10B981" (emerald)
+  - neutral_light: "#F9FAFB"
+  - neutral_mid: "#E5E7EB"
+  - danger_color: "#EF4444"
+- Do not create arbitrary HEX codes; use ONLY these 5 named colors.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 EXACT RESEARCHCONTEXT FIELD NAMES (use ONLY these as dotpath sources)
@@ -208,6 +225,14 @@ LLM-generated narrative (evidence-grounded):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 COMPONENT LIBRARY (renderer supports exactly these components)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CANVA-STYLE PRESENTATION COMPONENTS:
+  StepFlow            → horizontal steps with icons and numbers (for workflow slides)
+  MindMap             → central node with 4-8 surrounding nodes (for competitive landscape)
+  MetricTileGrid      → 3-6 tiles, each with a label, number, and trend arrow
+  FunnelDiagram       → 3-5 funnel layers, each with title and one bullet
+  KpiScorecard        → up to 6 KPIs with thresholds and color coding
+  RichTextBlock       → for markdown narrative sections (executive summary)
+
 HERO COMPONENTS:
   CompanyHero         → Large identity card (logo, name, tagline, key stats strip)
   TickerHero          → Bloomberg-style live price card + 52w range + volume
@@ -269,8 +294,9 @@ OUTPUT SCHEMA — return this exact structure
   "workspace_type": "<one of the 7 workspace types>",
   "theme": {
     "name": "<theme name from template>",
-    "primary_color": "<hex>",
-    "accent_color": "<hex>",
+    "primary_color": "#1F2933",
+    "accent_color": "#10B981",
+    "background_color": "#F9FAFB",
     "font": "Inter",
     "density": "comfortable | compact | spacious"
   },
@@ -286,6 +312,7 @@ OUTPUT SCHEMA — return this exact structure
       "id": "page_snake_case",
       "title": "Page title (sentence case)",
       "icon": "tabler icon name without ti- prefix",
+      "layout_style": "<workflow_steps | mind_map | metric_tiles | funnel | grid_cards>",
       "business_question": "The decision this page answers in one sentence",
       "sections": [
         {
@@ -306,6 +333,11 @@ OUTPUT SCHEMA — return this exact structure
                 "data_status": "available | unavailable | partial",
                 "priority": "critical | high | medium | low",
                 "format": "<currency_usd | percentage | ratio | number | text>"
+              },
+              "style": {
+                "variant": "primary | muted | danger",
+                "background": "neutral_light | neutral_mid",
+                "accent": "accent_color"
               }
             }
           ]
@@ -374,13 +406,14 @@ EMPTY STATE RULES:
 
 WORKSPACE-SPECIFIC RULES:
   CEO_REPORT:
-    Build 5-6 pages whenever enough data exists.
-    Page 1 — Command Center: CompanyHero + MetricStrip + ExecutiveSummaryCard
-    Page 2 — Financial Performance: RevenueLineChart + WaterfallChart + FinancialTable + ValuationCard
-    Page 3 — Business Quality: MarginAreaChart + CAGRBarChart + capital allocation metrics + FindingsAccordion
-    Page 4 — Competitive Landscape: MarketShareDonut + AxesComparisonBar + SWOTGrid + CompetitorMatrix
-    Page 5 — Operating Signals: TechStackBadges + LeadershipTable + NewsTimeline + HiringSignalsPanel
-    Page 6 — Risk & Strategy: RiskTable + RecommendationCard + ManagementQuoteCard + EvidenceTable
+    Build 6-7 pages following the canonical slide structure:
+    Page 1 — Company Snapshot & Headline Verdict (layout_style: grid_cards): CompanyHero + MetricTileGrid + RichTextBlock
+    Page 2 — Growth Engine (layout_style: workflow_steps): StepFlow
+    Page 3 — Financial Quality (layout_style: metric_tiles): RevenueLineChart + MarginAreaChart + KpiScorecard
+    Page 4 — Competitive Landscape (layout_style: mind_map): MindMap + SWOTGrid
+    Page 5 — Operating & Tech Signals (layout_style: grid_cards): TechStackBadges + NewsTimeline + MetricTileGrid
+    Page 6 — Risks & Strategic Priorities (layout_style: funnel): FunnelDiagram + RecommendationCard
+    Page 7 — KPI & Tracking (layout_style: metric_tiles): KpiScorecard + MetricStrip
 
   COMPETITOR_ANALYSIS:
     Page 1 — Comparison Overview: ComparisonHero + head-to-head MetricStrip (one column per company)
@@ -891,7 +924,7 @@ class UIAgent:
                           (call context.model_dump() before passing here).
 
         Returns:
-            {"ui_generation": <spec dict>}
+            {"ui_generation": <spec dict>, "presentation_plan": <dict>, "slides_plan": <list>}
         """
         # Pass 1: classify workspace
         workspace_type = await self._classify_workspace(query)
@@ -903,6 +936,24 @@ class UIAgent:
         # Build the structured payload for the LLM
         payload = self._build_payload(query, context_dict, workspace_type)
 
+        # Execute Phase 1: Presentation Planner
+        presentation_planner = PresentationPlanner(self.router)
+        presentation_plan = await presentation_planner.execute(payload)
+        logger.info(f"Presentation plan generated with {len(presentation_plan.get('storyline', []))} items")
+
+        # Execute Phase 2: Slide Planner
+        slide_planner = SlidePlanner(self.router)
+        slides_plan = []
+        for item in presentation_plan.get("storyline", []):
+            slide_plan = await slide_planner.execute(item, payload)
+            slides_plan.append(slide_plan)
+        
+        logger.info(f"Slide plans generated: {len(slides_plan)}")
+
+        # Inject plans into payload for UI Architect
+        payload["presentation_plan"] = presentation_plan
+        payload["slides_plan"] = slides_plan
+
         # Pass 2: full UI spec generation
         if self.router:
             try:
@@ -913,14 +964,30 @@ class UIAgent:
                 )
                 # Safety: ensure workspace_type is set correctly
                 spec["workspace_type"] = workspace_type
+                
+                # Align page IDs with slide plans if they aren't already
+                if "pages" in spec:
+                    for i, page in enumerate(spec["pages"]):
+                        if i < len(slides_plan):
+                            page["id"] = slides_plan[i].get("slide_id", page.get("id"))
+
                 # Strip any components whose source is marked unavailable
                 spec = self._sanitize_spec(spec, available_fields)
                 logger.info(f"UIAgent spec generated: {len(spec.get('pages', []))} pages")
-                return {"ui_generation": spec}
+                return {
+                    "ui_generation": spec,
+                    "presentation_plan": presentation_plan,
+                    "slides_plan": slides_plan
+                }
             except Exception as e:
                 logger.warning(f"UIAgent LLM failed: {e}. Using fallback spec.")
 
-        return {"ui_generation": self._fallback_spec(workspace_type, available_fields)}
+        return {
+            "ui_generation": self._fallback_spec(workspace_type, available_fields),
+            "presentation_plan": presentation_plan,
+            "slides_plan": slides_plan
+        }
+
 
     def _sanitize_spec(self, spec: dict, available_fields: dict) -> dict:
         """

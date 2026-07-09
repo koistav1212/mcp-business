@@ -32,57 +32,65 @@ RULES:
 
 OUTPUT FORMAT:
 Return only the final report in Markdown.
-Structure it as 6 clear report pages/sections so it can map naturally to a 5-6 page report:
+Structure it as 7 clear report pages/sections so it can map naturally to a 7-slide presentation:
 
-## Page 1 - Executive Summary
+## Page 1 - Company Snapshot & Headline Verdict
 - 3-5 bullet points with the headline takeaways, key numbers, and decision implication.
+- Mention company identity (who they are).
 
-## Page 2 - Company Overview
-Use 3-6 clearly marked subsections:
-### 2.1 Company identity
-- Who the company is, its core history, and presence.
-### 2.2 Business model
-- What it does and how it makes money.
-### 2.3 Industry context
-- Where it operates and the most important operating facts.
+## Page 2 - Growth Engine
+Structure this page so it can map to a workflow-style slide with 4-5 steps.
+For each key revenue or product segment:
+### 2.1 Segment 1 - <Name>
+- Metric: <latest revenue or CAGR>
+- Insight: <one sentence on growth or risk contribution>
+### 2.2 Segment 2 - <Name>
+- Metric: <latest revenue or CAGR>
+- Insight: <one sentence>
+(Repeat for up to 4-5 segments)
 
-## Page 3 - Financial Performance
-Use 3-6 clearly marked subsections:
+## Page 3 - Financial Quality
+Provide metrics and insights for charts and tiles:
 ### 3.1 Growth and scale
-- Describe revenue and net income history using financial_snapshot.revenue_history and net_income_history.
+- Describe revenue and net income history.
 ### 3.2 Profit quality and margins
-- Discuss operating_margin, net_margin, ROE/ROA from analytics.
-### 3.3 Capital allocation and balance sheet
-- Discuss capital_allocation: buybacks_history, dividends_history, capex_history, long_term_debt_history.
-### 3.4 Financial risks and opportunities
-- Summarize key upside/downside points.
+- Discuss operating_margin, net_margin, ROE/ROA.
+### 3.3 Multiples and Valuation
+- Note valuation_multiples.pe_ratio, ev_ebitda, and dividend yield if available.
 
-## Page 4 - Competitive Positioning
-Use 3-6 clearly marked subsections:
-### 4.1 Competitors
-- Detail competitors and market posture.
-### 4.2 Valuation
-- Note valuation metrics relative to positioning, if applicable.
-### 4.3 Market sentiment
-- Summarize strengths, weaknesses, and broader market sentiment.
+## Page 4 - Competitive Landscape
+Structure as 6 sub-nodes around the company for a mind-map:
+### 4.1 Node 1 - <Competitor Name>
+- Edge: <1-2 words, e.g. 'AI leadership', 'scale'>
+(Repeat for up to 6 competitors)
 
-## Page 5 - Operating Signals, Technology, and Market Developments
-Use 3-6 clearly marked subsections:
+## Page 5 - Operating & Tech Signals
 ### 5.1 Tech stack
-- Core technology stack. If tech is sparse, use other operating signals.
-### 5.2 Innovation/R&D
-- Recent product/R&D developments.
-### 5.3 Operating signals/news
-- Hiring/news signals, management commentary, and other indicators.
+- Core technology stack.
+### 5.2 Operating signals/news
+- Hiring/news signals, github_repo_count, management commentary.
+### 5.3 Operational Risks
+- Risk factors specifically tagged as operational.
 
-## Page 6 - Risks and Strategic Priorities
-Use 3-6 clearly marked subsections:
-### 6.1 Risk register
-- The most material risks first.
-### 6.2 Scenarios
-- Potential strategic scenarios or outcomes.
-### 6.3 Strategic priorities
-- End with 3-5 concrete recommendations tied to evidence in the brief.
+## Page 6 - Risks & Strategic Priorities
+Structure as 3-5 funnel stages with a risk label and one action.
+### 6.1 Funnel Stage 1 - Macro/Regulatory
+- Risk: <description>
+- Action: <one concrete play/action>
+### 6.2 Funnel Stage 2 - Execution
+- Risk: <description>
+- Action: <one concrete play/action>
+### 6.3 Funnel Stage 3 - Balance sheet/Capital allocation
+- Risk: <description>
+- Action: <one concrete play/action>
+
+## Page 7 - KPI & Tracking
+List the 4-6 most important metrics to track from analytics and financials.
+### 7.1 Key Metrics
+- <Metric 1>: <Value and insight>
+- <Metric 2>: <Value and insight>
+- <Metric 3>: <Value and insight>
+- <Metric 4>: <Value and insight>
 
 STYLE:
 - Write in clear, concise, MBA-level language.
@@ -214,17 +222,19 @@ def _render_deterministic_report(brief: Dict[str, Any]) -> str:
     ]
 
     return "\n".join([
-        "## Page 1 - Executive Summary",
+        "## Page 1 - Company Snapshot & Headline Verdict",
         _render_bullet_lines([
             f"{company.get('name', 'The company')} remains a large-scale enterprise with market cap {metrics.get('market_cap', 'N/A')} and current price {metrics.get('current_price', 'N/A')}.",
             f"Valuation remains elevated at P/E {metrics.get('pe_ratio', 'N/A')}, requiring continued execution against high market expectations.",
             f"Reported annual revenue stands at {metrics.get('revenue_annual', 'N/A')}, with recent growth and margin signals needing close monitoring.",
         ], "Evidence supports a mixed but still resilient headline view."),
         "",
-        "## Page 2 - Company Overview",
-        company.get("overview") or "Company overview data is limited, but the available evidence indicates a scaled operating footprint and established market presence.",
+        "## Page 2 - Growth Engine",
+        "### 2.1 Segment 1 - Core Business",
+        f"- Metric: {metrics.get('revenue_annual', 'N/A')}",
+        "- Insight: Primary revenue driver with stable growth.",
         "",
-        "## Page 3 - Financial Performance",
+        "## Page 3 - Financial Quality",
         _render_bullet_lines([
             f"Revenue history: {', '.join(financial.get('revenue_history', [])[:4]) or 'N/A'}",
             f"Net income history: {', '.join(financial.get('net_income_history', [])[:4]) or 'N/A'}",
@@ -232,20 +242,24 @@ def _render_deterministic_report(brief: Dict[str, Any]) -> str:
             f"Capital allocation: {', '.join(f'{k}={v}' for k, v in list((financial.get('capital_allocation') or {}).items())[:3]) or 'N/A'}",
         ], "Financial evidence is partial and should be interpreted cautiously."),
         "",
-        "## Page 4 - Competitive Positioning",
+        "## Page 4 - Competitive Landscape",
         _render_bullet_lines(competitive.get("competitors", []), "Direct competitor evidence is sparse in the current run, limiting precise relative benchmarking."),
         "",
-        "## Page 5 - Operating Signals, Technology, and Market Developments",
+        "## Page 5 - Operating & Tech Signals",
         _render_bullet_lines(
             signals.get("technology_stack", []) + signals.get("news", [])[:3],
             "Technology and operating signals are limited; recent news flow is the strongest available operating indicator."
         ),
         "",
-        "## Page 6 - Risks and Strategic Priorities",
-        _render_bullet_lines(risks.get("risk_factors", []), "Risk evidence is present but fragmented across market and news signals."),
+        "## Page 6 - Risks & Strategic Priorities",
+        "### 6.1 Funnel Stage 1 - Execution",
+        "- Risk: " + (risks.get("risk_factors", ["Unknown execution risks"])[0] if isinstance(risks.get("risk_factors"), list) and risks.get("risk_factors") else "Unknown execution risks"),
+        "- Action: " + recommendation_lines[0],
         "",
-        "### Strategic priorities",
-        _render_bullet_lines(recommendation_lines, "Refine priorities once competitor and technology evidence coverage improves."),
+        "## Page 7 - KPI & Tracking",
+        "### 7.1 Key Metrics",
+        f"- Market Cap: {metrics.get('market_cap', 'N/A')}",
+        f"- P/E Ratio: {metrics.get('pe_ratio', 'N/A')}",
     ])
 
 
