@@ -1,0 +1,40 @@
+{
+  "workspace_type": "CEO_REPORT",
+  "available_sources": {
+    "profile": "Company identity and metadata",
+    "financials.revenue_history": "Revenue by quarter/year",
+    "financials.net_income_history": "Net income history",
+    "financials.operating_income_history": "Operating income history",
+    "financials.long_term_debt_history": "Long term debt history",
+    "financials.market_cap": "Market capitalization",
+    "financials.pe_ratio": "P/E ratio",
+    "financials.current_price": "Current stock price",
+    "analytics.revenue_growth": "Revenue growth percentage",
+    "analytics.profit_growth": "Profit growth percentage",
+    "analytics.cagr": "Compound annual growth rate",
+    "analytics.operating_margin": "Operating margin",
+    "analytics.debt_equity": "Debt to equity ratio",
+    "valuation_multiples": "Valuation multiples",
+    "news": "News events and classifications",
+    "competitors": "Competitive landscape summary",
+    "competitive_positioning": "Competitive positioning",
+    "swot": "SWOT analysis",
+    "risk_factors": "Risk factors and mitigations",
+    "capital_allocation": "Capital allocation strategy",
+    "management_commentary": "Management commentary",
+    "social_sentiment": "Social sentiment",
+    "technology_stack": "TechStack overview",
+    "leadership": "Leadership roles and bios",
+    "hiring_signals": "Hiring signals",
+    "industry_context": "Industry context"
+  },
+  "optional_sources": {
+    "draft_report.executive_summary": "Narrative executive summary",
+    "draft_report.key_findings": "Narrative key findings",
+    "draft_report.risks": "Narrative risk analysis",
+    "draft_report.opportunities": "Narrative opportunity analysis",
+    "draft_report.recommendations": "Narrative strategic recommendations",
+    "draft_report.evidence_gaps": "Gaps in evidence",
+    "draft_report.sections": "Narrative sections, may be missing"
+  }
+}

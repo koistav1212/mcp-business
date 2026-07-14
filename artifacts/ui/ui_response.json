@@ -1,346 +1,224 @@
 {
-  "ui_generation": {
-    "version": "2.0",
-    "workspace_type": "CEO_REPORT",
-    "theme": {
-      "name": "executive_dark",
-      "primary_color": "#7C3AED",
-      "accent_color": "#10B981",
-      "font": "Inter",
-      "density": "comfortable"
-    },
-    "layout": {
-      "style": "command_center",
-      "grid_columns": 12,
-      "max_content_width": "1400px",
-      "sidebar": true,
-      "sticky_header": true
-    },
-    "pages": [
-      {
-        "id": "overview",
-        "title": "Overview",
-        "icon": "building",
-        "business_question": "What is this company and what is the headline assessment?",
-        "sections": [
-          {
-            "id": "hero_section",
-            "title": "Company identity",
-            "col_span": 12,
-            "components": [
-              {
-                "id": "company_hero",
-                "component": "CompanyHero",
-                "source": "profile",
-                "col_span": 12,
-                "row_span": 1,
-                "props": {
-                  "title": "Company overview",
-                  "show_when_empty": false,
-                  "data_status": "available",
-                  "priority": "critical"
-                }
-              },
-              {
-                "id": "exec_summary",
-                "component": "ExecutiveSummaryCard",
-                "source": "draft_report.executive_summary",
-                "col_span": 8,
-                "row_span": 1,
-                "props": {
-                  "title": "Executive summary",
-                  "show_when_empty": false,
-                  "data_status": "available",
-                  "priority": "critical"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "financials",
-        "title": "Financial performance",
-        "icon": "chart-bar",
-        "business_question": "Is this company financially healthy and growing?",
-        "sections": [
-          {
-            "id": "fin_section",
-            "title": "Financial summary",
-            "col_span": 12,
-            "components": [
-              {
-                "id": "revenue_chart",
-                "component": "RevenueLineChart",
-                "source": "financials.revenue_history",
-                "col_span": 8,
-                "row_span": 1,
-                "props": {
-                  "title": "Revenue trend",
-                  "format": "currency_usd",
-                  "show_when_empty": false,
-                  "data_status": "available",
-                  "priority": "critical"
-                }
-              },
-              {
-                "id": "margin_chart",
-                "component": "MarginAreaChart",
-                "source": "analytics.operating_margin",
-                "col_span": 4,
-                "row_span": 1,
-                "props": {
-                  "title": "Operating margin",
-                  "format": "percentage",
-                  "show_when_empty": false,
-                  "data_status": "available",
-                  "priority": "high"
-                }
-              },
-              {
-                "id": "cap_alloc_chart",
-                "component": "CapitalAllocationChart",
-                "source": "capital_allocation",
-                "col_span": 6,
-                "row_span": 1,
-                "props": {
-                  "title": "Capital allocation",
-                  "show_when_empty": false,
-                  "data_status": "available",
-                  "priority": "high"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "competition",
-        "title": "Competitive positioning",
-        "icon": "target-arrow",
-        "business_question": "How well positioned is the company versus competitors?",
-        "sections": [
-          {
-            "id": "competition_section",
-            "title": "Market context",
-            "col_span": 12,
-            "components": [
-              {
-                "id": "competitor_matrix",
-                "component": "CompetitorMatrix",
-                "source": "competitors",
-                "col_span": 8,
-                "row_span": 1,
-                "props": {
-                  "title": "Competitive landscape",
-                  "show_when_empty": false,
-                  "data_status": "available",
-                  "priority": "high"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "operations",
-        "title": "Operating signals",
-        "icon": "activity-heartbeat",
-        "business_question": "What operating signals or market developments matter right now?",
-        "sections": [
-          {
-            "id": "operations_section",
-            "title": "Signals and momentum",
-            "col_span": 12,
-            "components": [
-              {
-                "id": "tech_stack",
-                "component": "TechStackBadges",
-                "source": "technology_stack",
-                "col_span": 4,
-                "row_span": 1,
-                "props": {
-                  "title": "Technology stack",
-                  "show_when_empty": false,
-                  "data_status": "available",
-                  "priority": "medium"
-                }
-              },
-              {
-                "id": "leadership_table",
-                "component": "LeadershipTable",
-                "source": "leadership",
-                "col_span": 4,
-                "row_span": 1,
-                "props": {
-                  "title": "Leadership",
-                  "show_when_empty": false,
-                  "data_status": "available",
-                  "priority": "medium"
-                }
-              },
-              {
-                "id": "news_timeline",
-                "component": "NewsTimeline",
-                "source": "news",
-                "col_span": 4,
-                "row_span": 1,
-                "props": {
-                  "title": "Recent developments",
-                  "show_when_empty": false,
-                  "data_status": "available",
-                  "priority": "medium"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "risk_strategy",
-        "title": "Risks and strategy",
-        "icon": "shield-alert",
-        "business_question": "What could go wrong, and what should leadership do next?",
-        "sections": [
-          {
-            "id": "risk_strategy_section",
-            "title": "Downside and response",
-            "col_span": 12,
-            "components": [
-              {
-                "id": "risk_table",
-                "component": "RiskTable",
-                "source": "risk_factors",
-                "col_span": 8,
-                "row_span": 1,
-                "props": {
-                  "title": "Risk register",
-                  "show_when_empty": false,
-                  "data_status": "available",
-                  "priority": "critical"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "appendix",
-        "title": "Appendix",
-        "icon": "file-text",
-        "business_question": "What evidence supports the view, and where are the gaps?",
-        "sections": [
-          {
-            "id": "appendix_section",
-            "title": "Supporting evidence",
-            "col_span": 12,
-            "components": [
-              {
-                "id": "evidence_gaps",
-                "component": "EvidenceGapBanner",
-                "source": "draft_report.evidence_gaps",
-                "col_span": 4,
-                "row_span": 1,
-                "props": {
-                  "title": "Evidence gaps",
-                  "show_when_empty": true,
-                  "data_status": "partial",
-                  "priority": "low"
-                }
-              }
-            ]
-          }
-        ]
-      }
-    ],
-    "global_filters": [
-      {
-        "id": "time_range",
-        "label": "Time range",
-        "type": "select",
-        "default": "5_years",
-        "applies_to": [
-          "financials"
-        ]
-      }
-    ],
-    "actions": [
-      {
-        "id": "export_pdf",
-        "label": "Export PDF",
-        "icon": "file-text",
-        "type": "export_pdf",
-        "priority": "primary"
-      },
-      {
-        "id": "export_pptx",
-        "label": "Export slides",
-        "icon": "presentation",
-        "type": "export_pptx",
-        "priority": "secondary"
-      }
-    ],
-    "design_decisions": [
-      "Fallback spec: LLM unavailable. Only fields confirmed present in research data are included.",
-      "Workspace: CEO_REPORT. Theme: executive_dark."
-    ],
-    "data_gaps": [
-      "Field 'financials.long_term_debt_history' is unavailable \u2014 component omitted",
-      "Field 'analytics.profit_growth' is unavailable \u2014 component omitted",
-      "Field 'hiring_signals' is unavailable \u2014 component omitted",
-      "Field 'competitive_positioning' is unavailable \u2014 component omitted",
-      "Field 'swot' is unavailable \u2014 component omitted",
-      "Field 'management_commentary' is unavailable \u2014 component omitted",
-      "Field 'social_sentiment' is unavailable \u2014 component omitted",
-      "Field 'draft_report.key_findings' is unavailable \u2014 component omitted",
-      "Field 'draft_report.risks' is unavailable \u2014 component omitted",
-      "Field 'draft_report.opportunities' is unavailable \u2014 component omitted",
-      "Field 'draft_report.recommendations' is unavailable \u2014 component omitted"
-    ]
+  "page": {
+    "page_number": 1,
+    "page_type": "executive_company_snapshot",
+    "title": "AMAZON COM INC Executive Snapshot",
+    "executive_question": "Explain corporate identity and strategic architecture",
+    "executive_headline": "Operates with a multi-offering platform structure anchored by its core products and services.",
+    "image_search_query": "AMAZON COM INC E-commerce Online Retail"
   },
-  "presentation_plan": {
-    "presentation_type": "CEO_REPORT",
-    "target_executive": "CEO",
-    "time_horizon": "12M",
-    "storyline": [
-      {
-        "id": "exec_summary",
-        "title": "Executive Summary",
-        "question": "What is the high-level health and outlook of the company?",
-        "priority": "critical"
-      },
-      {
-        "id": "financial_quality",
-        "title": "Financial Quality",
-        "question": "Is the financial performance improving and sustainable?",
-        "priority": "critical"
-      }
-    ]
-  },
-  "slides_plan": [
+  "components": [
     {
-      "slide_id": "exec_summary",
-      "title": "Executive Summary",
-      "goal": "Provide high-level context.",
-      "decision": "Determine next areas of investigation.",
-      "question": "What is the high-level health and outlook of the company?",
-      "required_data": [
-        "profile"
+      "id": "07c91eb3-69a4-4e12-b906-280797566632",
+      "type": "ExecutiveHero",
+      "title": "Executive Hero",
+      "span": 12,
+      "analytical_question": "What is this company and where does it compete?",
+      "bindings": [
+        "entity.entity.name",
+        "entity.entity.ticker",
+        "entity.entity.exchange",
+        "entity.entity.industry",
+        "entity.entity.subindustry",
+        "entity.entity.website",
+        "profile.overview"
       ],
-      "decision_priority": "critical",
-      "time_horizon": "12M"
+      "derived_content": {
+        "company_name": "AMAZON COM INC",
+        "ticker": "AMZN",
+        "exchange": "NASDAQ",
+        "industry": "E-commerce",
+        "subindustry": "Online Retail",
+        "headline": "Operates with a multi-offering platform structure anchored by its core products and services.",
+        "website": "https://www.amazon.com"
+      },
+      "evidence_paths": [
+        "entity.entity.name",
+        "entity.entity.industry",
+        "profile.overview"
+      ]
     },
     {
-      "slide_id": "financial_quality",
-      "title": "Financial Quality",
-      "goal": "Provide high-level context.",
-      "decision": "Determine next areas of investigation.",
-      "question": "Is the financial performance improving and sustainable?",
-      "required_data": [
-        "profile"
+      "id": "aedd4b46-ad82-4b54-9b71-a580e014109b",
+      "type": "MetricStrip",
+      "title": "Metric Strip",
+      "span": 12,
+      "analytical_question": "What is this company and where does it compete?",
+      "bindings": [
+        "profile.employee_count",
+        "entity.entity.ticker",
+        "entity.entity.exchange",
+        "entity.entity.headquarters",
+        "entity.entity.country"
       ],
-      "decision_priority": "critical",
-      "time_horizon": "12M"
+      "derived_content": {
+        "metrics": [
+          {
+            "label": "Employees",
+            "value": 1576000,
+            "format": "integer"
+          },
+          {
+            "label": "Ticker",
+            "value": "AMZN",
+            "format": "text"
+          },
+          {
+            "label": "Exchange",
+            "value": "NASDAQ",
+            "format": "text"
+          },
+          {
+            "label": "Headquarters",
+            "value": "Seattle, Washington, U.S.",
+            "format": "text"
+          },
+          {
+            "label": "Country",
+            "value": "United States",
+            "format": "text"
+          }
+        ]
+      },
+      "evidence_paths": [
+        "profile.employee_count",
+        "entity.entity.ticker",
+        "entity.entity.exchange",
+        "entity.entity.headquarters",
+        "entity.entity.country",
+        "entity.entity.name",
+        "entity.entity.industry",
+        "profile.overview"
+      ]
+    },
+    {
+      "id": "c8d64f25-c3be-4b83-a886-107cbb768adc",
+      "type": "BusinessArchitectureMap",
+      "title": "Business Architecture",
+      "span": 7,
+      "analytical_question": "How is the business structurally organized?",
+      "bindings": [
+        "entity.products",
+        "entity.services",
+        "entity.solutions",
+        "profile.overview"
+      ],
+      "derived_content": {
+        "groups": [
+          {
+            "label": "Core Business",
+            "items": [
+              "cloud computing",
+              "online advertising",
+              "digital streaming",
+              "and artificial intelligence"
+            ]
+          }
+        ]
+      },
+      "evidence_paths": [
+        "entity.products",
+        "entity.services",
+        "entity.solutions",
+        "profile.overview"
+      ]
+    },
+    {
+      "id": "c75caab2-927f-49f1-889b-58fe29727296",
+      "type": "StrategicPositionCard",
+      "title": "Strategic Position",
+      "span": 5,
+      "analytical_question": "How is the business structurally organized?",
+      "bindings": [
+        "profile.overview",
+        "entity.products",
+        "entity.services",
+        "entity.solutions",
+        "entity.entity.industry"
+      ],
+      "derived_content": {
+        "position_label": "E-commerce",
+        "position_type": "operating model",
+        "strategic_layers": [
+          "Core Business"
+        ],
+        "short_assessment": "Operates with a multi-offering platform structure anchored by its core products and services."
+      },
+      "evidence_paths": [
+        "profile.overview",
+        "entity.products",
+        "entity.services",
+        "entity.solutions"
+      ]
+    },
+    {
+      "id": "0b778ce4-b6e5-4ea8-81c1-4a430c668c39",
+      "type": "FactMatrix",
+      "title": "Fact Matrix",
+      "span": 5,
+      "analytical_question": "What is this company and where does it compete?",
+      "bindings": [
+        "entity.entity.name",
+        "entity.entity.industry",
+        "entity.entity.subindustry",
+        "entity.entity.website",
+        "entity.entity.country",
+        "profile.employee_count"
+      ],
+      "derived_content": {
+        "facts": [
+          {
+            "label": "Company",
+            "value": "AMAZON COM INC"
+          },
+          {
+            "label": "Industry",
+            "value": "E-commerce"
+          },
+          {
+            "label": "Subindustry",
+            "value": "Online Retail"
+          },
+          {
+            "label": "Website",
+            "value": "https://www.amazon.com"
+          },
+          {
+            "label": "Country",
+            "value": "United States"
+          },
+          {
+            "label": "Employees",
+            "value": 1576000
+          }
+        ]
+      },
+      "evidence_paths": [
+        "entity.entity.name",
+        "entity.entity.industry",
+        "entity.entity.subindustry",
+        "entity.entity.website",
+        "entity.entity.country",
+        "profile.employee_count",
+        "profile.overview"
+      ]
     }
-  ]
+  ],
+  "executive_takeaway": {
+    "text": "Operates with a multi-offering platform structure anchored by its core products and services.",
+    "evidence_paths": [
+      "profile.overview",
+      "entity.products",
+      "entity.services"
+    ]
+  },
+  "validation": {
+    "component_count": 5,
+    "duplicate_components": [],
+    "null_values_rendered": false,
+    "raw_duplicate_products_rendered": false,
+    "biography_style_detected": false,
+    "all_claims_traceable": true,
+    "passed": true
+  }
 }

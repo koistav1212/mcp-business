@@ -64,9 +64,9 @@ MODEL_REGISTRY = {
     },
     "synthesizer": {
         "primary":   {"provider": "self_hosted", "model": "qwen3.5:2b"},
-        "secondary": {"provider": "self_hosted", "model": "qwen3.5:2b"},
+        "secondary": None,
         "tertiary":  None,
-        "token_budget": 3500,
+        "token_budget": 2200,
     },
 
     # Advanced Reasoning

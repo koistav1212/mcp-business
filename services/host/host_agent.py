@@ -6,9 +6,10 @@ from typing import Dict, Any
 from services.agents.planner_agent import PlannerAgent
 from services.agents.tool_router_agent import ToolRouterAgent
 from services.agents.critic_agent import CriticAgent
-from services.agents.ui_agent import UIAgent
+from services.ui.ui_agent import UIAgent
 from services.agents.entity_extractor_agent import EntityExtractorAgent
-from services.reports.coordinator import ReportCoordinator
+from services.agents.synthesizer_agent import SynthesizerAgent
+from services.intelligence.evidence_distiller import EvidenceDistiller
 
 from services.planning.task_scheduler import TaskScheduler
 from services.research.compressor import ResearchMemory
@@ -60,7 +61,7 @@ class HostAgent:
         self.entity_extractor = EntityExtractorAgent()
         self.planner = PlannerAgent()
         self.tool_router = ToolRouterAgent()
-        self.synthesizer = ReportCoordinator()
+        self.synthesizer = SynthesizerAgent()
         self.critic = CriticAgent()
         self.ui_agent = UIAgent()
 
@@ -108,19 +109,15 @@ class HostAgent:
         # Collect raw evidence from EvidenceStore to populate UI Context
         raw_context_dict = {}
         all_evidence = evidence_store.get_all()
+        from services.knowledge.context_assembler.source_registry import resolve_domain
+        
         for ev in all_evidence:
-            key = ev.source
-            if key.startswith("social_intel"): key = "social_intel"
-            elif key.startswith("company_profile"): key = "company_profile"
-            elif key.startswith("news_intelligence"): key = "news_intelligence_pipeline"
-            elif key.startswith("technology_profile"): key = "technology_profile"
-            elif key.startswith("technology_intelligence"): key = "technology_intelligence"
-            elif key.startswith("sec_edgar"): key = "sec_edgar"
+            domain = resolve_domain(ev.source)
             attr = ev.attribute
             val = ev.value
             
-            # Map by attribute or key based on the emitted provider sources
-            if key in ["sec_edgar", "sec_edgar_10k", "yfinance", "global_markets"]:
+            # Map by domain
+            if domain == "financial":
                 if "financials" not in raw_context_dict:
                     raw_context_dict["financials"] = {}
                 
@@ -169,38 +166,59 @@ class HostAgent:
                         "source_ids": [ev.id],
                         "confidence": ev.confidence
                     }
-            elif key == "news_intelligence_pipeline":
+                    
+            elif domain == "news":
                 if "news" not in raw_context_dict:
                     raw_context_dict["news"] = []
                 if "risk_factors" not in raw_context_dict.setdefault("financials", {}):
                     raw_context_dict["financials"]["risk_factors"] = []
                     
-                item = ev.value if isinstance(ev.value, dict) else {}
-                title = item.get("headline", item.get("title", ""))
-                snippet = item.get("summary", item.get("snippet", ""))
-                news_item = {
-                    "title": title,
-                    "url": item.get("url", ev.source_url or ""),
-                    "date": item.get("published_at", item.get("date")),
-                    "snippet": snippet,
-                    "type": item.get("signal_type", "general"),
+                item = ev.value if isinstance(ev.value, dict) else {
+                    "snippet": str(ev.value)
                 }
-                raw_context_dict["news"].append({
-                    "value": news_item,
-                    "source_ids": [ev.id],
-                    "confidence": ev.confidence,
-                })
-                    
+
+                news_item = {
+                    "title": item.get("headline") or item.get("title") or "",
+                    "url": item.get("url") or ev.source_url or "",
+                    "date": (
+                        item.get("published_at")
+                        or item.get("publishedAt")
+                        or item.get("date")
+                    ),
+                    "snippet": (
+                        item.get("summary")
+                        or item.get("description")
+                        or item.get("snippet")
+                        or ""
+                    ),
+                    "type": (
+                        item.get("signal_type")
+                        or item.get("type")
+                        or "general"
+                    ),
+                    "publisher": (
+                        item.get("publisher")
+                        or item.get("source")
+                    ),
+                }
+
+                if news_item["title"]:
+                    raw_context_dict["news"].append({
+                        "value": news_item,
+                        "source_ids": [ev.id],
+                        "confidence": ev.confidence,
+                    })
+
                 # Extract risk themes from news
-                text = f"{title} {snippet}".lower()
+                text = f"{news_item['title']} {news_item['snippet']}".lower()
                 if any(w in text for w in ["regulation", "risk", "lawsuit", "shortage", "decline", "challenge", "competitor"]):
                     raw_context_dict["financials"]["risk_factors"].append({
-                        "value": f"Market/Regulatory News: {title}",
+                        "value": f"Market/Regulatory News: {news_item['title']}",
                         "source_ids": [ev.id],
                         "confidence": ev.confidence
                     })
 
-            elif key in ["company_profile", "crunchbase", "similarweb", "web_technology_profile"]:
+            elif domain == "profile":
                 if "profile" not in raw_context_dict:
                     raw_context_dict["profile"] = {}
                     
@@ -234,7 +252,7 @@ class HostAgent:
                         "confidence": ev.confidence
                     }
                     
-            elif key.startswith("technology_profile") or key.startswith("technology_intelligence"):
+            elif domain == "technology":
                 if "technology_stack" not in raw_context_dict:
                     raw_context_dict["technology_stack"] = []
                 raw_context_dict["technology_stack"].append({
@@ -243,7 +261,7 @@ class HostAgent:
                     "confidence": ev.confidence
                 })
                 
-            elif key in ["reddit", "stocktwits", "hackernews", "social_intel"]:
+            elif domain == "social":
                 if "social" not in raw_context_dict:
                     raw_context_dict["social"] = {}
                 raw_context_dict["social"][attr] = val
@@ -260,7 +278,7 @@ class HostAgent:
                         "confidence": ev.confidence
                     })
                     
-            elif key in ["people_pipeline", "indeed", "github", "glassdoor"]:
+            elif domain == "people":
                 if "people" not in raw_context_dict:
                     raw_context_dict["people"] = {}
                 raw_context_dict["people"][attr] = val
@@ -452,11 +470,11 @@ class HostAgent:
             # Capital Allocation
             cap_alloc = {}
             if "buybacks_history" in f:
-                cap_alloc["buybacks"] = str(f["buybacks_history"].get("value") if isinstance(f["buybacks_history"], dict) else f["buybacks_history"])
+                cap_alloc["buybacks"] = f["buybacks_history"].get("value") if isinstance(f["buybacks_history"], dict) else f["buybacks_history"]
             if "dividends_history" in f:
-                cap_alloc["dividends"] = str(f["dividends_history"].get("value") if isinstance(f["dividends_history"], dict) else f["dividends_history"])
+                cap_alloc["dividends"] = f["dividends_history"].get("value") if isinstance(f["dividends_history"], dict) else f["dividends_history"]
             if "capex_history" in f:
-                cap_alloc["capex_trend"] = str(f["capex_history"].get("value") if isinstance(f["capex_history"], dict) else f["capex_history"])
+                cap_alloc["capex_trend"] = f["capex_history"].get("value") if isinstance(f["capex_history"], dict) else f["capex_history"]
             if cap_alloc:
                 from services.research.models import CapitalAllocation
                 try: capital_allocation_res = CapitalAllocation(**cap_alloc)
@@ -467,6 +485,17 @@ class HostAgent:
             from services.research.models import IndustryContext
             industry_context_res = IndustryContext(industry=entity_res.entity.industry, sub_industry=entity_res.entity.subindustry)
 
+        # Distill high-cardinality evidence
+        entity_name_for_distillation = target
+        if entity_res and entity_res.entity.name:
+            entity_name_for_distillation = entity_res.entity.name
+            
+        raw_news = raw_context_dict.get("news", [])
+        distilled_news = EvidenceDistiller.distill_news(raw_news, entity_name_for_distillation, max_items=10)
+        
+        raw_risk_factors = raw_context_dict.get("financials", {}).get("risk_factors", [])
+        distilled_risks = EvidenceDistiller.distill_risks(raw_risk_factors, max_items=8)
+
         context_obj = ResearchContext(
             entity=entity_res,
             profile=profile_res,
@@ -474,14 +503,14 @@ class HostAgent:
             analytics=analytics_data,
             valuation_multiples=valuation_multiples_res,
             capital_allocation=capital_allocation_res,
-            news=raw_context_dict.get("news", []),
+            news=distilled_news,
             technology_stack=tech_stack_raw,
             leadership=raw_context_dict.get("leadership", []),
             hiring_signals=hiring_signals_res,
             competitors=raw_context_dict.get("competitors", []),
             competitive_positioning=raw_context_dict.get("competitive_positioning"),
             swot=raw_context_dict.get("swot"),
-            risk_factors=raw_context_dict.get("financials", {}).get("risk_factors", []),
+            risk_factors=distilled_risks,
             management_commentary=raw_context_dict.get("financials", {}).get("mda_text", []) if isinstance(raw_context_dict.get("financials", {}).get("mda_text", []), list) else [],
             industry_context=industry_context_res,
             evidence_graph=evidence_graph,
@@ -522,7 +551,7 @@ class HostAgent:
             synthesis_dict = synthesis.model_dump() if hasattr(synthesis, "model_dump") else (synthesis if isinstance(synthesis, dict) else getattr(synthesis, "__dict__", {}))
 
         report_text = synthesis_dict.get("executive_summary", "")
-        if report_text:
+        if report_text and isinstance(report_text, str):
             findings_section = self._extract_markdown_section(report_text, "Page 3 - Financial Performance")
             risk_section = self._extract_markdown_section(report_text, "Page 6 - Risks and Strategic Priorities")
             competition_section = self._extract_markdown_section(report_text, "Page 4 - Competitive Positioning")
@@ -530,8 +559,8 @@ class HostAgent:
 
             if not synthesis_dict.get("key_findings"):
                 synthesis_dict["key_findings"] = self._extract_bullets(findings_section) or self._extract_bullets(competition_section)
-            if not synthesis_dict.get("risks"):
-                synthesis_dict["risks"] = self._extract_bullets(risk_section)
+            if not synthesis_dict.get("legacy_risks"):
+                synthesis_dict["legacy_risks"] = self._extract_bullets(risk_section)
             if not synthesis_dict.get("recommendations"):
                 bullets = self._extract_bullets(recommendations_section)
                 if "### Strategic priorities" in recommendations_section:
@@ -539,7 +568,7 @@ class HostAgent:
                 synthesis_dict["recommendations"] = bullets
 
         # Format strings to CitedInsight if needed
-        for key in ["key_findings", "risks", "opportunities", "recommendations"]:
+        for key in ["key_findings", "legacy_risks", "opportunities", "recommendations"]:
             if key in synthesis_dict:
                 formatted_list = []
                 for item in synthesis_dict[key]:
@@ -558,13 +587,15 @@ class HostAgent:
         # 6. UI Generation
         logger.info("START ui")
         ui = await self.ui_agent.execute(query, context_dict)
-        ArtifactWriter.write_json("ui/ui_response.json", ui)
+        ui_payload = ui.model_dump(mode="json") if hasattr(ui, "model_dump") else ui
+        ArtifactWriter.write_json("ui/ui_response.json", ui_payload)
         
         final_result = {
+            **context_dict,
             "context": synthesis_dict,
             "critique": critique_dict,
             "raw_research_context": context_dict,
-            **ui
+            **ui_payload
         }
         
         ArtifactWriter.write_json("final/final_context.json", context_dict)

@@ -12,7 +12,7 @@ from services.llm.providers.self_hosted_provider import build_self_hosted_timeou
 import httpx
 logger = logging.getLogger("uvicorn.error")
 
-async def _call_self_hosted_text(model: str, system_prompt: str, user_prompt: str, timeout: float = 300.0) -> str:
+async def _call_self_hosted_text(model: str, system_prompt: str, user_prompt: str, timeout: float = 300.0, force_json: bool = False) -> str:
     """
     Calls a self_hosted OpenAI-compatible endpoint (e.g., Ollama) and
     returns plain text. Uses `content` first, falls back to `reasoning`
@@ -21,17 +21,23 @@ async def _call_self_hosted_text(model: str, system_prompt: str, user_prompt: st
     timeout_config = build_self_hosted_timeout(timeout)
 
     async with httpx.AsyncClient(timeout=timeout_config) as client:
+        payload = {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            "temperature": 0.1 if force_json else 0.3,
+            "max_tokens": 2200 if force_json else 4096,
+        }
+        
+        if force_json:
+            payload["format"] = "json"
+            payload["response_format"] = {"type": "json_object"}
+            
         resp = await client.post(
             "http://localhost:11434/v1/chat/completions",
-            json={
-                "model": model,
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                "temperature": 0.3,
-                "max_tokens": 4096,
-            },
+            json=payload,
         )
         resp.raise_for_status()
         data = resp.json()
@@ -44,13 +50,17 @@ async def _call_self_hosted_text(model: str, system_prompt: str, user_prompt: st
     if not text:
         raise RuntimeError(f"Empty response from self_hosted model: {data}")
 
-    return sanitize_llm_text(text)
+    sanitized_text = sanitize_llm_text(text)
+    if not sanitized_text:
+        raise RuntimeError(
+            f"Self-hosted model returned content that became empty after sanitization. Raw content={content!r} raw reasoning={reasoning!r}"
+        )
+
+    return sanitized_text
 
 
 def extract_json(text: str) -> dict:
     text = sanitize_llm_text(text)
-    if "Thinking Process:" in text:
-        raise ValueError("Model returned chain-of-thought text instead of JSON.")
         
     text = text.strip()
     
@@ -76,6 +86,35 @@ def extract_json(text: str) -> dict:
     text = text.strip()
         
     return json.loads(text)
+
+
+async def _retry_self_hosted_json_after_parse_failure(
+    model: str,
+    system_prompt: str,
+    user_prompt: str,
+    invalid_output: str,
+    timeout: float,
+) -> str:
+    repair_system_prompt = (
+        system_prompt
+        + "\n\nYour previous reply was invalid because it was not parseable JSON."
+        + " Retry now. Output ONLY valid JSON. No prose. No headings. No explanations."
+    )
+    repair_user_prompt = json.dumps(
+        {
+            "original_task": user_prompt,
+            "previous_invalid_output_excerpt": invalid_output[:1200],
+            "repair_instruction": "Return only the corrected JSON object.",
+        },
+        default=str,
+    )
+    return await _call_self_hosted_text(
+        model,
+        repair_system_prompt,
+        repair_user_prompt,
+        timeout=timeout,
+        force_json=True,
+    )
 
 class ProviderRouter:
     @classmethod
@@ -228,6 +267,57 @@ class ProviderRouter:
                 continue
             seen_configs.add(config_key)
             
+            if provider_name == "self_hosted":
+                timeout = 900.0 if agent_name in {"synthesizer", "executive_qa", "financial_agent", "industry_agent", "competitor_agent", "risk_agent", "technology_agent", "director"} else 300.0
+                try:
+                    logger.info(f"LLM Routing (JSON) -> Agent: {agent_name} | Provider: {provider_name} | Model: {model_name} | text helper")
+                    raw_text = await _call_self_hosted_text(model_name, system_prompt, user_prompt, timeout=timeout, force_json=True)
+                    ArtifactWriter.write_json(f"agent_outputs/{agent_name}_self_hosted_raw.json", {
+                        "provider": provider_name,
+                        "model": model_name,
+                        "raw_llm_response": raw_text,
+                        "validation_result": "received_unparsed",
+                        "errors": []
+                    })
+                    try:
+                        parsed = json.loads(sanitize_llm_text(raw_text))
+                    except json.JSONDecodeError:
+                        try:
+                            parsed = extract_json(raw_text)
+                        except json.JSONDecodeError:
+                            repaired_text = await _retry_self_hosted_json_after_parse_failure(
+                                model_name,
+                                system_prompt,
+                                user_prompt,
+                                raw_text,
+                                timeout,
+                            )
+                            ArtifactWriter.write_json(f"agent_outputs/{agent_name}_self_hosted_repair_raw.json", {
+                                "provider": provider_name,
+                                "model": model_name,
+                                "raw_llm_response": repaired_text,
+                                "validation_result": "received_repair_unparsed",
+                                "errors": []
+                            })
+                            parsed = json.loads(sanitize_llm_text(repaired_text))
+                    ArtifactWriter.write_json(f"agent_outputs/{agent_name}.json", {
+                        "raw_llm_response": raw_text,
+                        "parsed_json": parsed,
+                        "validation_result": "success",
+                        "errors": []
+                    })
+                    return parsed
+                except Exception as e:
+                    ArtifactWriter.write_json(f"agent_outputs/{agent_name}_self_hosted_parse_error.json", {
+                        "provider": provider_name,
+                        "model": model_name,
+                        "raw_llm_response": locals().get("raw_text"),
+                        "validation_result": "failed",
+                        "errors": [repr(e)]
+                    })
+                    logger.warning(f"Provider {provider_name} failed for {agent_name}: {repr(e)}. Retrying next in chain...")
+                    continue
+                    
             provider = ProviderFactory.get_provider(provider_name)
             if not provider:
                 logger.warning(f"Router skipped {provider_name} for {agent_name} ({priority}) due to missing configuration.")

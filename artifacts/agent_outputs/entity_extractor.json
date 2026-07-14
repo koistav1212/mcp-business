@@ -1,11 +1,11 @@
 {
-  "company": "NVIDIA CORP",
-  "ticker": "NVDA",
+  "company": "AMAZON COM INC",
+  "ticker": "AMZN",
   "exchange": "NASDAQ",
-  "cik": "0001045810",
-  "website": "https://www.nvidia.com",
-  "industry": "Technology",
-  "subindustry": "Semiconductors",
+  "cik": "0001018724",
+  "website": "https://www.amazon.com",
+  "industry": "E-commerce",
+  "subindustry": "Online Retail",
   "country": "United States",
-  "headquarters": "Santa Clara, California"
+  "headquarters": "Seattle, Washington"
 }
