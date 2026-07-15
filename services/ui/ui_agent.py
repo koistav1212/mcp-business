@@ -44,7 +44,7 @@ class UIAgent:
                 system_prompt=system_instruction,
                 user_prompt=prompt
             )
-                return parsed
+            return parsed
         except Exception as e:
             logger.error(f"UIAgent failed: {e}")
             return {"ui_generation": []}

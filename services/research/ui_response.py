@@ -16,7 +16,7 @@ import logging
 from typing import List, Dict
 
 from services.schemas.insight import ResearchContext
-from services.schemas.ui import (
+from services.research.ui_models import (
     UIGeneration,
     Theme,
     ThemePalette,

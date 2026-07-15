@@ -8,7 +8,7 @@ from pydantic import BaseModel
 import httpx
 
 from services.host.host_agent import HostAgent
-from services.research.models import ResearchContext
+from services.schemas.insight import ResearchContext
 from services.research.ui_response import build_ui_generation
 from core.config import settings
 

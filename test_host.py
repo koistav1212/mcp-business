@@ -1,7 +1,9 @@
 import asyncio
 import json
+from dotenv import load_dotenv
+load_dotenv()
 from services.host.host_agent import HostAgent
-from services.models.research_execution_plan import ResearchExecutionPlan, ResearchType, AnalysisDepth
+from services.core.models import ResearchExecutionPlan, ResearchType, AnalysisDepth
 async def main():
     agent = HostAgent()
     res = await agent.run(query="Infosys")
