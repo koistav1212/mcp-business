@@ -1,4 +1,4 @@
-from services.research.models import EvidenceGraph, IndustryContext, IntentPlan, ReportPlan, ReportSection
+from services.schemas.insight import EvidenceGraph, IndustryContext, IntentPlan, ReportPlan, ReportSection
 
 
 class ReportPlanner:

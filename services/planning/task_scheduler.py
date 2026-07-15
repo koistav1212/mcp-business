@@ -2,7 +2,7 @@ import asyncio
 import logging
 from typing import Dict, Any
 
-from services.models.research_execution_plan import ResearchExecutionPlan, ExecutionWave, ResearchTask
+from services.core.models import ResearchExecutionPlan, ExecutionWave, ResearchTask
 from services.agents.tool_router_agent import ToolRouterAgent
 from services.knowledge.knowledge_router import KnowledgeRouter
 from services.artifacts.artifact_writer import ArtifactWriter

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from services.models.planning_models import PlanningResult
+from services.core.models import PlanningResult
 from services.models.research_models import AgentResult
 from services.agents.tool_router_agent import ToolRouterAgent
 

@@ -1,6 +1,6 @@
 import json
 import logging
-from services.models.planning_models import EntityExtractionResult
+from services.core.models import EntityExtractionResult
 from services.llm.provider_router import ProviderRouter
 from services.research.providers.entity_resolver import EntityResolver
 

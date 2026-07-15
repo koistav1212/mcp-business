@@ -173,7 +173,7 @@ Return your response in the following JSON format:
     
     async with httpx.AsyncClient() as client:
         response = await client.post(
-            "https://api.openai.com/v1/chat/completions",
+            settings.LLM_API_BASE,
             json=data,
             headers=headers,
             timeout=30.0

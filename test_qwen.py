@@ -2,7 +2,7 @@ import urllib.request
 import json
 
 payload = {
-    "model": "qwen3.5:2b",
+    "model": "llama3.1:8b",
     "messages": [
         {"role": "system", "content": "You MUST output exactly this: {\"msg\": \"hello\"} and nothing else."},
         {"role": "user", "content": "Say hello"}

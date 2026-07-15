@@ -15,8 +15,8 @@ Architecture:
 import logging
 from typing import List, Dict
 
-from services.research.models import ResearchContext
-from services.research.ui_models import (
+from services.schemas.insight import ResearchContext
+from services.schemas.ui import (
     UIGeneration,
     Theme,
     ThemePalette,

@@ -1,7 +1,7 @@
 import json
 from typing import Awaitable, Callable, Optional
 
-from services.research.models import CitedInsight, DraftReport, EvidenceGraph, IndustryContext, IntentPlan, ReportPlan, ResearchPlan
+from services.schemas.insight import CitedInsight, DraftReport, EvidenceGraph, IndustryContext, IntentPlan, ReportPlan, ResearchPlan
 
 
 WRITER_SYSTEM_PROMPT = """You are a Senior Strategy Consultant. Use only the verified evidence supplied.

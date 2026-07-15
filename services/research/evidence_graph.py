@@ -1,7 +1,7 @@
 import hashlib
 from typing import Any, Iterable, Optional
 
-from services.research.models import EvidenceGraph, EvidenceNode, ResearchContext
+from services.schemas.insight import EvidenceGraph, EvidenceNode, ResearchContext
 
 
 class EvidenceGraphBuilder:

@@ -1,4 +1,4 @@
-from services.research.models import EntityResolution, EntityCore
+from services.schemas.insight import EntityResolution, EntityCore
 
 MOCK_COMPANY_RESPONSES = {
     "zoho": {

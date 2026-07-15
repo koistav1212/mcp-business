@@ -1,4 +1,6 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
 import uuid
 from typing import Dict, List, Optional, Type
 from fastapi import FastAPI, HTTPException

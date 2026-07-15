@@ -41,7 +41,7 @@ def sanitize_llm_text(text: str) -> str:
 
 async def _call_ollama_text(model: str, system_prompt: str, user_prompt: str, timeout: float = 60.0, **kwargs) -> str:
     """Paragraph helper for agents like planner, synthesizer, etc."""
-    base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+    base_url = os.environ["OLLAMA_BASE_URL"]
     payload = {
         "model": model,
         "messages": [
@@ -99,7 +99,7 @@ class SelfHostedProvider(BaseProvider):
         self.api_key = api_key
         self.timeout = timeout
         self.provider_name = "self_hosted"
-        self.base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+        self.base_url = os.environ["OLLAMA_BASE_URL"]
 
     async def generate(self, request: LLMRequest) -> LLMResponse:
         start_time = time.time()

@@ -16,8 +16,11 @@ class UIValidation(BaseModel):
     all_claims_traceable: bool = True
     passed: bool = True
 
-class UISchema(BaseModel):
+class PageData(BaseModel):
     page: PageSchema
     components: List[ComponentSchema]
+
+class UISchema(BaseModel):
+    pages: List[PageData] = Field(default_factory=list)
     executive_takeaway: ExecutiveTakeaway
     validation: Optional[UIValidation] = None

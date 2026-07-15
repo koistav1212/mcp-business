@@ -6,7 +6,7 @@ from services.knowledge.confidence_engine import ConfidenceEngine
 from services.knowledge.evidence_validator import EvidenceValidator
 from services.knowledge.entity_linker import EntityLinker
 from services.agents.tool_router_agent import ToolRouterAgent
-from services.models.research_execution_plan import ResearchTask
+from services.core.models import ResearchTask
 
 logger = logging.getLogger("uvicorn.error")
 

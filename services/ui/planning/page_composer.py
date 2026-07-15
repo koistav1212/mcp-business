@@ -3,12 +3,12 @@ import uuid
 from collections import OrderedDict
 from typing import Any, Dict, List, Optional
 
-from services.research.models import ResearchContext, SourcedValue
+from services.schemas.insight import ResearchContext, SourcedValue
 
 from ..schemas.component_plan_schema import PlannedComponent, ComponentPlan
 from ..schemas.data_profile_schema import DataProfile
-from ..schemas.insight_schema import InsightCandidate, InsightPlan
-from ..schemas.ui_schema import UISchema, PageSchema, ComponentSchema, ExecutiveTakeaway
+from ..schemas.insight_schema import InsightCandidate, InsightPlan, ExecutiveQuestion
+from ..schemas.ui_schema import UISchema, PageSchema, ComponentSchema, ExecutiveTakeaway, PageData
 
 
 class UnsupportedComponentError(ValueError):
@@ -24,6 +24,11 @@ class PageComposer:
             "StrategicPositionCard": self._compose_strategic_position,
             "FactMatrix": self._compose_fact_matrix,
             "ExecutiveTakeaway": self._compose_executive_takeaway_component,
+            "FinancialHealthScorecard": self._compose_financial_health_scorecard,
+            "NewsTimeline": self._compose_news_timeline,
+            "RiskMatrix": self._compose_risk_matrix,
+            "SentimentTimeline": self._compose_sentiment_timeline,
+            "KnowledgeGraphViewer": self._compose_knowledge_graph,
         }
 
     def compose(
@@ -34,41 +39,47 @@ class PageComposer:
         component_plan: ComponentPlan,
     ) -> UISchema:
         """
-        Composes the final page schema by combining the component plan with the actual data context.
+        Composes the final page schemas by mapping components to their respective pages based on executive questions.
         """
         company_name = self._company_name(context)
-        headline = self._build_page_headline(context, insight_plan)
-
-        page = PageSchema(
-            page_number=1,
-            page_type="executive_company_snapshot",
-            title=f"{company_name} Executive Snapshot",
-            executive_question=insight_plan.page_objective or "What is the strategic position of the company?",
-            executive_headline=headline,
-            image_search_query=self._build_image_query(context),
-        )
-
-        components: List[ComponentSchema] = []
-        ordered_components = sorted(component_plan.selected_components, key=lambda component: component.priority)
-
-        for planned_component in ordered_components:
-            composer = self._composers.get(planned_component.component_type)
-            if composer is None:
-                raise UnsupportedComponentError(f"Unsupported component type: {planned_component.component_type}")
-            components.append(
-                composer(
-                    planned_component=planned_component,
-                    context=context,
-                    data_profile=data_profile,
-                    insight_plan=insight_plan,
-                )
+        
+        pages_data: List[PageData] = []
+        
+        for idx, question in enumerate(insight_plan.executive_questions):
+            page = PageSchema(
+                page_number=idx + 1,
+                page_type="executive_company_snapshot" if idx == 0 else "analytical_deep_dive",
+                title=f"{company_name} - {question.question}",
+                executive_question=question.question,
+                executive_headline=self._build_page_headline(context, insight_plan) if idx == 0 else "",
+                image_search_query=self._build_image_query(context) if idx == 0 else None,
             )
+            
+            components: List[ComponentSchema] = []
+            
+            # Filter components for this page
+            page_components = [c for c in component_plan.selected_components if c.executive_question_id == question.id]
+            ordered_components = sorted(page_components, key=lambda c: c.priority)
+            
+            for planned_component in ordered_components:
+                composer = self._composers.get(planned_component.component_type)
+                if composer is None:
+                    continue # Skip unsupported components instead of crashing
+                components.append(
+                    composer(
+                        planned_component=planned_component,
+                        context=context,
+                        data_profile=data_profile,
+                        insight_plan=insight_plan,
+                    )
+                )
+                
+            pages_data.append(PageData(page=page, components=components))
 
         takeaway = self._build_executive_takeaway(insight_plan)
 
         return UISchema(
-            page=page,
-            components=components,
+            pages=pages_data,
             executive_takeaway=takeaway
         )
 
@@ -197,7 +208,7 @@ class PageComposer:
         derived_content = self._remove_empty(
             {
                 "position_label": entity.industry if entity and entity.industry else "Strategic Position",
-                "position_type": "platform" if data_profile.platform_structure.available else "operating model",
+                "position_type": "platform" if data_profile.technology else "operating model",
                 "strategic_layers": [group["label"] for group in self._build_architecture_groups(context)[:3]],
                 "short_assessment": assessment,
             }
@@ -260,6 +271,102 @@ class PageComposer:
             derived_content={"text": takeaway.text},
             default_evidence=takeaway.evidence_paths,
         )
+
+    def _compose_financial_health_scorecard(self, planned_component, context, data_profile, insight_plan):
+        return self._build_component(
+            planned_component, context, insight_plan, title="Financial Health Scorecard",
+            bindings=["financials"], derived_content={}, default_evidence=[]
+)
+
+    def _compose_knowledge_graph(self, planned_component: PlannedComponent, context: ResearchContext, *args, **kwargs) -> ComponentSchema:
+        graph = context.evidence_graph
+        if not graph or not graph.nodes:
+            return self._build_component(planned_component, context, kwargs.get("insight_plan"), title="Knowledge Graph Viewer", bindings=[], derived_content={}, default_evidence=[])
+            
+        derived_content = {
+            "node_count": len(graph.nodes),
+            "edge_count": len(graph.edges) if hasattr(graph, 'edges') and graph.edges else 0,
+            "clusters": ["Products", "Executives", "Competitors", "Technologies", "Financial Metrics"]
+        }
+        
+        return self._build_component(
+            planned_component,
+            context,
+            kwargs.get("insight_plan"),
+            title="Corporate Knowledge Graph",
+            bindings=["evidence_graph.nodes"],
+            derived_content=derived_content,
+            default_evidence=["evidence_graph.nodes"]
+        )
+
+    def _compose_news_timeline(self, planned_component: PlannedComponent, context: ResearchContext, *args, **kwargs) -> ComponentSchema:
+        news = context.news
+        if not news:
+            return self._build_component(planned_component, context, kwargs.get("insight_plan"), title="News Timeline", bindings=[], derived_content={}, default_evidence=[])
+            
+        timeline = []
+        sources = set()
+        for n in news[:10]:
+            val = getattr(n, "value", n)
+            if isinstance(val, dict):
+                date = val.get("date")
+                title = val.get("title")
+                summary = val.get("summary", val.get("snippet"))
+                sentiment = val.get("sentiment", "neutral")
+                source = val.get("source")
+            else:
+                date = getattr(val, "date", None)
+                title = getattr(val, "title", None)
+                summary = getattr(val, "summary", getattr(val, "snippet", None))
+                sentiment = getattr(val, "sentiment", "neutral")
+                source = getattr(val, "source", None)
+            
+            if not source and getattr(n, "source_ids", None):
+                source = n.source_ids[0] if n.source_ids else None
+                
+            if source:
+                sources.add(source)
+                
+            timeline.append({
+                "date": date,
+                "title": title,
+                "summary": summary,
+                "sentiment": sentiment
+            })
+            
+        derived_content = {
+            "event_count": len(news),
+            "sources": list(sources),
+            "timeline": timeline
+        }
+        
+        return self._build_component(
+            planned_component,
+            context,
+            kwargs.get("insight_plan"),
+            title="Major Events & News Timeline",
+            bindings=["news"],
+            derived_content=derived_content,
+            default_evidence=["news"]
+        )
+
+    def _compose_sentiment_timeline(self, planned_component, context, data_profile, insight_plan):
+        return self._build_component(
+            planned_component, context, insight_plan, title="Sentiment Timeline",
+            bindings=["sentiment"], derived_content={}, default_evidence=[]
+        )
+
+    def _compose_risk_matrix(self, planned_component: PlannedComponent, context: ResearchContext, *args, **kwargs) -> ComponentSchema:
+        return self._build_component(
+            planned_component,
+            context,
+            kwargs.get("insight_plan"),
+            title="Risk Matrix",
+            bindings=["risk_factors"],
+            derived_content={},
+            default_evidence=["risk_factors"]
+        )
+
 
     def _build_component(
         self,

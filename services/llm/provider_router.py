@@ -1,3 +1,4 @@
+import os
 import json
 import logging
 import asyncio
@@ -27,28 +28,54 @@ async def _call_self_hosted_text(model: str, system_prompt: str, user_prompt: st
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
-            "temperature": 0.1 if force_json else 0.3,
-            "max_tokens": 2200 if force_json else 4096,
+            "options": {
+                "temperature": 0.1 if force_json else 0.3,
+                "num_ctx": 16384,
+                "num_predict": 8192
+            },
+            "stream": True
         }
         
-        if force_json:
+        if force_json and "qwen" not in model.lower():
             payload["format"] = "json"
-            payload["response_format"] = {"type": "json_object"}
             
-        resp = await client.post(
-            "http://localhost:11434/v1/chat/completions",
-            json=payload,
-        )
-        resp.raise_for_status()
-        data = resp.json()
-
-    choice = data["choices"][0]["message"]
-    content = choice.get("content") or ""
-    reasoning = choice.get("reasoning") or ""
+        base_url = os.environ["OLLAMA_BASE_URL"]
+        if base_url.endswith("/v1"):
+            base_url = base_url[:-3]
+            
+        content_chunks = []
+        reasoning_chunks = []
+        
+        async with client.stream("POST", f"{base_url}/api/chat", json=payload) as resp:
+            resp.raise_for_status()
+            async for line in resp.aiter_lines():
+                if not line.strip():
+                    continue
+                try:
+                    chunk_data = json.loads(line)
+                    
+                    if "error" in chunk_data:
+                        raise RuntimeError(f"Ollama API Error: {chunk_data['error']}")
+                        
+                    msg = chunk_data.get("message", {})
+                    
+                    if "content" in msg and msg["content"]:
+                        content_chunks.append(msg["content"])
+                        
+                    if "reasoning" in msg and msg["reasoning"]:
+                        reasoning_chunks.append(msg["reasoning"])
+                        
+                except json.JSONDecodeError:
+                    if not content_chunks and not reasoning_chunks and "<html>" in line.lower():
+                        raise RuntimeError(f"Received HTML instead of JSON (possibly Cloudflare error): {line[:200]}")
+                    continue
+                    
+    content = "".join(content_chunks)
+    reasoning = "".join(reasoning_chunks)
 
     text = content.strip() or reasoning.strip()
     if not text:
-        raise RuntimeError(f"Empty response from self_hosted model: {data}")
+        raise RuntimeError(f"Empty response from self_hosted model.")
 
     sanitized_text = sanitize_llm_text(text)
     if not sanitized_text:
@@ -299,7 +326,7 @@ class ProviderRouter:
                                 "validation_result": "received_repair_unparsed",
                                 "errors": []
                             })
-                            parsed = json.loads(sanitize_llm_text(repaired_text))
+                            parsed = extract_json(repaired_text)
                     ArtifactWriter.write_json(f"agent_outputs/{agent_name}.json", {
                         "raw_llm_response": raw_text,
                         "parsed_json": parsed,

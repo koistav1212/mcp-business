@@ -1,7 +1,7 @@
 import json
 import logging
 from typing import Dict, Any
-from services.models.planning_models import PlanningResult
+from services.core.models import PlanningResult
 from services.models.research_models import AgentResult, Finding
 from services.agents.tool_router_agent import ToolRouterAgent
 from services.agents.specialized.base import BaseResearchAgent
@@ -71,7 +71,7 @@ class GenericLLMAgent(BaseResearchAgent):
                     "evidence": []
                 }
                 
-                return AgentResult.model_validate(payload)
+            return AgentResult.model_validate(payload)
             except Exception as e:
                 logger.warning(f"{self.agent_name} LLM failed: {e}. Returning fallback.")
                 

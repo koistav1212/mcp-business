@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from services.models.research_execution_plan import ResearchExecutionPlan
-from services.reports.models import ReportPageSpec, ReportPlan
+from services.core.models import ResearchExecutionPlan
+from services.schemas.report import ReportPageSpec, ReportPlan
 
 
 class ReportPageRouter:

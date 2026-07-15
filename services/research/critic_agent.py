@@ -1,4 +1,4 @@
-from services.research.models import CriticResult, DraftReport, EvidenceGraph, IntentPlan, ReportPlan, ResearchPlan
+from services.schemas.insight import CriticResult, DraftReport, EvidenceGraph, IntentPlan, ReportPlan, ResearchPlan
 
 
 class CriticAgent:

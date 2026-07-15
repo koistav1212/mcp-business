@@ -6,7 +6,7 @@ import httpx
 import re
 from typing import List, Dict, Any, Optional
 
-from services.research.models import EntityResolution, EntityCore
+from services.schemas.insight import EntityResolution, EntityCore
 
 
 class EntityResolver:
@@ -141,7 +141,7 @@ class EntityResolver:
                     city = parts[0] if len(parts) > 0 else None
                     state = parts[1] if len(parts) > 1 else None
                     country = parts[2] if len(parts) > 2 else meta.get("country")
-                    from services.research.models import Headquarters
+                    from services.schemas.insight import Headquarters
                     hq_obj = Headquarters(city=city, state=state, country=country)
 
                 local_exact.append(
@@ -291,7 +291,7 @@ class EntityResolver:
                 city = parts[0] if len(parts) > 0 else None
                 state = parts[1] if len(parts) > 1 else None
                 country = parts[2] if len(parts) > 2 else meta.get("country")
-                from services.research.models import Headquarters  # adjust import path
+                from services.schemas.insight import Headquarters  # adjust import path
                 hq_obj = Headquarters(city=city, state=state, country=country)
 
             candidates.append(
@@ -353,7 +353,7 @@ class EntityResolver:
                 city = parts[0] if len(parts) > 0 else None
                 state = parts[1] if len(parts) > 1 else None
                 country = parts[2] if len(parts) > 2 else meta.get("country")
-                from services.research.models import Headquarters
+                from services.schemas.insight import Headquarters
                 hq_obj = Headquarters(city=city, state=state, country=country)
 
             candidates.append(
@@ -612,7 +612,7 @@ class EntityResolver:
                                 city = parts[0] if len(parts) > 0 else None
                                 state = parts[1] if len(parts) > 1 else None
                                 country = parts[2] if len(parts) > 2 else meta.get("country")
-                                from services.research.models import Headquarters
+                                from services.schemas.insight import Headquarters
                                 hq_obj = Headquarters(city=city, state=state, country=country)
 
                             return EntityResolution(

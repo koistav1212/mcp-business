@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
-from services.research.models import (
+from services.schemas.insight import (
     ResearchContext, RawResearchBundle, CompanyProfile, 
     Leadership, Competitor, FinancialData, NewsItem, HiringSignal, Source, EntityResolution, SocialSentiment,
     SourcedValue, CompetitiveAxis, CompetitivePositioning, SWOTAnalysis, ValuationMultiples, RiskFactor,
@@ -380,7 +380,7 @@ class ResearchSynthesizer:
         # 9.6 Management Commentary
         management_commentary = []
 
-        from services.research.models import AnalyticsData
+        from services.schemas.insight import AnalyticsData
         from services.research.analytics import AnalyticsCalculator
         
         calc = AnalyticsCalculator()

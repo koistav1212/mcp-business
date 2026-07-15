@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import List
 
-from services.reports.models import GeneratedPage
+from services.schemas.report import GeneratedPage
 
 
 class ReportComposer:

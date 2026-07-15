@@ -1,33 +1,21 @@
 import asyncio
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin, urlparse
 
-import httpx
-from bs4 import BeautifulSoup  # pip install beautifulsoup4
+from crawl4ai import AsyncWebCrawler
 
 from services.research.base import BaseProvider
 from services.knowledge.evidence import ResearchEvidence
 from services.knowledge.citation_manager import CitationManager
-from services.research.providers.shared_utils import _write_json, BROWSER_HEADERS, logger
+from services.research.providers.shared_utils import _write_json, logger
 from services.llm.provider_router import ProviderRouter
 import json
 
 
 class WebProvider(BaseProvider):
     """
-    Aggregates technology and architecture intelligence for a company by
-    crawling its public web presence and building a structured technology profile.
-
-    Data sources (first pass):
-      - Company website (home, /careers, /jobs if present)
-      - Linked GitHub org/user (if found on the site)
-
-    Outputs:
-      - technology_profile: compact domain-specific categories (e.g., languages, ai_frameworks, cloud)
-      - technology_intelligence: broader technology-intel categories (core_platforms,
-        programming_languages, frontend_frameworks, backend_frameworks, ai_ml_frameworks,
-        cloud_providers, databases, data_engineering, containerization, orchestration,
-        ci_cd, monitoring, security, cdn, api_technologies, mobile_technologies, web_servers)
+    Website Provider (Main Source)
+    Aggregates intelligence for a company by crawling its public web presence using crawl4ai.
     """
 
     async def fetch(self, target: Any) -> List[ResearchEvidence]:
@@ -40,164 +28,104 @@ class WebProvider(BaseProvider):
 
         evidence_list: List[ResearchEvidence] = []
 
-        # ------------------------------------------------------------------
-        # 1) Discover base URL(s) for crawling
-        # ------------------------------------------------------------------
+        # 1) Discover base URL
         base_url = self._guess_company_url(company_clean)
-        logger.info("WebProvider: guessed base URL '%s' for company '%s'", base_url, company_clean)
+        logger.info(f"WebProvider: guessed base URL '{base_url}' for company '{company_clean}'")
 
         if not base_url:
-            # If we can't guess a URL, we still return no evidence rather than hallucinating.
             return []
 
-        # ------------------------------------------------------------------
-        # 2) Crawl a small set of pages (home + careers)
-        # ------------------------------------------------------------------
-        async with httpx.AsyncClient(headers=BROWSER_HEADERS, timeout=20.0, follow_redirects=True) as client:
-            crawled_pages: Dict[str, str] = {}
+        # 2) Define the pages to crawl based on the user's requirement
+        pages_to_check = [
+            "/", "/products", "/solutions", "/industries", "/pricing", 
+            "/blog", "/docs", "/case-studies", "/developers", "/about", 
+            "/investors", "/press", "/careers"
+        ]
 
-            async def fetch_page(path: str) -> None:
+        crawled_markdown = []
+        
+        # We will crawl sequentially or concurrently with a limit. For now, concurrently.
+        async with AsyncWebCrawler() as crawler:
+            async def fetch_page(path: str):
                 url = urljoin(base_url, path)
                 try:
-                    r = await client.get(url)
-                    if r.status_code == 200 and "text/html" in r.headers.get("Content-Type", ""):
-                        crawled_pages[url] = r.text
-                        logger.info("WebProvider: fetched %s", url)
+                    result = await crawler.arun(url=url)
+                    if result and result.markdown:
+                        logger.info(f"WebProvider: successfully crawled {url}")
+                        return result.markdown
                 except Exception as e:
-                    logger.warning("WebProvider: error fetching %s (%r)", url, e)
+                    logger.warning(f"WebProvider: error crawling {url} ({e})")
+                return ""
 
-            # Seed a small frontier: base, /careers, /jobs
-            tasks = [
-                fetch_page("/"),
-                fetch_page("/careers"),
-                fetch_page("/jobs"),
-            ]
-            await asyncio.gather(*tasks, return_exceptions=True)
-
-        # ------------------------------------------------------------------
-        # 3) Extract raw text and discover GitHub link
-        # ------------------------------------------------------------------
-        all_text_chunks: List[str] = []
-        github_urls: List[str] = []
-
-        for url, html in crawled_pages.items():
-            soup = BeautifulSoup(html, "html.parser")
-            # text
-            text = soup.get_text(separator="\n", strip=True)
-            all_text_chunks.append(text)
-
-            # discover GitHub links
-            for a in soup.find_all("a", href=True):
-                href = a["href"]
-                if "github.com" in href:
-                    github_urls.append(href)
-
-        combined_text = "\n".join(all_text_chunks).lower()
-
-        # ------------------------------------------------------------------
-        # 4) Optionally inspect GitHub profile (very light)
-        # ------------------------------------------------------------------
-        github_langs: List[str] = []
-        if github_urls:
-            github_root = self._normalize_github_url(github_urls[0])
-            if github_root:
-                github_langs = await self._fetch_github_languages(github_root)
-
-        # ------------------------------------------------------------------
-        # 5) Detect technologies from text + GitHub using LLM
-        # ------------------------------------------------------------------
-        system_prompt = """You are an expert Technology Intelligence Analyst.
-Extract the technology stack of a company based on the provided text crawled from their website.
-Return a JSON object with two main keys: 'technology_profile' and 'technology_intelligence'.
-The 'technology_profile' should contain arrays of strings for: languages, ai_frameworks, cloud, containers, developer_platforms, products, innovation_focus.
-The 'technology_intelligence' should contain arrays of strings for: core_platforms, programming_languages, frontend_frameworks, backend_frameworks, ai_ml_frameworks, cloud_providers, databases, data_engineering, containerization, orchestration, ci_cd, monitoring, security, cdn, api_technologies, mobile_technologies, web_servers.
-If a category has no matches, return an empty array. Do not invent information."""
-        
-        # We truncate `combined_text` to avoid exceeding token limits.
-        max_chars = 25000
-        truncated_text = combined_text[:max_chars]
-        user_prompt = f"Company text snippet:\n{truncated_text}\n\nGitHub languages:\n{github_langs}\n\nExtract the technology stack in JSON format."
-        
-        technology_profile = {}
-        technology_intelligence = {}
-
-        # If we have essentially no usable signal, skip the LLM entirely.
-        signal_text = truncated_text.strip()
-        has_meaningful_site_text = len(signal_text) >= 200
-        has_github_signal = len(github_langs) > 0
-        
-        if has_meaningful_site_text or has_github_signal:
-            try:
-                llm_result = await ProviderRouter.generate_json(
-                    agent_name="technology_agent",
-                    system_prompt=system_prompt,
-                    user_prompt=user_prompt
-                )
-                technology_profile = llm_result.get("technology_profile", {})
-                technology_intelligence = llm_result.get("technology_intelligence", {})
-            except Exception as e:
-                logger.warning(f"WebProvider LLM extraction failed: {e}. Falling back to empty profile.")
-        else:
-            logger.info("WebProvider: skipping technology LLM extraction because site text and GitHub signals are too sparse.")
+            # Concurrently fetch pages
+            tasks = [fetch_page(path) for path in pages_to_check]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
             
-        # Ensure default shapes exist
-        default_profile = {
-            "languages": [], "ai_frameworks": [], "cloud": [], 
-            "containers": [], "developer_platforms": [], "products": [], "innovation_focus": []
-        }
-        default_intelligence = {
-            "core_platforms": [], "programming_languages": [], "frontend_frameworks": [], 
-            "backend_frameworks": [], "ai_ml_frameworks": [], "cloud_providers": [], 
-            "databases": [], "data_engineering": [], "containerization": [], "orchestration": [], 
-            "ci_cd": [], "monitoring": [], "security": [], "cdn": [], "api_technologies": [], 
-            "mobile_technologies": [], "web_servers": []
-        }
+            for res in results:
+                if isinstance(res, str) and res:
+                    crawled_markdown.append(res)
+
+        combined_text = "\n".join(crawled_markdown)
         
-        # Merge fetched with defaults
-        for k in default_profile:
-            if k not in technology_profile or not isinstance(technology_profile[k], list):
-                technology_profile[k] = []
-                
-        for k in default_intelligence:
-            if k not in technology_intelligence or not isinstance(technology_intelligence[k], list):
-                technology_intelligence[k] = []
+        if not combined_text.strip():
+            logger.warning(f"WebProvider: No content extracted for {company_clean}.")
+            return []
 
-        # ------------------------------------------------------------------
-        # 7) Emit ResearchEvidence
-        # ------------------------------------------------------------------
-        tech_profile_id = CitationManager.generate_id(
-            "technology_profile",
-            company_key,
-            "technology_profile",
-            "current",
+        # 3) Extract structured entities using LLM
+        system_prompt = (
+            "You are an expert Business Intelligence Analyst.\n"
+            "Extract comprehensive information from the provided website markdown.\n"
+            "Return a JSON object containing EXACTLY these keys with arrays of strings as values:\n"
+            "Products, Services, Technologies, Integrations, Features, Customers, Partners, Industries, Use_Cases.\n"
+            "If no information is found for a category, return an empty array. Do not hallucinate."
         )
-        evidence_list.append(
-            ResearchEvidence(
-                id=tech_profile_id,
-                entity=company_key,
-                attribute="technology_profile",
-                value=technology_profile,
-                source="technology_profile",
-                source_type="mcp",
-                confidence=0.7,  # heuristic, because detection is keyword-based
+
+        # Truncate to a reasonable length for the LLM
+        max_chars = 30000 
+        truncated_text = combined_text[:max_chars]
+        
+        user_prompt = f"Company website markdown:\n{truncated_text}\n\nExtract the required entities in JSON format."
+
+        extracted_data = {}
+        try:
+            parsed = await ProviderRouter.generate_json(
+                agent_name="technology_agent", # using an existing agent configuration
+                system_prompt=system_prompt,
+                user_prompt=user_prompt
             )
-        )
+            
+            extracted_data = {
+                "Products": parsed.get("Products", []),
+                "Services": parsed.get("Services", []),
+                "Technologies": parsed.get("Technologies", []),
+                "Integrations": parsed.get("Integrations", []),
+                "Features": parsed.get("Features", []),
+                "Customers": parsed.get("Customers", []),
+                "Partners": parsed.get("Partners", []),
+                "Industries": parsed.get("Industries", []),
+                "Use_Cases": parsed.get("Use_Cases", [])
+            }
+        except Exception as e:
+            logger.warning(f"WebProvider LLM extraction failed: {e}")
+            return []
 
-        tech_intel_id = CitationManager.generate_id(
-            "technology_intelligence",
+        # 4) Emit ResearchEvidence
+        evidence_id = CitationManager.generate_id(
+            "website_intelligence",
             company_key,
-            "technology_intelligence",
+            "website",
             "current",
         )
+        
         evidence_list.append(
             ResearchEvidence(
-                id=tech_intel_id,
+                id=evidence_id,
                 entity=company_key,
-                attribute="technology_intelligence",
-                value=technology_intelligence,
-                source="technology_profile",
+                attribute="website_intelligence",
+                value=extracted_data,
+                source="company_website",
                 source_type="mcp",
-                confidence=0.7,
+                confidence=0.8,
             )
         )
 
@@ -208,70 +136,11 @@ If a category has no matches, return an empty array. Do not invent information."
 
         return evidence_list
 
-    # ----------------------------------------------------------------------
-    # URL guessing / normalization
-    # ----------------------------------------------------------------------
-
     def _guess_company_url(self, company: str) -> Optional[str]:
         """
-        Very naive URL guesser: in a real system this would be replaced by
-        company metadata or a search/API call.
-
-        For now, just try https://{company}.com if it looks like a single token.
+        Very naive URL guesser.
         """
         token = company.lower().replace(" ", "")
         if not token:
             return None
         return f"https://{token}.com"
-
-    def _normalize_github_url(self, url: str) -> Optional[str]:
-        """
-        Normalize to https://github.com/{org_or_user}
-        """
-        parsed = urlparse(url)
-        if "github.com" not in parsed.netloc:
-            return None
-        parts = [p for p in parsed.path.split("/") if p]
-        if not parts:
-            return None
-        return f"https://github.com/{parts[0]}"
-
-    # ----------------------------------------------------------------------
-    # GitHub inspection (very light)
-    # ----------------------------------------------------------------------
-
-    async def _fetch_github_languages(self, github_root: str) -> List[str]:
-        """
-        Fetch a list of languages from the GitHub profile page by scraping the
-        'Most used languages' section on the user/org homepage.
-
-        Note: this is heuristic and HTML-structure-dependent.
-        """
-        langs: List[str] = []
-        try:
-            async with httpx.AsyncClient(headers=BROWSER_HEADERS, timeout=60.0, follow_redirects=True) as client:
-                r = await client.get(github_root)
-                if r.status_code != 200:
-                    return []
-                soup = BeautifulSoup(r.text, "html.parser")
-                text = soup.get_text(separator="\n", strip=True).lower()
-                # Cheap detection based on common languages
-                candidates = [
-                    "python",
-                    "java",
-                    "javascript",
-                    "typescript",
-                    "go",
-                    "rust",
-                    "c++",
-                    "c#",
-                    "php",
-                    "ruby",
-                ]
-                for lang in candidates:
-                    if lang in text:
-                        langs.append(lang.capitalize() if lang != "c++" else "C++")
-        except Exception:
-            logger.exception("WebProvider: error fetching GitHub languages for %s", github_root)
-        return list(set(langs))
-

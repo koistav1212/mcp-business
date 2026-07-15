@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-from services.research.models import ResearchContext
+from services.schemas.insight import ResearchContext
 
 from ..schemas.ui_schema import UISchema, UIValidation
 
@@ -9,20 +9,25 @@ class UIValidator:
         """
         Validates the generated UI schema against data constraints.
         """
-        component_count = len(ui_schema.components)
+        all_components = [c for p in ui_schema.pages for c in p.components]
+        component_count = len(all_components)
 
         types_seen = set()
         duplicates = []
-        for c in ui_schema.components:
+        for c in all_components:
             if c.type in types_seen:
                 duplicates.append(c.type)
             types_seen.add(c.type)
 
-        null_values_rendered = any(self._contains_nullish(component.derived_content) for component in ui_schema.components)
-        raw_duplicate_products_rendered = any(self._contains_duplicate_strings(component.derived_content) for component in ui_schema.components)
-        biography_style_detected = len(ui_schema.page.executive_headline.split()) > 24 or len(ui_schema.executive_takeaway.text.split()) > 60
+        null_values_rendered = any(self._contains_nullish(component.derived_content) for component in all_components)
+        raw_duplicate_products_rendered = any(self._contains_duplicate_strings(component.derived_content) for component in all_components)
+        
+        long_headline = any(len(p.page.executive_headline.split()) > 24 for p in ui_schema.pages)
+        long_takeaway = len(ui_schema.executive_takeaway.text.split()) > 60
+        biography_style_detected = long_headline or long_takeaway
+        
         all_claims_traceable = all(
-            bool(component.evidence_paths) for component in ui_schema.components
+            bool(component.evidence_paths) for component in all_components
         ) and bool(ui_schema.executive_takeaway.evidence_paths)
 
         passed = not any(

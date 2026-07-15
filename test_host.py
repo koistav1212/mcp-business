@@ -1,13 +1,9 @@
 import asyncio
 import json
 from services.host.host_agent import HostAgent
-from services.models.research_execution_plan import ResearchExecutionPlan
+from services.models.research_execution_plan import ResearchExecutionPlan, ResearchType, AnalysisDepth
 async def main():
     agent = HostAgent()
-    plan = ResearchExecutionPlan(company_name="Infosys")
-    # Actually wait, HostAgent.run takes (plan, target)
-    class Target:
-        company = "Infosys"
-        ticker = "INFY"
-    await agent.run(plan, Target())
+    res = await agent.run(query="Infosys")
+    print("FINISHED:", type(res))
 asyncio.run(main())

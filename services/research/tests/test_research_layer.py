@@ -1,7 +1,7 @@
 import pytest
 from services.research.base import BaseProvider
 from services.host.host_agent import HostAgent
-from services.research.models import ResearchContext, Source
+from services.schemas.insight import ResearchContext, Source
 from services.research.providers.company_provider import CompanyProvider
 from services.research.providers.web_provider import WebProvider
 from services.research.providers.news.news_provider import NewsProvider
@@ -66,7 +66,7 @@ async def test_orchestrator_zoho_success():
 @pytest.mark.asyncio
 async def test_conflict_detection_and_resolution():
     from services.research.synthesizer import ResearchSynthesizer
-    from services.research.models import RawResearchBundle, EntityResolution, EntityCore
+    from services.schemas.insight import RawResearchBundle, EntityResolution, EntityCore
     
     synthesizer = ResearchSynthesizer()
     

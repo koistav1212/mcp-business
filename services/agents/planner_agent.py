@@ -3,11 +3,11 @@ import logging
 from typing import Dict, Any, Optional
 
 from services.llm.provider_router import ProviderRouter
-from services.models.research_execution_plan import (
+from services.core.models import (
     ResearchExecutionPlan, ResearchType, AnalysisDepth, Priority,
     ExecutionWave, ResearchTask, DependencyEdge, StopCondition
 )
-from services.research.models import EntityResolution
+from services.schemas.insight import EntityResolution
 from services.planning.planner_prompts import PLANNER_SYSTEM_PROMPT
 from services.planning.research_planner import DynamicResearchPlanner
 
@@ -93,7 +93,7 @@ class PlannerAgent:
                 payload = extract_json(payload_text)
             except Exception:
                 logger.warning("Could not extract JSON from planner text output. Falling back to basic WBS.")
-                return self._generate_fallback_plan(user_query)
+            return self._generate_fallback_plan(user_query)
             
             plan = parse_execution_plan(payload, company_entity)
             
