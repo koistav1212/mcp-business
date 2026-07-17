@@ -9,23 +9,32 @@ class BaseProvider(ABC):
     Each provider represents a single category of raw facts or events.
     """
     
-    def _extract_identifier(self, target: Any) -> Optional[str]:
+    def _extract_identifier(self, target: Any, preferred_key: Optional[str] = None) -> Optional[str]:
         """
-        Safely extracts the ticker or string name from the target object.
+        Safely extracts the preferred string identifier from the target object.
         """
         if not target:
             return None
         if isinstance(target, str):
             return target
             
-        # If it's a Pydantic model or dict
+        # Try preferred key first if provided
+        if preferred_key:
+            if hasattr(target, preferred_key) and getattr(target, preferred_key):
+                return getattr(target, preferred_key)
+            if isinstance(target, dict) and target.get(preferred_key):
+                return target.get(preferred_key)
+                
+        # Fallbacks
         if hasattr(target, "ticker") and target.ticker:
             return target.ticker
+        if hasattr(target, "company") and target.company:
+            return target.company
         if hasattr(target, "company_name") and target.company_name:
             return target.company_name
             
         if isinstance(target, dict):
-            return target.get("ticker") or target.get("canonical_name") or target.get("company_name") or str(target)
+            return target.get("ticker") or target.get("company") or target.get("canonical_name") or target.get("company_name") or str(target)
             
         return str(target)
 

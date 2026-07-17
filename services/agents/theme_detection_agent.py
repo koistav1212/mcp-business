@@ -40,7 +40,9 @@ class ThemeDetectionAgent:
                 system_prompt=system_instruction,
                 user_prompt=prompt
             )
-            return parsed.get("themes", {})
+            if isinstance(parsed, dict):
+                return parsed.get("themes", {})
+            return {}
         except Exception as e:
             logger.error(f"ThemeDetectionAgent failed: {e}")
             return {}

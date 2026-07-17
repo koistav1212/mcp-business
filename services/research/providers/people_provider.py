@@ -18,7 +18,7 @@ class PeopleProvider(BaseProvider):
     Leadership and talent intelligence.
     """
     async def fetch(self, target: Any) -> List[ResearchEvidence]:
-        company = self._extract_identifier(target)
+        company = self._extract_identifier(target, preferred_key="company")
         if not company:
             return []
         company_clean = company.strip()

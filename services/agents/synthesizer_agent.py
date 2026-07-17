@@ -1,51 +1,64 @@
 import json
 import logging
 from typing import Dict, Any, List
-import httpx
-from core.config import settings
-from services.schemas.insight import ExecutiveSummary
+from services.schemas.insight import ExecutiveSynthesizerOutput
 
 logger = logging.getLogger("uvicorn.error")
 
 class SynthesizerAgent:
     """
-    The final executive reasoning layer.
-    Consumes structured section outputs and reasoning signals to produce cross-sectional insights
-    and populates the NarrativeStore.
+    Executive Synthesizer Agent.
+    The only agent allowed to write narrative prose (Executive Summary, Investment Case,
+    Strategic Outlook, Key Risks, Opportunities, Recommendations).
+    Receives validated sections, validated signals, and quality score (never raw data).
     """
-    async def execute(self, sections: Dict[str, Any], validated_signals: List[str], entity_name: str) -> Dict[str, Any]:
-        sections_dict = {k: (v.model_dump() if hasattr(v, 'model_dump') else v) for k, v in sections.items()}
-        
+
+    async def execute(self, validated_sections: Dict[str, Any], validated_signals: List[str], quality_score: int, entity_name: str) -> Dict[str, Any]:
         system_instruction = (
-            "You are the Lead Executive Analyst. Your task is to generate the final executive narratives "
-            f"for the company {entity_name} based on the detailed section intelligence and cross-provider signals provided.\n"
-            "Produce the following narratives: 'company_summary', 'investment_case', 'risk_summary', "
-            "'competitive_summary', and 'operating_summary'.\n"
-            "Return a JSON object with these keys, containing the respective narrative paragraphs."
+            "You are the Lead Executive Analyst (Executive Synthesizer). Your task is to generate the final executive narratives "
+            f"for the company {entity_name} based on the validated section outputs, signals, and quality score provided.\n"
+            "CRITICAL RULES:\n"
+            "- You are the ONLY agent in this architecture allowed to write narrative prose.\n"
+            "- Write professional, high-impact narrative blocks for each of: 'executive_summary', 'investment_case', "
+            "'strategic_outlook', 'key_risks', 'opportunities', and 'recommendations'.\n"
+            "- Ground all narratives strictly in the provided validated sections and signals. Do not invent any facts, numbers, or details.\n"
+            "Return ONLY a valid JSON object matching the requested schema. Do not include markdown formatting or extra prose outside the JSON."
         )
 
-        headers = {
-            "Authorization": f"Bearer {settings.OPENAI_API_KEY}",
-            "Content-Type": "application/json"
-        }
-        
         payload = {
-            "sections": sections_dict,
-            "validated_signals": validated_signals
+            "validated_sections": validated_sections,
+            "validated_signals": validated_signals,
+            "quality_score": quality_score
         }
-        
-        prompt = f"Data for Synthesis:\n{json.dumps(payload, default=str)[:16000]}"
-        
+
+        prompt_payload = json.dumps(payload, default=str)
+        prompt = f"Data for Synthesis:\n{prompt_payload}"
+
+        logger.info(
+            "Synthesizer -> sections=%d signals=%d chars=%d",
+            len(validated_sections),
+            len(validated_signals),
+            len(prompt_payload)
+        )
+
         try:
             from services.llm.provider_router import ProviderRouter
-            narratives = await ProviderRouter.generate_json(
+            parsed = await ProviderRouter.generate_json(
                 agent_name="synthesizer",
                 system_prompt=system_instruction,
                 user_prompt=prompt
             )
-                
-                # We return the narratives to be stored in NarrativeStore by the HostAgent
-            return narratives
+            
+            # Make sure it matches our schema
+            validated = ExecutiveSynthesizerOutput.model_validate(parsed)
+            return validated.model_dump()
         except Exception as e:
             logger.error(f"SynthesizerAgent failed: {e}")
-            return {}
+            return {
+                "executive_summary": "Summary unavailable.",
+                "investment_case": "Investment case unavailable.",
+                "strategic_outlook": "Strategic outlook unavailable.",
+                "key_risks": "Key risks unavailable.",
+                "opportunities": "Opportunities unavailable.",
+                "recommendations": "Recommendations unavailable."
+            }

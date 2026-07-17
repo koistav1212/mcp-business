@@ -6,7 +6,7 @@ from typing import Any, List, Dict
 from crawl4ai import AsyncWebCrawler
 
 from services.research.base import BaseProvider
-from services.research.providers.shared_utils import logger
+from services.research.providers.shared_utils import logger, _write_json
 
 
 def parse_reddit_markdown(markdown: str) -> List[Dict[str, Any]]:
@@ -46,7 +46,7 @@ class RedditProvider(BaseProvider):
         """
         Entry point: fetch cross-source social intelligence for a given company/ticker.
         """
-        company = self._extract_identifier(target)
+        company = self._extract_identifier(target, preferred_key="company")
         if not company:
             return {"posts": []}
 
@@ -69,5 +69,21 @@ class RedditProvider(BaseProvider):
         except Exception as e:
             logger.exception(f"RedditProvider: Error crawling Reddit: {e}")
 
+        from services.knowledge.evidence import ResearchEvidence
+        from services.knowledge.citation_manager import CitationManager
+
         # The user requested that we return a dictionary with the "posts" key
-        return {"posts": posts}
+        result = {"posts": posts}
+        _write_json(f"reddit_{company_clean.replace(' ', '_')[:40]}.json", result)
+        
+        evidence_id = CitationManager.generate_id("social_sentiment", company_clean, "reddit", "current")
+        evidence = ResearchEvidence(
+            id=evidence_id,
+            entity=company_clean,
+            attribute="social_sentiment",
+            value=result,
+            source="reddit",
+            source_type="mcp",
+            confidence=0.7
+        )
+        return [evidence]

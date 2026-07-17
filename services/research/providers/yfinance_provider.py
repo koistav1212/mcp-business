@@ -13,7 +13,7 @@ class YFinanceProvider(BaseProvider):
     Live market data from Yahoo Finance via yfinance.
     """
     async def fetch(self, target: Any) -> List[ResearchEvidence]:
-        ticker_symbol = self._extract_identifier(target)
+        ticker_symbol = self._extract_identifier(target, preferred_key="ticker")
         if not ticker_symbol:
             return []
         ticker_clean = str(ticker_symbol).strip().upper()
@@ -84,6 +84,8 @@ class YFinanceProvider(BaseProvider):
                 "short_interest_pct": info.get("shortPercentOfFloat"),
                 "shares_short": info.get("sharesShort"),
                 "revenue_ttm": info.get("totalRevenue"),
+                "revenue_growth": info.get("revenueGrowth"),
+                "earnings_growth": info.get("earningsGrowth"),
                 "net_income_ttm": info.get("netIncomeToCommon"),
                 "ebitda_ttm": info.get("ebitda"),
                 "free_cash_flow_ttm": info.get("freeCashflow"),

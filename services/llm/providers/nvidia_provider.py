@@ -8,7 +8,7 @@ from services.llm.response import LLMResponse
 logger = logging.getLogger("uvicorn.error")
 
 class NVIDIAProvider(BaseProvider):
-    def __init__(self, api_key: str, timeout: float = 60.0):
+    def __init__(self, api_key: str, timeout: float = 300.0):
         self.api_key = api_key
         self.timeout = timeout
         self.provider_name = "nvidia"
@@ -30,6 +30,9 @@ class NVIDIAProvider(BaseProvider):
             
         if request.max_tokens is not None:
             payload["max_tokens"] = request.max_tokens
+            
+        if request.response_format is not None:
+            payload["response_format"] = request.response_format
 
         headers = {
             "Authorization": f"Bearer {self.api_key}",

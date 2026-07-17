@@ -31,7 +31,7 @@ class NewsProvider(BaseProvider):
     """
     
     async def fetch(self, target: Any) -> List[ResearchEvidence]:
-        company = self._extract_identifier(target)
+        company = self._extract_identifier(target, preferred_key="company")
         if not company:
             return []
             

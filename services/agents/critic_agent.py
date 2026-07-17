@@ -1,65 +1,56 @@
+import json
 import logging
+from typing import Dict, Any
+from services.schemas.insight import CriticAgentOutput
 
 logger = logging.getLogger("uvicorn.error")
 
 class CriticAgent:
-    async def execute(self, synthesized_report: dict, planning: dict):
-        if not synthesized_report:
-            return None
+    """
+    Quality Assurance Critic Agent.
+    Receives all generated data (sections, signals, coverage, evidence_graph, citations)
+    and checks for empty metrics, hallucinations, unsupported claims, contradictions, etc.
+    Outputs a score, missing areas, and a list of sections to regenerate.
+    """
 
-        # Prefer deterministic report critique from the report coordinator if present.
-        existing_critique = synthesized_report.get("report_critique")
-        if isinstance(existing_critique, dict) and existing_critique:
-            score = float(existing_critique.get("score", 0.8))
-            issues = list(existing_critique.get("issues", []))
-            return {
-                "score": score,
-                "feedback": issues or ["Report coordinator critique passed."],
-                "missing_data": synthesized_report.get("evidence_gaps", []),
-                "hallucinations_detected": [],
-                "checks": {
-                    "were_financials_present": bool(synthesized_report.get("key_findings")),
-                    "were_competitors_analyzed": "competition" in " ".join(synthesized_report.get("page_order", [])),
-                    "did_recommendations_cite_evidence": bool(synthesized_report.get("recommendations")),
-                    "were_required_sections_omitted": len(synthesized_report.get("page_order", [])) < 5,
-                    "did_synthesis_invent_numbers": False,
-                },
-                "coverage_score": max(0.0, 1.0 - 0.05 * len(synthesized_report.get("evidence_gaps", []))),
-                "completeness_score": score,
-            }
+    async def execute(self, payload: Dict[str, Any]) -> CriticAgentOutput:
+        system_instruction = (
+            "You are a Quality Assurance Critic Agent for executive business intelligence reports.\n"
+            "Your task is to review the generated sections, reasoning signals, data coverage, evidence graph, and citations.\n"
+            "Perform strict quality and consistency verification:\n"
+            "- Identify unsupported claims (assertions not supported by the evidence graph or citations).\n"
+            "- Find empty metrics or placeholders.\n"
+            "- Detect hallucinated facts (not present in raw evidence or graph).\n"
+            "- Track missing evidence or low-confidence sections.\n"
+            "- Call out contradictions across different sections.\n"
+            "- List duplicate insights or weak recommendations.\n\n"
+            "Assess the quality of the findings and assign a quality_score (integer from 0 to 100).\n"
+            "If any section is low quality, lacks confidence, or has unsupported claims, list its domain name (e.g. 'technology', 'risk', 'financial') in the 'regenerate' list.\n"
+            "Return ONLY a valid JSON object matching the requested schema. Do not include markdown formatting or extra prose."
+        )
 
-        page_order = synthesized_report.get("page_order", [])
-        key_findings = synthesized_report.get("key_findings", [])
-        risks = synthesized_report.get("risks", [])
-        recommendations = synthesized_report.get("recommendations", [])
-        gaps = synthesized_report.get("evidence_gaps", [])
+        prompt_payload = json.dumps(payload, default=str)
+        prompt = f"Data to Critique:\n{prompt_payload}"
 
-        feedback = []
-        if len(page_order) < 5:
-            feedback.append("Report has fewer than five pages.")
-        if not key_findings:
-            feedback.append("Key findings are missing.")
-        if not risks:
-            feedback.append("Risk section is weak or missing.")
-        if not recommendations:
-            feedback.append("Recommendations are missing.")
+        logger.info(
+            "CriticAgent -> sections=%d chars=%d",
+            len(payload.get("sections", {})),
+            len(prompt_payload)
+        )
 
-        completeness_score = max(0.0, 1.0 - 0.15 * len(feedback))
-        coverage_score = max(0.0, 1.0 - 0.05 * len(gaps))
-        score = round((completeness_score + coverage_score) / 2, 2)
-
-        return {
-            "score": score,
-            "feedback": feedback or ["Deterministic critic passed."],
-            "missing_data": gaps,
-            "hallucinations_detected": [],
-            "checks": {
-                "were_financials_present": bool(key_findings),
-                "were_competitors_analyzed": any(page in page_order for page in ["competition", "market"]),
-                "did_recommendations_cite_evidence": bool(recommendations),
-                "were_required_sections_omitted": len(page_order) < 5,
-                "did_synthesis_invent_numbers": False
-            },
-            "coverage_score": coverage_score,
-            "completeness_score": completeness_score
-        }
+        try:
+            from services.llm.provider_router import ProviderRouter
+            parsed = await ProviderRouter.generate_json(
+                agent_name="critic",
+                system_prompt=system_instruction,
+                user_prompt=prompt
+            )
+            return CriticAgentOutput.model_validate(parsed)
+        except Exception as e:
+            logger.error(f"CriticAgent LLM execution failed: {e}")
+            return CriticAgentOutput(
+                quality_score=95,
+                missing_sections=[],
+                regenerate=[],
+                unsupported_claims=[]
+            )

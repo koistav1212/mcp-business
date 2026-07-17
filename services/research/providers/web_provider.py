@@ -1,146 +1,222 @@
 import asyncio
-from typing import Any, Dict, List, Optional
+import json
+import re
+from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urljoin, urlparse
 
 from crawl4ai import AsyncWebCrawler
 
-from services.research.base import BaseProvider
-from services.knowledge.evidence import ResearchEvidence
 from services.knowledge.citation_manager import CitationManager
+from services.knowledge.evidence import ResearchEvidence
+from services.research.base import BaseProvider
 from services.research.providers.shared_utils import _write_json, logger
-from services.llm.provider_router import ProviderRouter
-import json
-
 
 class WebProvider(BaseProvider):
     """
-    Website Provider (Main Source)
-    Aggregates intelligence for a company by crawling its public web presence using crawl4ai.
+    Crawl a company's public website and return structured page snippets.
     """
 
+    PAGES_TO_CHECK = [
+        "/",
+        "/products",
+        "/solutions",
+        "/industries",
+        "/pricing",
+        "/blog",
+        "/docs",
+        "/case-studies",
+        "/developers",
+        "/about",
+        "/investors",
+        "/press",
+        "/careers",
+    ]
+    MAX_SNIPPET_CHARS = 1800
+    MAX_TOTAL_CHARS = 10000
+
     async def fetch(self, target: Any) -> List[ResearchEvidence]:
-        company = self._extract_identifier(target)
-        if not company:
+        company_name, base_url = self._resolve_company_and_base_url(target)
+        if not company_name and not base_url:
+            logger.warning("WebProvider: could not resolve a company name or website from target")
             return []
 
-        company_clean = company.strip()
-        company_key = company_clean.lower()
-
-        evidence_list: List[ResearchEvidence] = []
-
-        # 1) Discover base URL
-        base_url = self._guess_company_url(company_clean)
-        logger.info(f"WebProvider: guessed base URL '{base_url}' for company '{company_clean}'")
+        company_label = company_name or self._hostname_label(base_url) or "unknown_company"
+        company_key = company_label.strip().lower()
 
         if not base_url:
+            logger.warning(f"WebProvider: no resolvable base URL for {company_label}")
             return []
 
-        # 2) Define the pages to crawl based on the user's requirement
-        pages_to_check = [
-            "/", "/products", "/solutions", "/industries", "/pricing", 
-            "/blog", "/docs", "/case-studies", "/developers", "/about", 
-            "/investors", "/press", "/careers"
-        ]
-
-        crawled_markdown = []
-        
-        # We will crawl sequentially or concurrently with a limit. For now, concurrently.
-        async with AsyncWebCrawler() as crawler:
-            async def fetch_page(path: str):
-                url = urljoin(base_url, path)
-                try:
-                    result = await crawler.arun(url=url)
-                    if result and result.markdown:
-                        logger.info(f"WebProvider: successfully crawled {url}")
-                        return result.markdown
-                except Exception as e:
-                    logger.warning(f"WebProvider: error crawling {url} ({e})")
-                return ""
-
-            # Concurrently fetch pages
-            tasks = [fetch_page(path) for path in pages_to_check]
-            results = await asyncio.gather(*tasks, return_exceptions=True)
-            
-            for res in results:
-                if isinstance(res, str) and res:
-                    crawled_markdown.append(res)
-
-        combined_text = "\n".join(crawled_markdown)
-        
-        if not combined_text.strip():
-            logger.warning(f"WebProvider: No content extracted for {company_clean}.")
+        logger.info(f"WebProvider: using base URL '{base_url}' for company '{company_label}'")
+        page_context = await self._crawl_pages(base_url, company_label)
+        if not page_context:
+            logger.warning(f"WebProvider: no crawlable content extracted for {company_label} from {base_url}")
             return []
 
-        # 3) Extract structured entities using LLM
-        system_prompt = (
-            "You are an expert Business Intelligence Analyst.\n"
-            "Extract comprehensive information from the provided website markdown.\n"
-            "Return a JSON object containing EXACTLY these keys with arrays of strings as values:\n"
-            "Products, Services, Technologies, Integrations, Features, Customers, Partners, Industries, Use_Cases.\n"
-            "If no information is found for a category, return an empty array. Do not hallucinate."
-        )
+        extracted_data = {"pages": page_context}
 
-        # Truncate to a reasonable length for the LLM
-        max_chars = 30000 
-        truncated_text = combined_text[:max_chars]
-        
-        user_prompt = f"Company website markdown:\n{truncated_text}\n\nExtract the required entities in JSON format."
-
-        extracted_data = {}
-        try:
-            parsed = await ProviderRouter.generate_json(
-                agent_name="technology_agent", # using an existing agent configuration
-                system_prompt=system_prompt,
-                user_prompt=user_prompt
-            )
-            
-            extracted_data = {
-                "Products": parsed.get("Products", []),
-                "Services": parsed.get("Services", []),
-                "Technologies": parsed.get("Technologies", []),
-                "Integrations": parsed.get("Integrations", []),
-                "Features": parsed.get("Features", []),
-                "Customers": parsed.get("Customers", []),
-                "Partners": parsed.get("Partners", []),
-                "Industries": parsed.get("Industries", []),
-                "Use_Cases": parsed.get("Use_Cases", [])
-            }
-        except Exception as e:
-            logger.warning(f"WebProvider LLM extraction failed: {e}")
-            return []
-
-        # 4) Emit ResearchEvidence
         evidence_id = CitationManager.generate_id(
             "website_intelligence",
             company_key,
             "website",
             "current",
         )
-        
-        evidence_list.append(
-            ResearchEvidence(
-                id=evidence_id,
-                entity=company_key,
-                attribute="website_intelligence",
-                value=extracted_data,
-                source="company_website",
-                source_type="mcp",
-                confidence=0.8,
-            )
+        evidence = ResearchEvidence(
+            id=evidence_id,
+            entity=company_key,
+            attribute="website_intelligence",
+            value=extracted_data,
+            source="company_website",
+            source_type="mcp",
+            confidence=0.8,
+            metadata={
+                "base_url": base_url,
+                "pages_crawled": len(page_context),
+                "paths": [page["path"] for page in page_context],
+            },
         )
 
         _write_json(
             f"web_evidence_{company_key.replace(' ', '_')[:40]}.json",
-            [e.model_dump(mode="json") for e in evidence_list],
+            [evidence.model_dump(mode="json")],
+        )
+        return [evidence]
+
+    async def _crawl_pages(self, base_url: Optional[str], company_label: str) -> List[Dict[str, str]]:
+        async with AsyncWebCrawler() as crawler:
+            async def fetch_url(url: str, path_label: str) -> Optional[Dict[str, str]]:
+                try:
+                    result = await crawler.arun(url=url)
+                except Exception as exc:
+                    logger.warning(f"WebProvider: error crawling {url} ({exc})")
+                    return None
+
+                markdown = getattr(result, "markdown", "") if result else ""
+                cleaned_markdown = self._clean_markdown(markdown)
+                if not cleaned_markdown:
+                    return None
+
+                logger.info(f"WebProvider: successfully crawled {url}")
+                return {
+                    "path": path_label,
+                    "url": url,
+                    "snippet": cleaned_markdown[: self.MAX_SNIPPET_CHARS],
+                }
+
+            urls_to_fetch = []
+            if base_url:
+                for p in self.PAGES_TO_CHECK:
+                    urls_to_fetch.append((urljoin(base_url, p), p))
+            
+            if company_label and company_label != "unknown_company":
+                wiki_url = f"https://en.wikipedia.org/wiki/{company_label.replace(' ', '_')}"
+                urls_to_fetch.append((wiki_url, "/wikipedia"))
+
+            tasks = [fetch_url(u, p) for u, p in urls_to_fetch]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        page_context: List[Dict[str, str]] = []
+        total_chars = 0
+        for result in results:
+            if isinstance(result, Exception) or not result:
+                continue
+            snippet = result["snippet"]
+            if total_chars >= self.MAX_TOTAL_CHARS:
+                break
+            remaining = self.MAX_TOTAL_CHARS - total_chars
+            if len(snippet) > remaining:
+                result = dict(result)
+                result["snippet"] = snippet[:remaining].rstrip() + "..."
+            page_context.append(result)
+            total_chars += len(result["snippet"])
+        return page_context
+
+
+
+    def _resolve_company_and_base_url(self, target: Any) -> Tuple[Optional[str], Optional[str]]:
+        if isinstance(target, str):
+            if self._looks_like_url(target):
+                return self._hostname_label(target), self._normalize_base_url(target)
+            company_name = target.strip()
+            return company_name, self._guess_company_url(company_name)
+
+        company_name = self._extract_identifier(target, preferred_key="company")
+        website = self._extract_url_hint(target)
+        if website:
+            return company_name, self._normalize_base_url(website)
+        if company_name:
+            return company_name, self._guess_company_url(company_name)
+        return None, None
+
+    def _extract_url_hint(self, target: Any) -> Optional[str]:
+        if not isinstance(target, dict):
+            return None
+
+        direct_fields = [
+            target.get("website"),
+            target.get("official_website"),
+            target.get("homepage"),
+            target.get("canonical_domain"),
+        ]
+        entity = target.get("entity", {}) if isinstance(target.get("entity"), dict) else {}
+        official_pages = target.get("official_pages", {}) if isinstance(target.get("official_pages"), dict) else {}
+        direct_fields.extend(
+            [
+                entity.get("website"),
+                entity.get("canonical_domain"),
+                official_pages.get("homepage"),
+                official_pages.get("about"),
+            ]
         )
 
-        return evidence_list
+        for value in direct_fields:
+            if value and self._looks_like_url(str(value)):
+                return str(value)
+        return None
+
+    def _normalize_base_url(self, value: str) -> str:
+        raw_value = value.strip()
+        if not raw_value.startswith(("http://", "https://")):
+            raw_value = f"https://{raw_value}"
+        parsed = urlparse(raw_value)
+        if not parsed.netloc:
+            return raw_value.rstrip("/")
+        return f"{parsed.scheme}://{parsed.netloc}/"
+
+    def _looks_like_url(self, value: str) -> bool:
+        value = value.strip().lower()
+        return value.startswith(("http://", "https://")) or ("." in value and " " not in value and "/" not in value[:1])
+
+    def _hostname_label(self, value: Optional[str]) -> Optional[str]:
+        if not value:
+            return None
+        parsed = urlparse(value if value.startswith(("http://", "https://")) else f"https://{value}")
+        host = parsed.netloc.lower()
+        if host.startswith("www."):
+            host = host[4:]
+        if not host:
+            return None
+        return host.split(".")[0].replace("-", " ")
+
+
+
+    def _clean_markdown(self, markdown: str) -> str:
+        if not markdown:
+            return ""
+        text = re.sub(r"!\[[^\]]*\]\([^)]+\)", " ", markdown)
+        text = re.sub(r"\[[^\]]+\]\([^)]+\)", " ", text)
+        text = re.sub(r"`{1,3}", " ", text)
+        text = re.sub(r"[#>*_\-]{2,}", " ", text)
+        return self._clean_text(text, self.MAX_SNIPPET_CHARS * 2)
+
+    def _clean_text(self, value: str, limit: int) -> str:
+        text = re.sub(r"\s+", " ", value).strip()
+        if len(text) > limit:
+            text = text[: limit - 3].rstrip() + "..."
+        return text
 
     def _guess_company_url(self, company: str) -> Optional[str]:
-        """
-        Very naive URL guesser.
-        """
-        token = company.lower().replace(" ", "")
+        token = re.sub(r"[^a-z0-9]", "", company.lower())
         if not token:
             return None
-        return f"https://{token}.com"
+        return f"https://{token}.com/"

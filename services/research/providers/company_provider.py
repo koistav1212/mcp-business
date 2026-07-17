@@ -475,6 +475,12 @@ class CompanyProvider(BaseProvider):
             {"name": "BioNTech", "website": "https://biontech.com", "segment": "mRNA Oncology & Vaccines"},
             {"name": "Regeneron", "website": "https://regeneron.com", "segment": "Large Molecule Biologics"},
         ],
+        "Consumer Electronics": [
+            {"name": "Samsung Electronics", "website": "https://samsung.com", "segment": "Smartphones & Hardware"},
+            {"name": "Sony", "website": "https://sony.com", "segment": "Gaming & Electronics"},
+            {"name": "Google", "website": "https://google.com", "segment": "Hardware & OS"},
+            {"name": "Dell Technologies", "website": "https://dell.com", "segment": "PCs & Hardware"}
+        ],
     }
 
     def _get_competitors(self, industry: str, sector: str) -> List[Dict[str, str]]:
@@ -594,7 +600,7 @@ class CompanyProvider(BaseProvider):
     # ── Main fetch ──────────────────────────────────────────────────────────
 
     async def fetch(self, target: Any) -> List[ResearchEvidence]:
-        company = self._extract_identifier(target)
+        company = self._extract_identifier(target, preferred_key="company")
         if not company:
             return []
         company_clean = company.strip()

@@ -41,10 +41,12 @@ class KnowledgeRouter:
         # If target is a dictionary/model with a canonical name, we use that for cache lookup.
         # Otherwise fallback to string representation.
         entity_name = str(target)
-        if hasattr(target, "company_name") and target.company_name:
+        if hasattr(target, "company") and target.company:
+            entity_name = target.company
+        elif hasattr(target, "company_name") and target.company_name:
             entity_name = target.company_name
-        elif isinstance(target, dict) and "company_name" in target:
-            entity_name = target["company_name"]
+        elif isinstance(target, dict):
+            entity_name = target.get("company") or target.get("company_name") or target.get("canonical_name") or str(target)
             
         canonical_entity = EntityLinker.canonicalize(entity_name)
         
@@ -60,6 +62,10 @@ class KnowledgeRouter:
         
         raw_data = await self.tool_router.fetch(provider_name, target)
         if not raw_data:
+            logger.warning(f"KnowledgeRouter: Provider {provider_name} returned no evidence for {canonical_entity}")
+            return []
+        if not self._has_meaningful_payload(raw_data):
+            logger.warning(f"KnowledgeRouter: Provider {provider_name} returned only empty payloads for {canonical_entity}")
             return []
             
         parsed_evidence = []
@@ -102,3 +108,20 @@ class KnowledgeRouter:
             logger.warning(f"Failed to dump parsed evidence for {provider_name}: {e}")
             
         return parsed_evidence
+
+    def _has_meaningful_payload(self, payload: Any) -> bool:
+        if payload is None:
+            return False
+        if isinstance(payload, list):
+            if not payload:
+                return False
+            return any(self._has_meaningful_payload(item) for item in payload)
+        if isinstance(payload, ResearchEvidence):
+            return self._has_meaningful_payload(payload.value)
+        if isinstance(payload, dict):
+            if not payload:
+                return False
+            return any(self._has_meaningful_payload(value) for value in payload.values())
+        if isinstance(payload, str):
+            return bool(payload.strip())
+        return True

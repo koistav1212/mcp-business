@@ -1,6 +1,6 @@
 from services.agents.section_generators.base_section_generator import BaseSectionGenerator
-from services.schemas.insight import NewsIntelligence
+from services.schemas.insight import RiskAgentOutput
 
 class RiskSectionGenerator(BaseSectionGenerator):
     def __init__(self):
-        super().__init__("News and Risk Intelligence", NewsIntelligence)
+        super().__init__("News and Risk Intelligence", RiskAgentOutput)

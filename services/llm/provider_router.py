@@ -3,85 +3,93 @@ import json
 import logging
 import asyncio
 import re
+import random
 from typing import Optional, Dict, Any, List
 from services.llm.request import LLMRequest
 from services.llm.response import LLMResponse
 from services.llm.model_registry import MODEL_REGISTRY
 from services.llm.provider_factory import ProviderFactory
-from services.llm.providers.self_hosted_provider import build_self_hosted_timeout, sanitize_llm_text
-
+from services.llm.providers.self_hosted_provider import sanitize_llm_text
+from json_repair import repair_json
 import httpx
+
 logger = logging.getLogger("uvicorn.error")
 
-async def _call_self_hosted_text(model: str, system_prompt: str, user_prompt: str, timeout: float = 300.0, force_json: bool = False) -> str:
-    """
-    Calls a self_hosted OpenAI-compatible endpoint (e.g., Ollama) and
-    returns plain text. Uses `content` first, falls back to `reasoning`
-    if present. Raises on timeout or empty output.
-    """
-    timeout_config = build_self_hosted_timeout(timeout)
+GLOBAL_LLM_SEMAPHORE = asyncio.Semaphore(2)
 
-    async with httpx.AsyncClient(timeout=timeout_config) as client:
-        payload = {
-            "model": model,
-            "messages": [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ],
-            "options": {
-                "temperature": 0.1 if force_json else 0.3,
-                "num_ctx": 16384,
-                "num_predict": 8192
-            },
-            "stream": True
-        }
+def _profile_llm_call(agent_name: str, user_prompt: str, messages: Optional[List[Dict[str, str]]] = None):
+    text_content = user_prompt
+    if messages:
+        text_content += " " + " ".join([m.get("content", "") for m in messages])
+    
+    char_count = len(text_content)
+    token_est = char_count // 4
+    evidence_count = text_content.count('"source_id"') + text_content.count("'source_id'")
+    url_count = text_content.count('http://') + text_content.count('https://')
+    entity_count = text_content.count('"company_name"') + text_content.count('"ticker"')
+    
+    logger.info(
+        f"\nAgent: {agent_name}\n"
+        f"Input tokens: {token_est}\n"
+        f"Chars: {char_count}\n"
+        f"Evidence objects: {evidence_count}\n"
+        f"URLs: {url_count}\n"
+        f"Entities: {entity_count}\n"
+    )
+
+async def _call_openrouter_text(model: str, system_prompt: str, user_prompt: str, timeout: float = 300.0, force_json: bool = False) -> str:
+    headers = {
+        "Authorization": f"Bearer {os.environ['OPENROUTER_API_KEY']}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+        "temperature": 0.1 if force_json else 0.3,
+        "stream": True
+    }
+    
+    if force_json and "gemma" not in model.lower() and "qwen" not in model.lower():
+        payload["response_format"] = {"type": "json_object"}
         
-        if force_json and "qwen" not in model.lower():
-            payload["format"] = "json"
-            
-        base_url = os.environ["OLLAMA_BASE_URL"]
-        if base_url.endswith("/v1"):
-            base_url = base_url[:-3]
-            
-        content_chunks = []
-        reasoning_chunks = []
-        
-        async with client.stream("POST", f"{base_url}/api/chat", json=payload) as resp:
-            resp.raise_for_status()
-            async for line in resp.aiter_lines():
-                if not line.strip():
-                    continue
-                try:
-                    chunk_data = json.loads(line)
-                    
-                    if "error" in chunk_data:
-                        raise RuntimeError(f"Ollama API Error: {chunk_data['error']}")
-                        
-                    msg = chunk_data.get("message", {})
-                    
-                    if "content" in msg and msg["content"]:
-                        content_chunks.append(msg["content"])
-                        
-                    if "reasoning" in msg and msg["reasoning"]:
-                        reasoning_chunks.append(msg["reasoning"])
-                        
-                except json.JSONDecodeError:
-                    if not content_chunks and not reasoning_chunks and "<html>" in line.lower():
-                        raise RuntimeError(f"Received HTML instead of JSON (possibly Cloudflare error): {line[:200]}")
-                    continue
+    base_url = "https://openrouter.ai/api/v1"
+    
+    content_chunks = []
+    
+    async with GLOBAL_LLM_SEMAPHORE:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            async with client.stream("POST", f"{base_url}/chat/completions", json=payload, headers=headers) as resp:
+                resp.raise_for_status()
+                async for line in resp.aiter_lines():
+                    if not line.strip() or line.strip() == "data: [DONE]":
+                        continue
+                    if line.startswith("data: "):
+                        line = line[6:]
+                    try:
+                        chunk_data = json.loads(line)
+                        if "error" in chunk_data:
+                            raise RuntimeError(f"OpenRouter API Error: {chunk_data['error']}")
+                            
+                        choices = chunk_data.get("choices", [])
+                        if choices:
+                            delta = choices[0].get("delta", {})
+                            if "content" in delta and delta["content"]:
+                                content_chunks.append(delta["content"])
+                                
+                    except json.JSONDecodeError:
+                        continue
                     
     content = "".join(content_chunks)
-    reasoning = "".join(reasoning_chunks)
-
-    text = content.strip() or reasoning.strip()
+    text = content.strip()
     if not text:
-        raise RuntimeError(f"Empty response from self_hosted model.")
+        raise RuntimeError(f"Empty response from openrouter model.")
 
     sanitized_text = sanitize_llm_text(text)
     if not sanitized_text:
-        raise RuntimeError(
-            f"Self-hosted model returned content that became empty after sanitization. Raw content={content!r} raw reasoning={reasoning!r}"
-        )
+        raise RuntimeError(f"OpenRouter model returned empty content after sanitization. Raw={content!r}")
 
     return sanitized_text
 
@@ -95,13 +103,19 @@ def extract_json(text: str) -> dict:
     match = re.search(r'```(?:json)?\s*(.*?)\s*```', text, re.DOTALL | re.IGNORECASE)
     if match:
         text = match.group(1).strip()
-        return json.loads(text)
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            return json.loads(repair_json(text))
         
     # Try to find the first JSON object or array
     match = re.search(r'(\{.*\}|\[.*\])', text, re.DOTALL)
     if match:
         text = match.group(1).strip()
-        return json.loads(text)
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            return json.loads(repair_json(text))
         
     # Fallback to the original logic
     if text.startswith("```json"):
@@ -112,10 +126,13 @@ def extract_json(text: str) -> dict:
         text = text[:-3]
     text = text.strip()
         
-    return json.loads(text)
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        return json.loads(repair_json(text))
 
 
-async def _retry_self_hosted_json_after_parse_failure(
+async def _retry_openrouter_json_after_parse_failure(
     model: str,
     system_prompt: str,
     user_prompt: str,
@@ -135,7 +152,7 @@ async def _retry_self_hosted_json_after_parse_failure(
         },
         default=str,
     )
-    return await _call_self_hosted_text(
+    return await _call_openrouter_text(
         model,
         repair_system_prompt,
         repair_user_prompt,
@@ -153,6 +170,8 @@ class ProviderRouter:
         token_budget = registry_entry.get("token_budget", 1500)
         
         from services.artifacts.artifact_writer import ArtifactWriter
+        
+        _profile_llm_call(agent_name, user_prompt, messages)
 
         fallback_chain = ["primary", "secondary", "tertiary"]
         seen_configs = set()
@@ -170,20 +189,28 @@ class ProviderRouter:
                 continue
             seen_configs.add(config_key)
             
-            if provider_name == "self_hosted":
-                timeout = 900.0 if agent_name in {"synthesizer", "executive_qa", "financial_agent", "industry_agent", "competitor_agent", "risk_agent", "technology_agent", "director"} else 300.0
-                try:
-                    logger.info(f"LLM Routing (Text) -> Agent: {agent_name} | Provider: {provider_name} | Model: {model_name} | text helper")
-                    raw_text = await _call_self_hosted_text(model_name, system_prompt, user_prompt, timeout=timeout)
-                    ArtifactWriter.write_json(f"agent_outputs/{agent_name}_text.json", {
-                        "raw_llm_response": raw_text,
-                        "validation_result": "success",
-                        "errors": []
-                    })
-                    return sanitize_llm_text(raw_text)
-                except Exception as e:
-                    logger.warning(f"Provider {provider_name} failed for {agent_name}: {repr(e)}. Retrying next in chain...")
-                    continue
+            if provider_name == "openrouter":
+                timeout = 360.0
+                base_delay = 2.0
+                attempt = 0
+                while attempt < 3:
+                    try:
+                        logger.info(f"LLM Routing (Text) -> Agent: {agent_name} | Provider: {provider_name} | Model: {model_name} | text helper | Attempt: {attempt+1}")
+                        raw_text = await _call_openrouter_text(model_name, system_prompt, user_prompt, timeout=timeout)
+                        ArtifactWriter.write_json(f"agent_outputs/{agent_name}_text.json", {
+                            "raw_llm_response": raw_text,
+                            "validation_result": "success",
+                            "errors": []
+                        })
+                        return sanitize_llm_text(raw_text)
+                    except Exception as e:
+                        attempt += 1
+                        if attempt >= 3:
+                            logger.warning(f"Provider {provider_name} exhausted 3 attempts for {agent_name}: {repr(e)}. Retrying next in chain...")
+                            break
+                        logger.warning(f"Provider {provider_name} failed for {agent_name}: {repr(e)}. Retrying attempt {attempt+1}...")
+                        await asyncio.sleep(base_delay * (2 ** attempt) + random.uniform(0.1, 1.0))
+                continue
             
             provider = ProviderFactory.get_provider(provider_name)
             if not provider:
@@ -214,7 +241,8 @@ class ProviderRouter:
                 try:
                     logger.info(f"LLM Routing (Text) -> Agent: {agent_name} | Provider: {provider_name} | Model: {model_name} | Attempt: {attempt+1}")
                     
-                    response: LLMResponse = await provider.generate(request)
+                    async with GLOBAL_LLM_SEMAPHORE:
+                        response: LLMResponse = await provider.generate(request)
                     
                     # Log telemetry
                     logger.info(
@@ -246,7 +274,7 @@ class ProviderRouter:
                     })
                     
                     is_validation = "validation" in error_msg or "validationerror" in error_type
-                    is_429 = "429" in error_msg
+                    is_429 = "429" in error_msg or "502" in error_msg or "503" in error_msg or "504" in error_msg
                     
                     if is_validation:
                         logger.error(f"Provider {provider_name} validation error for {agent_name}. Failing fast: {repr(e)}")
@@ -264,7 +292,7 @@ class ProviderRouter:
                         logger.warning(f"Provider {provider_name} failed for {agent_name}: {repr(e)}. Retrying...")
                     
                     attempt += 1
-                    await asyncio.sleep(base_delay * (2 ** attempt))
+                    await asyncio.sleep(base_delay * (2 ** attempt) + random.uniform(0.1, 1.0))
                     
         raise Exception(f"All providers exhausted for agent: {agent_name}. Routing failed.")
 
@@ -277,6 +305,8 @@ class ProviderRouter:
         token_budget = registry_entry.get("token_budget", 1500)
         
         from services.artifacts.artifact_writer import ArtifactWriter
+
+        _profile_llm_call(agent_name, user_prompt, messages)
 
         fallback_chain = ["primary", "secondary", "tertiary"]
         seen_configs = set()
@@ -294,56 +324,64 @@ class ProviderRouter:
                 continue
             seen_configs.add(config_key)
             
-            if provider_name == "self_hosted":
-                timeout = 900.0 if agent_name in {"synthesizer", "executive_qa", "financial_agent", "industry_agent", "competitor_agent", "risk_agent", "technology_agent", "director"} else 300.0
-                try:
-                    logger.info(f"LLM Routing (JSON) -> Agent: {agent_name} | Provider: {provider_name} | Model: {model_name} | text helper")
-                    raw_text = await _call_self_hosted_text(model_name, system_prompt, user_prompt, timeout=timeout, force_json=True)
-                    ArtifactWriter.write_json(f"agent_outputs/{agent_name}_self_hosted_raw.json", {
-                        "provider": provider_name,
-                        "model": model_name,
-                        "raw_llm_response": raw_text,
-                        "validation_result": "received_unparsed",
-                        "errors": []
-                    })
+            if provider_name == "openrouter":
+                timeout = 360.0
+                base_delay = 2.0
+                attempt = 0
+                while attempt < 3:
                     try:
-                        parsed = json.loads(sanitize_llm_text(raw_text))
-                    except json.JSONDecodeError:
+                        logger.info(f"LLM Routing (JSON) -> Agent: {agent_name} | Provider: {provider_name} | Model: {model_name} | text helper | Attempt: {attempt+1}")
+                        raw_text = await _call_openrouter_text(model_name, system_prompt, user_prompt, timeout=timeout, force_json=True)
+                        ArtifactWriter.write_json(f"agent_outputs/{agent_name}_openrouter_raw.json", {
+                            "provider": provider_name,
+                            "model": model_name,
+                            "raw_llm_response": raw_text,
+                            "validation_result": "received_unparsed",
+                            "errors": []
+                        })
                         try:
-                            parsed = extract_json(raw_text)
+                            parsed = json.loads(sanitize_llm_text(raw_text))
                         except json.JSONDecodeError:
-                            repaired_text = await _retry_self_hosted_json_after_parse_failure(
-                                model_name,
-                                system_prompt,
-                                user_prompt,
-                                raw_text,
-                                timeout,
-                            )
-                            ArtifactWriter.write_json(f"agent_outputs/{agent_name}_self_hosted_repair_raw.json", {
-                                "provider": provider_name,
-                                "model": model_name,
-                                "raw_llm_response": repaired_text,
-                                "validation_result": "received_repair_unparsed",
-                                "errors": []
-                            })
-                            parsed = extract_json(repaired_text)
-                    ArtifactWriter.write_json(f"agent_outputs/{agent_name}.json", {
-                        "raw_llm_response": raw_text,
-                        "parsed_json": parsed,
-                        "validation_result": "success",
-                        "errors": []
-                    })
-                    return parsed
-                except Exception as e:
-                    ArtifactWriter.write_json(f"agent_outputs/{agent_name}_self_hosted_parse_error.json", {
-                        "provider": provider_name,
-                        "model": model_name,
-                        "raw_llm_response": locals().get("raw_text"),
-                        "validation_result": "failed",
-                        "errors": [repr(e)]
-                    })
-                    logger.warning(f"Provider {provider_name} failed for {agent_name}: {repr(e)}. Retrying next in chain...")
-                    continue
+                            try:
+                                parsed = extract_json(raw_text)
+                            except json.JSONDecodeError:
+                                repaired_text = await _retry_openrouter_json_after_parse_failure(
+                                    model_name,
+                                    system_prompt,
+                                    user_prompt,
+                                    raw_text,
+                                    timeout,
+                                )
+                                ArtifactWriter.write_json(f"agent_outputs/{agent_name}_openrouter_repair_raw.json", {
+                                    "provider": provider_name,
+                                    "model": model_name,
+                                    "raw_llm_response": repaired_text,
+                                    "validation_result": "received_repair_unparsed",
+                                    "errors": []
+                                })
+                                parsed = extract_json(repaired_text)
+                        ArtifactWriter.write_json(f"agent_outputs/{agent_name}.json", {
+                            "raw_llm_response": raw_text,
+                            "parsed_json": parsed,
+                            "validation_result": "success",
+                            "errors": []
+                        })
+                        return parsed
+                    except Exception as e:
+                        ArtifactWriter.write_json(f"agent_outputs/{agent_name}_openrouter_parse_error_{attempt}.json", {
+                            "provider": provider_name,
+                            "model": model_name,
+                            "raw_llm_response": locals().get("raw_text"),
+                            "validation_result": "failed",
+                            "errors": [repr(e)]
+                        })
+                        attempt += 1
+                        if attempt >= 3:
+                            logger.warning(f"Provider {provider_name} exhausted 3 attempts for {agent_name}: {repr(e)}. Retrying next in chain...")
+                            break
+                        logger.warning(f"Provider {provider_name} failed for {agent_name}: {repr(e)}. Retrying attempt {attempt+1}...")
+                        await asyncio.sleep(base_delay * (2 ** attempt) + random.uniform(0.1, 1.0))
+                continue
                     
             provider = ProviderFactory.get_provider(provider_name)
             if not provider:
@@ -355,7 +393,8 @@ class ProviderRouter:
                 user_prompt=user_prompt,
                 messages=messages or [],
                 model=model_name,
-                max_tokens=token_budget
+                max_tokens=token_budget,
+                response_format={"type": "json_object"} if provider_name == "nvidia" else None
             )
             
             # Save Input Artifact
@@ -374,7 +413,8 @@ class ProviderRouter:
                 try:
                     logger.info(f"LLM Routing -> Agent: {agent_name} | Provider: {provider_name} | Model: {model_name} | Attempt: {attempt+1}")
                     
-                    response: LLMResponse = await provider.generate(request)
+                    async with GLOBAL_LLM_SEMAPHORE:
+                        response: LLMResponse = await provider.generate(request)
                     
                     # Log telemetry
                     logger.info(
@@ -413,14 +453,14 @@ class ProviderRouter:
                     })
                     
                     is_validation = "validation" in error_msg or "validationerror" in error_type
-                    is_429 = "429" in error_msg
+                    is_429 = "429" in error_msg or "502" in error_msg or "503" in error_msg or "504" in error_msg
                     
                     if is_validation:
                         logger.error(f"Provider {provider_name} validation error for {agent_name}. Failing fast: {repr(e)}")
                         break  # No retries for validation error, fall back immediately
                         
                     if is_429:
-                        if attempt >= 1:
+                        if attempt >= 5:
                             logger.warning(f"Provider {provider_name} exhausted 429 retries for {agent_name}. Falling back.")
                             break
                         logger.warning(f"Provider {provider_name} rate limited for {agent_name}. Retrying...")
@@ -431,6 +471,6 @@ class ProviderRouter:
                         logger.warning(f"Provider {provider_name} failed for {agent_name}: {repr(e)}. Retrying...")
                     
                     attempt += 1
-                    await asyncio.sleep(base_delay * (2 ** attempt))
+                    await asyncio.sleep(base_delay * (2 ** attempt) + random.uniform(0.1, 1.0))
                     
         raise Exception(f"All providers exhausted for agent: {agent_name}. Routing failed.")

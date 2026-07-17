@@ -10,6 +10,7 @@ class DynamicResearchPlanner:
     SOURCE_TASK_MAP = {
         "sec": {"task": "financial_history", "provider": "sec_edgar"},
         "yfinance": {"task": "market_valuation", "provider": "yfinance"},
+        "global_markets": {"task": "market_valuation", "provider": "global_markets"},
         "news": {"task": "recent_developments", "provider": "news_provider"},
         "reddit": {"task": "social_sentiment", "provider": "reddit_provider"},
         "company": {"task": "company_profile", "provider": "company_provider"},

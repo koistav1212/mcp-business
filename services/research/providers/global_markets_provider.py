@@ -15,7 +15,6 @@ class GlobalMarketsProvider(BaseProvider):
     (US + non-US) using ticker/exchange-based APIs, and falls back
     to lightweight estimates for some private firms where available.
 
-    This is complementary to USSECFilingsProvider (CIK-based).
     """
 
     _HEADERS = {"User-Agent": _BOT_UA, "Accept-Encoding": "gzip, deflate"}
@@ -129,6 +128,7 @@ class GlobalMarketsProvider(BaseProvider):
         (ticker + exchange) or private, then emit ResearchEvidence with
         standardized histories for consulting-style analysis.
         """
+        ticker_symbol = self._extract_identifier(target, preferred_key="ticker")
         now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         evidence_list: List[ResearchEvidence] = []
 

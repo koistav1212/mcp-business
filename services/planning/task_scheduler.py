@@ -40,8 +40,15 @@ class TaskScheduler:
                     self._execute_task_with_retries(task, target_val)
                 )
 
-            # Execute all tasks in this wave in parallel
-            results = await asyncio.gather(*wave_tasks, return_exceptions=True)
+            # Execute all tasks in this wave with pacing and concurrency limit of 2
+            sem_wave = asyncio.Semaphore(2)
+            async def run_task_paced(task_coro, index):
+                await asyncio.sleep(index * 0.5)
+                async with sem_wave:
+                    return await task_coro
+            
+            paced_wave_tasks = [run_task_paced(t, i) for i, t in enumerate(wave_tasks)]
+            results = await asyncio.gather(*paced_wave_tasks, return_exceptions=True)
             
             failed = False
             wave_results_dict = {}

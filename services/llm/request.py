@@ -8,3 +8,4 @@ class LLMRequest(BaseModel):
     model: str
     temperature: float = 0.0
     max_tokens: Optional[int] = None
+    response_format: Optional[Dict] = None

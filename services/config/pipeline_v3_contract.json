@@ -1,0 +1,2029 @@
+{
+  "global_contract": {
+    "entity_resolution": {
+      "must_use_canonical_name": true,
+      "must_reject_raw_query_as_entity": true,
+      "allowed_query_verbs_to_strip": [
+        "analyze",
+        "analyse",
+        "research",
+        "investigate",
+        "study",
+        "evaluate",
+        "review",
+        "tell me about",
+        "look up",
+        "get",
+        "compare",
+        "find"
+      ]
+    },
+    "grounding_rules": [
+      "Every claim must map to at least one evidence_id, signal_id, or source_id.",
+      "Intermediate agents must output structured objects, not prose-only text.",
+      "Only the final synthesizer may generate narrative paragraphs.",
+      "If evidence is insufficient, the agent must return explicit gaps instead of inference.",
+      "No section may invent numbers, acquisitions, launches, partnerships, or sentiments without evidence.",
+      "Every widget on every page must resolve to real data_keys; if data_keys are empty, render the empty-state card instead of fabricating content."
+    ],
+    "output_style": {
+      "tone": "executive",
+      "depth": "consulting-grade",
+      "specificity": "high",
+      "hallucination_tolerance": 0
+    }
+  },
+  "ui_design_system": {
+    "layout": {
+      "grid": 12,
+      "page_padding": 24,
+      "section_gap": 20,
+      "card_radius": 20,
+      "shadow": "soft",
+      "density": "comfortable"
+    },
+    "colors": {
+      "background": "#0B0F14",
+      "surface": "#111827",
+      "surface_2": "#172033",
+      "surface_3": "#1F2937",
+      "border": "#243244",
+      "text_primary": "#E5E7EB",
+      "text_secondary": "#9CA3AF",
+      "muted": "#6B7280",
+      "accent_primary": "#60A5FA",
+      "accent_success": "#34D399",
+      "accent_warning": "#F59E0B",
+      "accent_danger": "#F87171",
+      "accent_info": "#22D3EE"
+    },
+    "typography": {
+      "font_family": "Inter",
+      "title_size": 28,
+      "section_title_size": 20,
+      "card_title_size": 16,
+      "body_size": 14,
+      "caption_size": 12,
+      "line_height": 1.5
+    },
+    "component_defaults": {
+      "card": {
+        "variant": "glass",
+        "border": true,
+        "collapsible": true,
+        "exportable": true,
+        "loading_state": "skeleton"
+      },
+      "chart": {
+        "legend": true,
+        "grid_lines": true,
+        "show_tooltips": true
+      },
+      "table": {
+        "sticky_header": true,
+        "striped_rows": true,
+        "compact": false
+      }
+    }
+  },
+  "report_pages": [
+    {
+      "page_id": "executive_summary",
+      "page_title": "Executive Summary",
+      "page_goal": "Give the CEO a 30-second view of the company, its scale, trajectory, and headline conclusion.",
+      "priority": "critical",
+      "data_contract": {
+        "sources": [
+          "entity_extraction.output",
+          "synthesizer.output.company_summary",
+          "cross_provider_reasoning.output.validated_signals",
+          "section_generation:*"
+        ],
+        "summary_fields": [
+          "narratives.company_summary"
+        ],
+        "insight_fields": [
+          "validated_signals[].signal",
+          "validated_signals[].why_it_matters"
+        ],
+        "evidence_fields": [
+          "evidence_refs"
+        ],
+        "metric_fields": [
+          "summary.score",
+          "summary.confidence",
+          "summary.coverage"
+        ]
+      },
+      "grid_layout": {
+        "columns": 12,
+        "sections": [
+          {
+            "id": "hero",
+            "span": 12,
+            "order": 1
+          },
+          {
+            "id": "summary_row",
+            "span": 12,
+            "order": 2
+          },
+          {
+            "id": "kpi_row",
+            "span": 12,
+            "order": 3
+          },
+          {
+            "id": "top_signals",
+            "span": 8,
+            "order": 4
+          },
+          {
+            "id": "coverage",
+            "span": 4,
+            "order": 5
+          }
+        ]
+      },
+      "widgets": [
+        {
+          "component": "ExecutiveHero",
+          "data_keys": [
+            "entity.name",
+            "entity.ticker",
+            "entity.industry",
+            "entity.country",
+            "entity.headquarters"
+          ],
+          "position": {
+            "row": 1,
+            "col": 1,
+            "width": 12,
+            "height": 2
+          },
+          "style": {
+            "theme": "hero",
+            "accent": "accent_primary",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "entity_extraction",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          },
+          "notes": "Full-width banner: company name, ticker badge, industry chip, HQ location."
+        },
+        {
+          "component": "CompanyIdentityCard",
+          "data_keys": [
+            "entity.name",
+            "entity.website",
+            "entity.exchange",
+            "entity.is_public_company"
+          ],
+          "position": {
+            "row": 3,
+            "col": 1,
+            "width": 4,
+            "height": 2
+          },
+          "style": {
+            "theme": "card",
+            "accent": "accent_info",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "entity_extraction",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "ExecutiveScorecard",
+          "data_keys": [
+            "summary.score",
+            "summary.confidence",
+            "summary.coverage"
+          ],
+          "position": {
+            "row": 3,
+            "col": 5,
+            "width": 4,
+            "height": 2
+          },
+          "style": {
+            "theme": "score",
+            "accent": "accent_success",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "critic_agent",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          },
+          "notes": "Gauge trio: overall score /100, confidence %, evidence coverage %."
+        },
+        {
+          "component": "KeyTakeawaysStrip",
+          "data_keys": [
+            "narratives.company_summary",
+            "validated_signals",
+            "top_findings"
+          ],
+          "position": {
+            "row": 3,
+            "col": 9,
+            "width": 4,
+            "height": 2
+          },
+          "style": {
+            "theme": "strip",
+            "accent": "accent_primary",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "synthesizer",
+            "summary_field": "company_summary",
+            "insight_field": "validated_signals",
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "SourcesCitations",
+          "data_keys": [
+            "evidence_refs"
+          ],
+          "position": {
+            "row": 5,
+            "col": 1,
+            "width": 12,
+            "height": 1
+          },
+          "style": {
+            "theme": "compact",
+            "accent": "muted",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "synthesizer",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        }
+      ]
+    },
+    {
+      "page_id": "company_profile",
+      "page_title": "Company Profile",
+      "page_goal": "Show company identity, scale, organization, products, leadership, and business description.",
+      "priority": "high",
+      "data_contract": {
+        "sources": [
+          "section_generation[Operations Intelligence]",
+          "section_generation[Product and Market Intelligence]",
+          "people_provider",
+          "company_provider"
+        ],
+        "summary_fields": [
+          "company_profile.value_prop",
+          "company_profile.customers",
+          "company_profile.channels"
+        ],
+        "insight_fields": [
+          "Operations Intelligence.key_insights"
+        ],
+        "evidence_fields": [
+          "Operations Intelligence.evidence_ids",
+          "Product and Market Intelligence.evidence_ids"
+        ],
+        "metric_fields": [
+          "entity.employee_count",
+          "entity.revenue",
+          "entity.market_cap"
+        ]
+      },
+      "grid_layout": {
+        "columns": 12,
+        "sections": [
+          {
+            "id": "leadership_size",
+            "span": 12,
+            "order": 1
+          },
+          {
+            "id": "business_model",
+            "span": 12,
+            "order": 2
+          },
+          {
+            "id": "products",
+            "span": 12,
+            "order": 3
+          }
+        ]
+      },
+      "widgets": [
+        {
+          "component": "LeadershipTeam",
+          "data_keys": [
+            "people.leadership",
+            "organization.board",
+            "organization.succession"
+          ],
+          "position": {
+            "row": 1,
+            "col": 1,
+            "width": 6,
+            "height": 3
+          },
+          "style": {
+            "theme": "card",
+            "accent": "accent_info",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "people_provider",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "CompanySizeCard",
+          "data_keys": [
+            "entity.employee_count",
+            "entity.revenue",
+            "entity.market_cap"
+          ],
+          "position": {
+            "row": 1,
+            "col": 7,
+            "width": 6,
+            "height": 2
+          },
+          "style": {
+            "theme": "metric",
+            "accent": "accent_success",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "company_provider",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "BusinessModelCanvas",
+          "data_keys": [
+            "company_profile.value_prop",
+            "company_profile.customers",
+            "company_profile.channels"
+          ],
+          "position": {
+            "row": 4,
+            "col": 1,
+            "width": 12,
+            "height": 3
+          },
+          "style": {
+            "theme": "canvas",
+            "accent": "accent_primary",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Operations Intelligence]",
+            "summary_field": "summary",
+            "insight_field": "key_insights",
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "ProductsServicesPanel",
+          "data_keys": [
+            "product.portfolio",
+            "product.new_launches",
+            "product.discontinued"
+          ],
+          "position": {
+            "row": 7,
+            "col": 1,
+            "width": 12,
+            "height": 3
+          },
+          "style": {
+            "theme": "panel",
+            "accent": "accent_info",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Product and Market Intelligence]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        }
+      ]
+    },
+    {
+      "page_id": "financials",
+      "page_title": "Financial Intelligence",
+      "page_goal": "Explain revenue, margins, cash flow, capital allocation, and financial momentum.",
+      "priority": "critical",
+      "data_contract": {
+        "sources": [
+          "section_generation[Financials]",
+          "sec_provider",
+          "global_markets_provider",
+          "yfinance_provider"
+        ],
+        "summary_fields": [
+          "Financials.summary"
+        ],
+        "insight_fields": [
+          "Financials.key_insights",
+          "Financials.trends"
+        ],
+        "evidence_fields": [
+          "Financials.evidence_ids"
+        ],
+        "metric_fields": [
+          "Financials.metrics[]",
+          "financials.kpis"
+        ],
+        "risk_fields": [
+          "Financials.risks"
+        ]
+      },
+      "grid_layout": {
+        "columns": 12,
+        "sections": [
+          {
+            "id": "revenue_health",
+            "span": 12,
+            "order": 1
+          },
+          {
+            "id": "margin_capital",
+            "span": 12,
+            "order": 2
+          },
+          {
+            "id": "kpi_facts",
+            "span": 12,
+            "order": 3
+          }
+        ]
+      },
+      "widgets": [
+        {
+          "component": "RevenueLineChart",
+          "data_keys": [
+            "financials.revenue_history"
+          ],
+          "position": {
+            "row": 1,
+            "col": 1,
+            "width": 8,
+            "height": 3
+          },
+          "style": {
+            "theme": "chart",
+            "accent": "accent_primary",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft",
+            "chart_type": "line"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Financials]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          },
+          "notes": "X: fiscal period, Y: revenue ($). Tooltip shows YoY %."
+        },
+        {
+          "component": "FinancialHealthScorecard",
+          "data_keys": [
+            "financials.growth",
+            "financials.margin",
+            "financials.cash_flow",
+            "financials.debt"
+          ],
+          "position": {
+            "row": 1,
+            "col": 9,
+            "width": 4,
+            "height": 3
+          },
+          "style": {
+            "theme": "score",
+            "accent": "accent_success",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Financials]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "MarginAreaChart",
+          "data_keys": [
+            "financials.margin_history"
+          ],
+          "position": {
+            "row": 4,
+            "col": 1,
+            "width": 6,
+            "height": 3
+          },
+          "style": {
+            "theme": "chart",
+            "accent": "accent_info",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft",
+            "chart_type": "area"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Financials]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "CapitalAllocationStackedChart",
+          "data_keys": [
+            "capital_allocation.capex",
+            "capital_allocation.buybacks",
+            "capital_allocation.dividends"
+          ],
+          "position": {
+            "row": 4,
+            "col": 7,
+            "width": 6,
+            "height": 3
+          },
+          "style": {
+            "theme": "chart",
+            "accent": "accent_warning",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft",
+            "chart_type": "stacked_bar"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Financials]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "KpiCards",
+          "data_keys": [
+            "financials.kpis"
+          ],
+          "position": {
+            "row": 7,
+            "col": 1,
+            "width": 12,
+            "height": 2
+          },
+          "style": {
+            "theme": "metric_grid",
+            "accent": "accent_primary",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Financials]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "FactMatrix",
+          "data_keys": [
+            "financials.key_facts",
+            "financials.evidence_ids"
+          ],
+          "position": {
+            "row": 9,
+            "col": 1,
+            "width": 12,
+            "height": 2
+          },
+          "style": {
+            "theme": "table",
+            "accent": "muted",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Financials]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        }
+      ]
+    },
+    {
+      "page_id": "competitor_analysis",
+      "page_title": "Competitor Analysis",
+      "page_goal": "Compare company positioning, gaps, moats, pricing, features, and strategic threats.",
+      "priority": "critical",
+      "data_contract": {
+        "sources": [
+          "section_generation[Competitor Intelligence]",
+          "competitors_provider"
+        ],
+        "summary_fields": [
+          "Competitor Intelligence.summary"
+        ],
+        "insight_fields": [
+          "Competitor Intelligence.key_insights"
+        ],
+        "evidence_fields": [
+          "Competitor Intelligence.evidence_ids"
+        ],
+        "risk_fields": [
+          "Competitor Intelligence.risks"
+        ]
+      },
+      "grid_layout": {
+        "columns": 12,
+        "sections": [
+          {
+            "id": "matrix",
+            "span": 12,
+            "order": 1
+          },
+          {
+            "id": "positioning",
+            "span": 12,
+            "order": 2
+          },
+          {
+            "id": "pricing_features",
+            "span": 12,
+            "order": 3
+          }
+        ]
+      },
+      "widgets": [
+        {
+          "component": "CompetitiveMatrix",
+          "data_keys": [
+            "competitors.list",
+            "competitors.attributes"
+          ],
+          "position": {
+            "row": 1,
+            "col": 1,
+            "width": 12,
+            "height": 4
+          },
+          "style": {
+            "theme": "table",
+            "accent": "accent_primary",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Competitor Intelligence]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "PositioningMap",
+          "data_keys": [
+            "competitive_positioning.axes",
+            "competitive_positioning.competitors"
+          ],
+          "position": {
+            "row": 5,
+            "col": 1,
+            "width": 7,
+            "height": 4
+          },
+          "style": {
+            "theme": "chart",
+            "accent": "accent_info",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft",
+            "chart_type": "scatter"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Competitor Intelligence]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          },
+          "notes": "X/Y axes are configurable, e.g. Price vs Feature Depth; bubble size = market share."
+        },
+        {
+          "component": "StrategicPositionCard",
+          "data_keys": [
+            "competitive_positioning.summary",
+            "competitive_positioning.moat"
+          ],
+          "position": {
+            "row": 5,
+            "col": 8,
+            "width": 5,
+            "height": 2
+          },
+          "style": {
+            "theme": "card",
+            "accent": "accent_success",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Competitor Intelligence]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "WhiteSpaceMap",
+          "data_keys": [
+            "competitive_gaps",
+            "opportunities"
+          ],
+          "position": {
+            "row": 7,
+            "col": 8,
+            "width": 5,
+            "height": 2
+          },
+          "style": {
+            "theme": "card",
+            "accent": "accent_warning",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Competitor Intelligence]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "PricingComparison",
+          "data_keys": [
+            "pricing.competitor_pricing",
+            "pricing.company_pricing"
+          ],
+          "position": {
+            "row": 9,
+            "col": 1,
+            "width": 6,
+            "height": 2
+          },
+          "style": {
+            "theme": "card",
+            "accent": "accent_info",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Competitor Intelligence]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "FeatureComparison",
+          "data_keys": [
+            "product.features",
+            "competitors.features"
+          ],
+          "position": {
+            "row": 9,
+            "col": 7,
+            "width": 6,
+            "height": 2
+          },
+          "style": {
+            "theme": "checklist",
+            "accent": "accent_primary",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Product and Market Intelligence]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        }
+      ]
+    },
+    {
+      "page_id": "social_intelligence",
+      "page_title": "Social Intelligence",
+      "page_goal": "Show sentiment, customer pain points, feature requests, and public discussion trends.",
+      "priority": "high",
+      "data_contract": {
+        "sources": [
+          "section_generation[Social Intelligence]",
+          "reddit_provider"
+        ],
+        "summary_fields": [
+          "Social Intelligence.summary"
+        ],
+        "insight_fields": [
+          "Social Intelligence.key_insights"
+        ],
+        "evidence_fields": [
+          "Social Intelligence.evidence_ids"
+        ],
+        "metric_fields": [
+          "social.overall_sentiment"
+        ]
+      },
+      "grid_layout": {
+        "columns": 12,
+        "sections": [
+          {
+            "id": "sentiment",
+            "span": 12,
+            "order": 1
+          },
+          {
+            "id": "pain_share",
+            "span": 12,
+            "order": 2
+          },
+          {
+            "id": "feed",
+            "span": 12,
+            "order": 3
+          }
+        ]
+      },
+      "widgets": [
+        {
+          "component": "SentimentTimeline",
+          "data_keys": [
+            "social.overall_sentiment",
+            "social.sentiment_history"
+          ],
+          "position": {
+            "row": 1,
+            "col": 1,
+            "width": 8,
+            "height": 3
+          },
+          "style": {
+            "theme": "chart",
+            "accent": "accent_info",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft",
+            "chart_type": "timeline"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Social Intelligence]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          },
+          "notes": "Y: sentiment score -1..1, X: date, colored bands for positive/neutral/negative."
+        },
+        {
+          "component": "VoiceOfCustomer",
+          "data_keys": [
+            "social.customer_opinions",
+            "social.expert_quotes"
+          ],
+          "position": {
+            "row": 1,
+            "col": 9,
+            "width": 4,
+            "height": 3
+          },
+          "style": {
+            "theme": "quote_card",
+            "accent": "accent_primary",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Social Intelligence]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "CustomerPainMatrix",
+          "data_keys": [
+            "social.pain_points",
+            "social.feature_requests"
+          ],
+          "position": {
+            "row": 4,
+            "col": 1,
+            "width": 6,
+            "height": 3
+          },
+          "style": {
+            "theme": "matrix",
+            "accent": "accent_warning",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Social Intelligence]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "ShareOfVoice",
+          "data_keys": [
+            "social.competitor_mentions",
+            "social.brand_mentions"
+          ],
+          "position": {
+            "row": 4,
+            "col": 7,
+            "width": 6,
+            "height": 3
+          },
+          "style": {
+            "theme": "chart",
+            "accent": "accent_success",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft",
+            "chart_type": "donut"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Social Intelligence]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "PostFeed",
+          "data_keys": [
+            "social.posts"
+          ],
+          "position": {
+            "row": 7,
+            "col": 1,
+            "width": 12,
+            "height": 3
+          },
+          "style": {
+            "theme": "feed",
+            "accent": "muted",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "reddit_provider",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        }
+      ]
+    },
+    {
+      "page_id": "technology_intelligence",
+      "page_title": "Technology Intelligence",
+      "page_goal": "Explain tech stack, AI maturity, engineering velocity, patents, and modernization posture.",
+      "priority": "high",
+      "data_contract": {
+        "sources": [
+          "section_generation[Technology Intelligence]",
+          "web_provider",
+          "hiring_provider"
+        ],
+        "summary_fields": [
+          "Technology Intelligence.summary"
+        ],
+        "insight_fields": [
+          "Technology Intelligence.key_insights"
+        ],
+        "evidence_fields": [
+          "Technology Intelligence.evidence_ids"
+        ]
+      },
+      "grid_layout": {
+        "columns": 12,
+        "sections": [
+          {
+            "id": "stack",
+            "span": 12,
+            "order": 1
+          },
+          {
+            "id": "ai_patents",
+            "span": 12,
+            "order": 2
+          },
+          {
+            "id": "velocity_modernization",
+            "span": 12,
+            "order": 3
+          }
+        ]
+      },
+      "widgets": [
+        {
+          "component": "TechStackBadges",
+          "data_keys": [
+            "technology.tech_stack"
+          ],
+          "position": {
+            "row": 1,
+            "col": 1,
+            "width": 12,
+            "height": 1
+          },
+          "style": {
+            "theme": "badge_row",
+            "accent": "accent_info",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Technology Intelligence]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "AIReadinessCard",
+          "data_keys": [
+            "technology.ai_capabilities",
+            "technology.innovation_score"
+          ],
+          "position": {
+            "row": 2,
+            "col": 1,
+            "width": 4,
+            "height": 3
+          },
+          "style": {
+            "theme": "card",
+            "accent": "accent_primary",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Technology Intelligence]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "PatentTimeline",
+          "data_keys": [
+            "technology.patents"
+          ],
+          "position": {
+            "row": 2,
+            "col": 5,
+            "width": 8,
+            "height": 3
+          },
+          "style": {
+            "theme": "chart",
+            "accent": "accent_success",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft",
+            "chart_type": "timeline"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Technology Intelligence]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "EngineeringVelocity",
+          "data_keys": [
+            "technology.developer_activity",
+            "technology.opensource_activity"
+          ],
+          "position": {
+            "row": 5,
+            "col": 1,
+            "width": 6,
+            "height": 3
+          },
+          "style": {
+            "theme": "chart",
+            "accent": "accent_info",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft",
+            "chart_type": "bar"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Technology Intelligence]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "ModernizationScore",
+          "data_keys": [
+            "technology.architecture_maturity",
+            "technology.tech_debt"
+          ],
+          "position": {
+            "row": 5,
+            "col": 7,
+            "width": 6,
+            "height": 3
+          },
+          "style": {
+            "theme": "score",
+            "accent": "accent_warning",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Technology Intelligence]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        }
+      ]
+    },
+    {
+      "page_id": "product_services",
+      "page_title": "Products and Services",
+      "page_goal": "Present product portfolio, launches, maturity, pricing, growth products, and overlap with competitors.",
+      "priority": "high",
+      "data_contract": {
+        "sources": [
+          "section_generation[Product and Market Intelligence]"
+        ],
+        "summary_fields": [
+          "Product and Market Intelligence.summary"
+        ],
+        "insight_fields": [
+          "Product and Market Intelligence.key_insights"
+        ],
+        "evidence_fields": [
+          "Product and Market Intelligence.evidence_ids"
+        ]
+      },
+      "grid_layout": {
+        "columns": 12,
+        "sections": [
+          {
+            "id": "portfolio",
+            "span": 12,
+            "order": 1
+          },
+          {
+            "id": "lifecycle_share",
+            "span": 12,
+            "order": 2
+          },
+          {
+            "id": "overlap",
+            "span": 12,
+            "order": 3
+          }
+        ]
+      },
+      "widgets": [
+        {
+          "component": "ProductsServicesPanel",
+          "data_keys": [
+            "product.portfolio",
+            "product.new_launches",
+            "product.discontinued"
+          ],
+          "position": {
+            "row": 1,
+            "col": 1,
+            "width": 12,
+            "height": 3
+          },
+          "style": {
+            "theme": "panel",
+            "accent": "accent_primary",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Product and Market Intelligence]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "ProductLifecycleMap",
+          "data_keys": [
+            "product.product_maturity",
+            "product.growth_products",
+            "product.declining_products"
+          ],
+          "position": {
+            "row": 4,
+            "col": 1,
+            "width": 7,
+            "height": 3
+          },
+          "style": {
+            "theme": "chart",
+            "accent": "accent_info",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft",
+            "chart_type": "quadrant"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Product and Market Intelligence]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "MarketShareBar",
+          "data_keys": [
+            "product.market_share_by_product"
+          ],
+          "position": {
+            "row": 4,
+            "col": 8,
+            "width": 5,
+            "height": 3
+          },
+          "style": {
+            "theme": "chart",
+            "accent": "accent_success",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft",
+            "chart_type": "bar"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Product and Market Intelligence]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "CompetitiveOverlapTable",
+          "data_keys": [
+            "product.competitive_overlap"
+          ],
+          "position": {
+            "row": 7,
+            "col": 1,
+            "width": 12,
+            "height": 3
+          },
+          "style": {
+            "theme": "table",
+            "accent": "accent_warning",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Competitor Intelligence]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        }
+      ]
+    },
+    {
+      "page_id": "operations_and_supply_chain",
+      "page_title": "Operations and Supply Chain",
+      "page_goal": "Explain operating model, capacity, logistics, bottlenecks, and operational risks.",
+      "priority": "high",
+      "data_contract": {
+        "sources": [
+          "section_generation[Operations Intelligence]"
+        ],
+        "summary_fields": [
+          "Operations Intelligence.summary"
+        ],
+        "insight_fields": [
+          "Operations Intelligence.key_insights"
+        ],
+        "evidence_fields": [
+          "Operations Intelligence.evidence_ids"
+        ],
+        "risk_fields": [
+          "Operations Intelligence.risks"
+        ]
+      },
+      "grid_layout": {
+        "columns": 12,
+        "sections": [
+          {
+            "id": "supply_capacity",
+            "span": 12,
+            "order": 1
+          },
+          {
+            "id": "bottlenecks_leadtime",
+            "span": 12,
+            "order": 2
+          },
+          {
+            "id": "vendor_risk",
+            "span": 12,
+            "order": 3
+          }
+        ]
+      },
+      "widgets": [
+        {
+          "component": "SupplyChainMap",
+          "data_keys": [
+            "operations.suppliers",
+            "operations.logistics",
+            "operations.distribution"
+          ],
+          "position": {
+            "row": 1,
+            "col": 1,
+            "width": 8,
+            "height": 3
+          },
+          "style": {
+            "theme": "map",
+            "accent": "accent_info",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Operations Intelligence]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "CapacityUtilization",
+          "data_keys": [
+            "operations.capacity",
+            "operations.utilization"
+          ],
+          "position": {
+            "row": 1,
+            "col": 9,
+            "width": 4,
+            "height": 3
+          },
+          "style": {
+            "theme": "gauge",
+            "accent": "accent_success",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Operations Intelligence]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "BottleneckDiagram",
+          "data_keys": [
+            "operations.bottlenecks",
+            "operations.operational_risks"
+          ],
+          "position": {
+            "row": 4,
+            "col": 1,
+            "width": 6,
+            "height": 3
+          },
+          "style": {
+            "theme": "diagram",
+            "accent": "accent_warning",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Operations Intelligence]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "LeadTimeAnalysis",
+          "data_keys": [
+            "operations.lead_time",
+            "operations.delivery_speed"
+          ],
+          "position": {
+            "row": 4,
+            "col": 7,
+            "width": 6,
+            "height": 3
+          },
+          "style": {
+            "theme": "chart",
+            "accent": "accent_primary",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft",
+            "chart_type": "bar"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Operations Intelligence]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "VendorRiskTable",
+          "data_keys": [
+            "operations.vendor_risk",
+            "operations.cost_optimization"
+          ],
+          "position": {
+            "row": 7,
+            "col": 1,
+            "width": 12,
+            "height": 3
+          },
+          "style": {
+            "theme": "table",
+            "accent": "accent_warning",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[Operations Intelligence]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        }
+      ]
+    },
+    {
+      "page_id": "risk",
+      "page_title": "Risk Intelligence",
+      "page_goal": "Surface the main business, market, regulatory, legal, operational, and execution risks.",
+      "priority": "critical",
+      "data_contract": {
+        "sources": [
+          "section_generation[News and Risk Intelligence]",
+          "cross_provider_reasoning.output.validated_signals"
+        ],
+        "summary_fields": [
+          "risk_summary"
+        ],
+        "insight_fields": [
+          "News and Risk Intelligence.risks"
+        ],
+        "evidence_fields": [
+          "News and Risk Intelligence.evidence_ids"
+        ]
+      },
+      "grid_layout": {
+        "columns": 12,
+        "sections": [
+          {
+            "id": "matrix_register",
+            "span": 12,
+            "order": 1
+          },
+          {
+            "id": "scenarios",
+            "span": 12,
+            "order": 2
+          },
+          {
+            "id": "mitigations",
+            "span": 12,
+            "order": 3
+          }
+        ]
+      },
+      "widgets": [
+        {
+          "component": "RiskMatrix",
+          "data_keys": [
+            "risk.risks",
+            "risk.likelihood",
+            "risk.impact"
+          ],
+          "position": {
+            "row": 1,
+            "col": 1,
+            "width": 6,
+            "height": 4
+          },
+          "style": {
+            "theme": "chart",
+            "accent": "accent_danger",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft",
+            "chart_type": "scatter"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[News and Risk Intelligence]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          },
+          "notes": "X: likelihood, Y: impact, bubble color: risk category."
+        },
+        {
+          "component": "RiskRegister",
+          "data_keys": [
+            "risk.register"
+          ],
+          "position": {
+            "row": 1,
+            "col": 7,
+            "width": 6,
+            "height": 4
+          },
+          "style": {
+            "theme": "table",
+            "accent": "accent_warning",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[News and Risk Intelligence]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "ScenarioAnalysis",
+          "data_keys": [
+            "risk.scenarios"
+          ],
+          "position": {
+            "row": 5,
+            "col": 1,
+            "width": 12,
+            "height": 3
+          },
+          "style": {
+            "theme": "card",
+            "accent": "accent_info",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "synthesizer",
+            "summary_field": "risk_summary",
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "MitigationTracker",
+          "data_keys": [
+            "risk.mitigations"
+          ],
+          "position": {
+            "row": 8,
+            "col": 1,
+            "width": 12,
+            "height": 2
+          },
+          "style": {
+            "theme": "progress",
+            "accent": "accent_success",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "section_generation[News and Risk Intelligence]",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        }
+      ]
+    },
+    {
+      "page_id": "recommendations",
+      "page_title": "Recommendations",
+      "page_goal": "Translate analysis into strategic priorities, actions, and executive decisions.",
+      "priority": "critical",
+      "data_contract": {
+        "sources": [
+          "synthesizer.output",
+          "cross_provider_reasoning.output.validated_signals"
+        ],
+        "summary_fields": [
+          "company_summary",
+          "investment_case"
+        ],
+        "insight_fields": [
+          "validated_signals[].why_it_matters"
+        ],
+        "evidence_fields": [
+          "evidence_refs"
+        ]
+      },
+      "grid_layout": {
+        "columns": 12,
+        "sections": [
+          {
+            "id": "verdict",
+            "span": 12,
+            "order": 1
+          },
+          {
+            "id": "initiatives",
+            "span": 12,
+            "order": 2
+          },
+          {
+            "id": "roadmap",
+            "span": 12,
+            "order": 3
+          }
+        ]
+      },
+      "widgets": [
+        {
+          "component": "ExecutiveVerdictCard",
+          "data_keys": [
+            "narratives.company_summary",
+            "narratives.investment_case"
+          ],
+          "position": {
+            "row": 1,
+            "col": 1,
+            "width": 12,
+            "height": 2
+          },
+          "style": {
+            "theme": "hero_card",
+            "accent": "accent_primary",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "synthesizer",
+            "summary_field": "investment_case",
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "InitiativeCards",
+          "data_keys": [
+            "recommendations.initiatives"
+          ],
+          "position": {
+            "row": 3,
+            "col": 1,
+            "width": 12,
+            "height": 3
+          },
+          "style": {
+            "theme": "cards",
+            "accent": "accent_success",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "cross_provider_reasoning",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "PrioritizationMatrix",
+          "data_keys": [
+            "recommendations.impact_effort"
+          ],
+          "position": {
+            "row": 6,
+            "col": 1,
+            "width": 6,
+            "height": 3
+          },
+          "style": {
+            "theme": "matrix",
+            "accent": "accent_info",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft",
+            "chart_type": "quadrant"
+          },
+          "data_binding": {
+            "bound_section": "cross_provider_reasoning",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "Next90Days",
+          "data_keys": [
+            "recommendations.90_day_plan"
+          ],
+          "position": {
+            "row": 6,
+            "col": 7,
+            "width": 6,
+            "height": 3
+          },
+          "style": {
+            "theme": "roadmap",
+            "accent": "accent_warning",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "synthesizer",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        }
+      ]
+    },
+    {
+      "page_id": "sources_appendix",
+      "page_title": "Sources and Evidence",
+      "page_goal": "Expose provenance, citations, evidence coverage, and traceability.",
+      "priority": "medium",
+      "data_contract": {
+        "sources": [
+          "all_sections.evidence_ids",
+          "synthesizer.output.evidence_refs"
+        ],
+        "summary_fields": [],
+        "insight_fields": [],
+        "evidence_fields": [
+          "evidence_refs",
+          "sources"
+        ]
+      },
+      "grid_layout": {
+        "columns": 12,
+        "sections": [
+          {
+            "id": "citations",
+            "span": 12,
+            "order": 1
+          },
+          {
+            "id": "coverage_quality_confidence",
+            "span": 12,
+            "order": 2
+          }
+        ]
+      },
+      "widgets": [
+        {
+          "component": "SourcesCitations",
+          "data_keys": [
+            "evidence_refs",
+            "sources"
+          ],
+          "position": {
+            "row": 1,
+            "col": 1,
+            "width": 12,
+            "height": 4
+          },
+          "style": {
+            "theme": "table",
+            "accent": "muted",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "synthesizer",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "CoverageMeter",
+          "data_keys": [
+            "coverage.total",
+            "coverage.by_section"
+          ],
+          "position": {
+            "row": 5,
+            "col": 1,
+            "width": 4,
+            "height": 2
+          },
+          "style": {
+            "theme": "gauge",
+            "accent": "accent_info",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "critic_agent",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "EvidenceQualityCard",
+          "data_keys": [
+            "evidence.quality_score",
+            "evidence.gaps"
+          ],
+          "position": {
+            "row": 5,
+            "col": 5,
+            "width": 4,
+            "height": 2
+          },
+          "style": {
+            "theme": "card",
+            "accent": "accent_warning",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "critic_agent",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        },
+        {
+          "component": "ConfidenceMeter",
+          "data_keys": [
+            "summary.confidence",
+            "signals.confidence"
+          ],
+          "position": {
+            "row": 5,
+            "col": 9,
+            "width": 4,
+            "height": 2
+          },
+          "style": {
+            "theme": "gauge",
+            "accent": "accent_success",
+            "background": "surface",
+            "card_radius": 20,
+            "shadow": "soft"
+          },
+          "data_binding": {
+            "bound_section": "critic_agent",
+            "summary_field": null,
+            "insight_field": null,
+            "evidence_required": true,
+            "empty_state_if_missing": true
+          }
+        }
+      ]
+    }
+  ]
+}

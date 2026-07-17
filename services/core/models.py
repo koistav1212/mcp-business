@@ -128,7 +128,7 @@ class ResearchTask:
     target_field: str               # which field of ResolvedCompany to pass as input
                                     # e.g. "canonical_name" | "ticker" | "cik" | "official_website"
     priority: Priority = Priority.MEDIUM
-    timeout_seconds: float = 30.0
+    timeout_seconds: float = 180.0
     max_retries: int = 2
     dependencies: List[str] = field(default_factory=list)   # task_ids that must complete first
     fallback_provider: Optional[str] = None                 # run this if primary times out

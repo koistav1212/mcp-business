@@ -20,7 +20,7 @@ class ProviderFactory:
         if provider_name == "nvidia":
             key = settings.NVDA_KEY.strip()
             if key and key != "sk-placeholder":
-                provider = NVIDIAProvider(api_key=key)
+                provider = NVIDIAProvider(api_key=key, timeout=360.0)
         elif provider_name == "self_hosted":
             provider = SelfHostedProvider()
 

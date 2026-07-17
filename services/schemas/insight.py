@@ -690,3 +690,117 @@ class ResearchContext(
     operating_signals: Optional[OperatingSignals] = None
     social_intelligence: Optional[SocialIntelligence] = None
     ui_metadata: Optional[UIMetadata] = None
+
+
+# ==============================================================================
+# NEW ARCHITECTURE SCHEMAS
+# ==============================================================================
+
+class LightweightPlannerOutput(BaseModel):
+    required_evidence: List[str] = Field(default_factory=list)
+    selected_providers: List[str] = Field(default_factory=list)
+    required_sections: List[str] = Field(default_factory=list)
+    priority: str = "medium"  # high | medium | low
+    reasoning: List[str] = Field(default_factory=list)
+
+
+class FinancialAgentOutput(BaseModel):
+    executive_summary: str = ""
+    revenue: Dict[str, Any] = Field(default_factory=dict)
+    growth: Dict[str, Any] = Field(default_factory=dict)
+    margin: Dict[str, Any] = Field(default_factory=dict)
+    cashflow: Dict[str, Any] = Field(default_factory=dict)
+    cash_flow: Dict[str, Any] = Field(default_factory=dict)
+    cash: Dict[str, Any] = Field(default_factory=dict)
+    debt: Dict[str, Any] = Field(default_factory=dict)
+    market_cap: Dict[str, Any] = Field(default_factory=dict)
+    capital_allocation: Dict[str, Any] = Field(default_factory=dict)
+    key_metrics: List[Dict[str, Any]] = Field(default_factory=list)
+    risks: List[str] = Field(default_factory=list)
+    opportunities: List[str] = Field(default_factory=list)
+    confidence: float = 0.9
+
+
+class TechnologyAgentOutput(BaseModel):
+    ai_maturity: str = ""
+    architecture: Dict[str, Any] = Field(default_factory=dict)
+    stack: List[str] = Field(default_factory=list)
+    patents: Dict[str, Any] = Field(default_factory=dict)
+    developer_velocity: str = ""
+    innovation: str = ""
+    modernization: str = ""
+    technical_risks: List[str] = Field(default_factory=list)
+
+
+class CompetitorAgentOutput(BaseModel):
+    competitive_matrix: Dict[str, Any] = Field(default_factory=dict)
+    positioning: Dict[str, Any] = Field(default_factory=dict)
+    swot: Dict[str, Any] = Field(default_factory=dict)
+    white_space: List[str] = Field(default_factory=list)
+    feature_comparison: Dict[str, Any] = Field(default_factory=dict)
+    pricing_comparison: Dict[str, Any] = Field(default_factory=dict)
+    threats: List[str] = Field(default_factory=list)
+    moat: str = ""
+
+
+class ProductAgentOutput(BaseModel):
+    portfolio: List[Any] = Field(default_factory=list)
+    bcg_matrix: Dict[str, Any] = Field(default_factory=dict)
+    lifecycle: Dict[str, Any] = Field(default_factory=dict)
+    innovation: str = ""
+    pricing: Any = Field(default_factory=dict)
+    revenue_products: List[str] = Field(default_factory=list)
+
+
+class OperationsAgentOutput(BaseModel):
+    supply_chain: Dict[str, Any] = Field(default_factory=dict)
+    factory: Dict[str, Any] = Field(default_factory=dict)
+    distribution: Dict[str, Any] = Field(default_factory=dict)
+    efficiency: Dict[str, Any] = Field(default_factory=dict)
+    capacity: Dict[str, Any] = Field(default_factory=dict)
+    vendor_risk: Dict[str, Any] = Field(default_factory=dict)
+
+
+class SocialAgentOutput(BaseModel):
+    sentiment: str = ""
+    pain_points: List[str] = Field(default_factory=list)
+    feature_requests: List[str] = Field(default_factory=list)
+    top_complaints: List[str] = Field(default_factory=list)
+    positive_themes: List[str] = Field(default_factory=list)
+    competitor_mentions: List[str] = Field(default_factory=list)
+    trending_topics: List[str] = Field(default_factory=list)
+
+
+class RiskAgentOutput(BaseModel):
+    risk_register: List[Dict[str, Any]] = Field(default_factory=list)
+    likelihood: Dict[str, Any] = Field(default_factory=dict)
+    impact: Dict[str, Any] = Field(default_factory=dict)
+    mitigation: Dict[str, Any] = Field(default_factory=dict)
+    early_warning_signals: List[str] = Field(default_factory=list)
+    scenario_analysis: Dict[str, Any] = Field(default_factory=dict)
+
+
+class CriticAgentOutput(BaseModel):
+    quality_score: int = 100
+    missing_sections: List[str] = Field(default_factory=list)
+    regenerate: List[str] = Field(default_factory=list)
+    unsupported_claims: List[str] = Field(default_factory=list)
+
+
+class ExecutiveSynthesizerOutput(BaseModel):
+    executive_summary: str = ""
+    investment_case: str = ""
+    strategic_outlook: str = ""
+    key_risks: str = ""
+    opportunities: str = ""
+    recommendations: str = ""
+
+
+class NewBusinessEvent(BaseModel):
+    type: str
+    importance: float = 0.5
+    headline: str = ""
+    date: str = ""
+    entities: List[str] = Field(default_factory=list)
+    metrics: List[str] = Field(default_factory=list)
+    evidence_ids: List[str] = Field(default_factory=list)
