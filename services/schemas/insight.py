@@ -749,12 +749,27 @@ class ProductAgentOutput(BaseModel):
     revenue_products: List[str] = Field(default_factory=list)
 
 
+class SupplyChainOutput(BaseModel):
+    factory: Dict[str, Optional[Any]] = Field(default_factory=lambda: {"location": None, "capacity": None, "efficiency": None})
+    distribution: Dict[str, Optional[Any]] = Field(default_factory=lambda: {"method": None, "speed": None, "cost": None})
+    vendor_risk: Dict[str, Optional[Any]] = Field(default_factory=lambda: {"reliability": None, "financial_stability": None, "geopolitical_risk": None})
+
+class EfficiencyOutput(BaseModel):
+    operational_efficiency: Optional[str] = None
+    energy_efficiency: Optional[str] = None
+    water_efficiency: Optional[str] = None
+
+class CapacityOutput(BaseModel):
+    production_capacity: Optional[str] = None
+    utilization_rate: Optional[str] = None
+    bottleneck_process: Optional[str] = None
+
 class OperationsAgentOutput(BaseModel):
-    supply_chain: Dict[str, Any] = Field(default_factory=dict)
+    supply_chain: SupplyChainOutput = Field(default_factory=SupplyChainOutput)
     factory: Dict[str, Any] = Field(default_factory=dict)
     distribution: Dict[str, Any] = Field(default_factory=dict)
-    efficiency: Dict[str, Any] = Field(default_factory=dict)
-    capacity: Dict[str, Any] = Field(default_factory=dict)
+    efficiency: EfficiencyOutput = Field(default_factory=EfficiencyOutput)
+    capacity: CapacityOutput = Field(default_factory=CapacityOutput)
     vendor_risk: Dict[str, Any] = Field(default_factory=dict)
 
 

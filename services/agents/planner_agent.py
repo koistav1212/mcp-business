@@ -20,6 +20,8 @@ PROVIDER_MAP = {
     "web": "web_provider",
     "products": "web_provider",
     "patents": "web_provider",
+    "competitors": "competitor_provider",
+    "operations": "operations_provider",
 }
 
 def _target_field_for_provider(provider_name: str, company_entity: Optional[EntityResolution] = None) -> str:
@@ -78,7 +80,7 @@ class PlannerAgent:
             )
 
         # Force inclusion of vital providers for complete coverage
-        forced_providers = {"market", "web", "reddit", "company", "news", "sec"}
+        forced_providers = {"market", "web", "reddit", "company", "news", "sec", "competitors", "operations"}
         for fp in forced_providers:
             if fp not in planner_output.selected_providers:
                 planner_output.selected_providers.append(fp)
