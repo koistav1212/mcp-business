@@ -22,6 +22,8 @@ class SynthesizerAgent:
             "- Write professional, high-impact narrative blocks for each of: 'executive_summary', 'investment_case', "
             "'strategic_outlook', 'key_risks', 'opportunities', and 'recommendations'.\n"
             "- Ground all narratives strictly in the provided validated sections and signals. Do not invent any facts, numbers, or details.\n"
+            "- You MUST extract real source URLs and evidence references from the inputs and populate the 'evidence_refs' array.\n"
+            "- Do NOT put narrative opinion sentences into the 'evidence_refs' array. Only include real citations, URLs, and source metadata.\n"
             "Return ONLY a valid JSON object matching the requested schema. Do not include markdown formatting or extra prose outside the JSON."
         )
 

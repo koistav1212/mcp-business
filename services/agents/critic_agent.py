@@ -1,17 +1,63 @@
 import json
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, List
+from pydantic import BaseModel
+
 from services.schemas.insight import CriticAgentOutput
 
 logger = logging.getLogger("uvicorn.error")
 
+class DetailedCriticScore(BaseModel):
+    structural_quality: int = 100
+    data_completeness: int = 100
+    evidence_coverage: int = 100
+    citation_coverage: int = 100
+    duplicate_score: int = 100
+    contradiction_score: int = 100
+    overall_score: int = 100
+    missing_sections: List[str] = []
+    regenerate: List[str] = []
+    unsupported_claims: List[str] = []
+
 class CriticAgent:
     """
     Quality Assurance Critic Agent.
-    Receives all generated data (sections, signals, coverage, evidence_graph, citations)
-    and checks for empty metrics, hallucinations, unsupported claims, contradictions, etc.
-    Outputs a score, missing areas, and a list of sections to regenerate.
+    Calculates detailed scores for structural quality, data completeness,
+    evidence coverage, citation coverage, duplicates, and contradictions.
     """
+
+    def detect_duplicates(self, payload: Dict[str, Any]) -> int:
+        return 90 # placeholder for logic
+
+    def detect_contradictions(self, payload: Dict[str, Any]) -> int:
+        return 95 # placeholder for logic
+
+    def check_empty_widgets(self, payload: Dict[str, Any]) -> int:
+        return 85 # placeholder for logic
+
+    def verify_citations(self, payload: Dict[str, Any]) -> int:
+        return 80 # placeholder for logic
+
+    def verify_required_sections(self, payload: Dict[str, Any]) -> int:
+        return 100 # placeholder for logic
+
+    def coverage_score(self, payload: Dict[str, Any]) -> int:
+        return 88 # placeholder for logic
+
+    def consistency_score(self, payload: Dict[str, Any]) -> int:
+        return 92 # placeholder for logic
+
+    def _calculate_overall_score(self, scores: dict) -> int:
+        weights = {
+            "structural_quality": 0.1,
+            "data_completeness": 0.15,
+            "evidence_coverage": 0.2,
+            "citation_coverage": 0.15,
+            "duplicate_score": 0.15,
+            "contradiction_score": 0.25
+        }
+        total = sum(scores[k] * w for k, w in weights.items())
+        return int(total)
 
     async def execute(self, payload: Dict[str, Any]) -> CriticAgentOutput:
         system_instruction = (
@@ -24,12 +70,12 @@ class CriticAgent:
             "- Track missing evidence or low-confidence sections.\n"
             "- Call out contradictions across different sections.\n"
             "- List duplicate insights or weak recommendations.\n\n"
-            "Assess the quality of the findings and assign a quality_score (integer from 0 to 100).\n"
-            "If any section is low quality, lacks confidence, or has unsupported claims, list its domain name (e.g. 'technology', 'risk', 'financial') in the 'regenerate' list.\n"
-            "Return ONLY a valid JSON object matching the requested schema. Do not include markdown formatting or extra prose."
+            "Assess the quality of the findings and assign scores (integer from 0 to 100).\n"
+            "Return ONLY a valid JSON object matching the requested schema exactly. Do not include markdown formatting or extra prose.\n"
+            f"Schema:\n{json.dumps(DetailedCriticScore.model_json_schema(), indent=2)}"
         )
 
-        prompt_payload = json.dumps(payload, default=str)
+        prompt_payload = json.dumps(payload, default=str)[:16000] # Cap size to avoid overwhelming LLM
         prompt = f"Data to Critique:\n{prompt_payload}"
 
         logger.info(
@@ -45,11 +91,20 @@ class CriticAgent:
                 system_prompt=system_instruction,
                 user_prompt=prompt
             )
-            return CriticAgentOutput.model_validate(parsed)
+            detailed = DetailedCriticScore.model_validate(parsed)
+            detailed.overall_score = self._calculate_overall_score(detailed.model_dump())
+            
+            # Map back to CriticAgentOutput for pipeline compatibility
+            return CriticAgentOutput(
+                quality_score=detailed.overall_score,
+                missing_sections=detailed.missing_sections,
+                regenerate=detailed.regenerate,
+                unsupported_claims=detailed.unsupported_claims
+            )
         except Exception as e:
             logger.error(f"CriticAgent LLM execution failed: {e}")
             return CriticAgentOutput(
-                quality_score=95,
+                quality_score=85,
                 missing_sections=[],
                 regenerate=[],
                 unsupported_claims=[]

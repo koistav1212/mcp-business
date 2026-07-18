@@ -706,16 +706,13 @@ class LightweightPlannerOutput(BaseModel):
 
 class FinancialAgentOutput(BaseModel):
     executive_summary: str = ""
-    revenue: Dict[str, Any] = Field(default_factory=dict)
-    growth: Dict[str, Any] = Field(default_factory=dict)
-    margin: Dict[str, Any] = Field(default_factory=dict)
-    cashflow: Dict[str, Any] = Field(default_factory=dict)
-    cash_flow: Dict[str, Any] = Field(default_factory=dict)
-    cash: Dict[str, Any] = Field(default_factory=dict)
-    debt: Dict[str, Any] = Field(default_factory=dict)
-    market_cap: Dict[str, Any] = Field(default_factory=dict)
-    capital_allocation: Dict[str, Any] = Field(default_factory=dict)
-    key_metrics: List[Dict[str, Any]] = Field(default_factory=list)
+    growth_metrics: Dict[str, Any] = Field(default_factory=dict)
+    profitability_metrics: Dict[str, Any] = Field(default_factory=dict)
+    financial_health: Dict[str, Any] = Field(default_factory=dict)
+    valuation_metrics: Dict[str, Any] = Field(default_factory=dict)
+    market_performance: Dict[str, Any] = Field(default_factory=dict)
+    analyst_sentiment: Dict[str, Any] = Field(default_factory=dict)
+    trend_analysis: str = ""
     risks: List[str] = Field(default_factory=list)
     opportunities: List[str] = Field(default_factory=list)
     confidence: float = 0.9
@@ -794,6 +791,7 @@ class ExecutiveSynthesizerOutput(BaseModel):
     key_risks: str = ""
     opportunities: str = ""
     recommendations: str = ""
+    evidence_refs: List[Dict[str, Any]] = Field(default_factory=list, description="Array of real source URLs and citations used")
 
 
 class NewBusinessEvent(BaseModel):

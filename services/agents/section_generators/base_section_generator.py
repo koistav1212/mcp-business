@@ -1,8 +1,8 @@
 import json
 import logging
 from typing import Dict, Any, Type
+from pydantic import BaseModel, ValidationError
 from services.llm.provider_router import ProviderRouter
-from pydantic import BaseModel
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -14,10 +14,31 @@ class BaseSectionGenerator:
         self.section_name = section_name
         self.model_class = model_class
 
-    async def generate(self, slice_data: Dict[str, Any], entity_name: str) -> BaseModel:
-        """
-        Generates the structured section output by sending the strictly scoped slice data to the LLM.
-        """
+    def build_context(self, slice_data: Dict[str, Any]) -> str:
+        def deduplicate_and_truncate(data: Any) -> Any:
+            if isinstance(data, list):
+                seen = set()
+                unique_list = []
+                for item in data:
+                    if isinstance(item, dict):
+                        key = item.get("id") or item.get("url") or item.get("headline") or str(item)
+                        if key not in seen:
+                            seen.add(key)
+                            unique_list.append({k: deduplicate_and_truncate(v) for k, v in item.items()})
+                    else:
+                        key = str(item)
+                        if key not in seen:
+                            seen.add(key)
+                            unique_list.append(item)
+                return unique_list[:10]
+            elif isinstance(data, dict):
+                return {k: deduplicate_and_truncate(v) for k, v in data.items()}
+            return data
+            
+        slice_data = deduplicate_and_truncate(slice_data)
+        return json.dumps(slice_data, default=str)
+
+    def build_prompt(self, entity_name: str) -> str:
         def _simplify_schema(schema_dict: Dict[str, Any], indent: int = 0) -> str:
             lines = []
             prefix = " " * indent
@@ -64,45 +85,53 @@ Rules:
 - Return ONLY valid JSON.
 - Do not output markdown.
 """
+        return system_instruction
 
-        def deduplicate_and_truncate(data: Any) -> Any:
-            if isinstance(data, list):
-                seen = set()
-                unique_list = []
-                for item in data:
-                    if isinstance(item, dict):
-                        key = item.get("id") or item.get("url") or item.get("headline") or str(item)
-                        if key not in seen:
-                            seen.add(key)
-                            unique_list.append({k: deduplicate_and_truncate(v) for k, v in item.items()})
-                    else:
-                        key = str(item)
-                        if key not in seen:
-                            seen.add(key)
-                            unique_list.append(item)
-                return unique_list[:10]
-            elif isinstance(data, dict):
-                return {k: deduplicate_and_truncate(v) for k, v in data.items()}
-            return data
-            
-        slice_data = deduplicate_and_truncate(slice_data)
-        prompt_payload = json.dumps(slice_data, default=str)
-        prompt = f"Data:\n{prompt_payload}"
+    def _validate_output(self, parsed: Any) -> BaseModel:
+        if not isinstance(parsed, dict):
+            raise ValueError("Parsed output is not a dictionary")
+        return self.model_class.model_validate(parsed)
 
+    async def _retry_on_validation_failure(self, system_prompt: str, user_prompt: str, error: Exception) -> BaseModel:
+        retry_prompt = f"{system_prompt}\n\nYour previous response failed validation: {error}. Please fix and return ONLY valid JSON matching the schema exactly. Ensure all required fields are present."
+        try:
+            parsed = await ProviderRouter.generate_json(
+                agent_name="section_generator",
+                system_prompt=retry_prompt,
+                user_prompt=user_prompt
+            )
+            return self._validate_output(parsed)
+        except Exception as e:
+            logger.error(f"{self.__class__.__name__} retry failed: {e}")
+            return self.model_class()
+
+    async def execute(self, slice_data: Dict[str, Any], entity_name: str) -> BaseModel:
+        system_prompt = self.build_prompt(entity_name)
+        context = self.build_context(slice_data)
+        user_prompt = f"Data:\n{context}"
+        
         logger.info(
             "SectionGenerator (%s) -> chars=%d",
             self.section_name,
-            len(prompt_payload)
+            len(context)
         )
 
         try:
             parsed = await ProviderRouter.generate_json(
                 agent_name="section_generator",
-                system_prompt=system_instruction,
-                user_prompt=prompt
+                system_prompt=system_prompt,
+                user_prompt=user_prompt
             )
-            return self.model_class(**parsed)
+            return self._validate_output(parsed)
+        except (ValidationError, ValueError) as e:
+            logger.warning(f"{self.__class__.__name__} validation failed: {e}. Retrying...")
+            return await self._retry_on_validation_failure(system_prompt, user_prompt, e)
         except Exception as e:
-            logger.error(f"{self.__class__.__name__} failed: {e}")
-            # Fallback to an empty model
+            logger.error(f"{self.__class__.__name__} generation failed: {e}")
             return self.model_class()
+
+    async def generate(self, slice_data: Dict[str, Any], entity_name: str) -> BaseModel:
+        """
+        Legacy generate method for backward compatibility, routes to execute().
+        """
+        return await self.execute(slice_data, entity_name)

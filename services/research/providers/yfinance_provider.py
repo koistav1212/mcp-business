@@ -106,6 +106,9 @@ class YFinanceProvider(BaseProvider):
                 "exchange": info.get("exchange"),
             }
 
+            from services.normalizers.financial_normalizer import FinancialNormalizer
+            field_map = FinancialNormalizer.merge_financial_metrics(field_map)
+
             for attr, val in field_map.items():
                 if val is None:
                     continue

@@ -167,6 +167,12 @@ class HostAgent:
             self.insight_store.save_insight(name, result)
             
         sections_dict = {k: (v.model_dump() if hasattr(v, 'model_dump') else v) for k, v in sections.items()}
+        
+        # Inject yfinance evidence into Financials section
+        yfinance_evidence = [ev.model_dump() if hasattr(ev, 'model_dump') else ev for ev in raw_evidence if getattr(ev, "source", "") == "yfinance"]
+        if "Financials" in sections_dict and isinstance(sections_dict["Financials"], dict):
+            sections_dict["Financials"]["yfinance_evidence"] = yfinance_evidence
+            
         ArtifactWriter.write_json("pipeline/6_sections.json", {"sections": sections_dict})
 
         # 6. Cross-Provider Reasoning
